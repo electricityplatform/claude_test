@@ -95,6 +95,14 @@ async function renderUsersDataCenterSheet() {
                     <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     <span>رجوع لمركز البيانات</span>
                 </button>
+                <button type="button" onclick="renderUsersDataCenterSheet()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>تحديث</span>
+                </button>
+                <button type="button" onclick="addUsersSheetRow(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>إضافة صف</span>
+                </button>
                 <button type="button" onclick="saveUsersDataCenterSheetToDB()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     <span>حفظ التعديلات لقاعدة البيانات</span>
@@ -170,6 +178,8 @@ async function loadUsersDataIntoSheetGrid() {
                 </table>
             `;
 
+            currentUsersSheetColumns = columns;
+            document.getElementById('editableUsersTable').addRowFn = addUsersSheetRow;
             enableExcelPasteAndDragFill();
 
         } else {
@@ -197,6 +207,7 @@ function exportUsersSheetToExcel() {
     const rows = table.querySelectorAll('tbody tr');
 
     rows.forEach(row => {
+        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '')) return;
         const rowData = [];
         const cells = row.querySelectorAll('td');
 
@@ -323,40 +334,75 @@ async function saveUsersDataCenterSheetToDB() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
-    const rows = table.querySelectorAll('tbody tr');
-    const payload = [];
+    const updatePayload = [];
+    const insertPayload = [];
 
-    rows.forEach(row => {
-        const id = row.getAttribute('data-id');
+    table.querySelectorAll('tbody tr').forEach(row => {
         const inputs = row.querySelectorAll('input[data-field]');
-        const rowData = { id: id };
 
-        inputs.forEach(input => {
-            const field = input.getAttribute('data-field');
-            const rawVal = input.value.trim();
-            rowData[field] = rawVal !== '' ? rawVal : null;
-        });
-
-        payload.push(rowData);
+        if (row.hasAttribute('data-id')) {
+            const rowData = { id: row.getAttribute('data-id') };
+            inputs.forEach(input => {
+                const rawVal = input.value.trim();
+                rowData[input.getAttribute('data-field')] = rawVal !== '' ? rawVal : null;
+            });
+            updatePayload.push(rowData);
+        } else {
+            const rowData = {};
+            let hasValue = false;
+            inputs.forEach(input => {
+                const rawVal = input.value.trim();
+                if (rawVal !== '') {
+                    rowData[input.getAttribute('data-field')] = rawVal;
+                    hasValue = true;
+                }
+            });
+            if (hasValue) insertPayload.push(rowData);
+        }
     });
 
+    if (updatePayload.length === 0 && insertPayload.length === 0) {
+        alert("لا توجد بيانات للحفظ");
+        return;
+    }
+
+    const messages = [];
+
     try {
-        const { data, error } = await supabaseClient.rpc('update_users_for_data_center', {
-            p_user_id: currentUserId,
-            p_payload: payload
-        });
-
-        if (error) {
-            alert("حدث خطأ أثناء الحفظ: " + error.message);
-            return;
+        if (updatePayload.length > 0) {
+            const { data, error } = await supabaseClient.rpc('update_users_for_data_center', {
+                p_user_id: currentUserId,
+                p_payload: updatePayload
+            });
+            if (error) {
+                alert("حدث خطأ أثناء حفظ التعديلات: " + error.message);
+                return;
+            }
+            if (!data || !data.success) {
+                alert(data?.message || "فشل حفظ التعديلات");
+                return;
+            }
+            messages.push(data.message || "تم حفظ التعديلات بنجاح!");
         }
 
-        if (data && data.success) {
-            alert(data.message || "تم حفظ التعديلات بنجاح!");
-            await loadUsersDataIntoSheetGrid();
-        } else {
-            alert(data?.message || "فشل حفظ التعديلات");
+        if (insertPayload.length > 0) {
+            const { data, error } = await supabaseClient.rpc('insert_users_for_data_center', {
+                p_user_id: currentUserId,
+                p_payload: insertPayload
+            });
+            if (error) {
+                alert((messages.length ? messages.join('\n') + '\n\n' : '') + "حدث خطأ أثناء إضافة المستخدمين الجدد: " + error.message);
+                return;
+            }
+            if (!data || !data.success) {
+                alert((messages.length ? messages.join('\n') + '\n\n' : '') + (data?.message || "فشلت إضافة المستخدمين الجدد"));
+                return;
+            }
+            messages.push(data.message || "تمت إضافة المستخدمين الجدد");
         }
+
+        alert(messages.join('\n'));
+        await loadUsersDataIntoSheetGrid();
     } catch (err) {
         console.error("Save users sheet error:", err);
         alert("حدث خطأ غير متوقع أثناء الحفظ");
@@ -387,6 +433,8 @@ let currentModelsSheetBrand = '';
 let currentModelsSheetLabel = '';
 let currentModelsSheetColumns = [];
 const MODELS_SHEET_READONLY_COLS = ['id', 'created_at', 'updated_at'];
+let currentUsersSheetColumns = [];
+const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at'];
 
 function escapeHtmlValue(val) {
     return String(val === null || val === undefined ? '' : val)
@@ -574,16 +622,16 @@ async function getModelsTableColumns(brandKey) {
     ];
 }
 
-// ---------- إضافة صف جديد فارغ للشيت ----------
-function addModelsSheetRow(focus = true) {
+// ---------- إضافة صف جديد فارغ للشيت (مشترك بين شيت الموديلات وشيت المستخدمين) ----------
+function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
     const table = document.getElementById('editableUsersTable');
     if (!table) return null;
     const tbody = table.querySelector('tbody');
 
     const tr = document.createElement('tr');
     tr.setAttribute('data-new', '1');
-    tr.innerHTML = currentModelsSheetColumns.map(col => {
-        if (MODELS_SHEET_READONLY_COLS.includes(col)) {
+    tr.innerHTML = columns.map(col => {
+        if (readOnlyCols.includes(col)) {
             return `<td class="p-2 font-mono text-slate-400 text-xs whitespace-nowrap min-w-[150px] text-center" dir="ltr">جديد</td>`;
         }
         return `
@@ -605,6 +653,14 @@ function addModelsSheetRow(focus = true) {
         }
     }
     return tr;
+}
+
+function addModelsSheetRow(focus = true) {
+    return appendBlankSheetRow(currentModelsSheetColumns, MODELS_SHEET_READONLY_COLS, focus);
+}
+
+function addUsersSheetRow(focus = true) {
+    return appendBlankSheetRow(currentUsersSheetColumns, USERS_SHEET_READONLY_COLS, focus);
 }
 
 // ---------- حفظ شيت الموديلات (تعديل الموجود + إضافة الجديد) ----------
