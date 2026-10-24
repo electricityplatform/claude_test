@@ -231,6 +231,8 @@ function enableExcelPasteAndDragFill() {
 
     // 1. اللصق الجماعي (Multi-cell Paste)
     inputs.forEach(input => {
+        if (input.dataset.bound) return;
+        input.dataset.bound = '1';
         input.addEventListener('paste', function(e) {
             e.preventDefault();
             const clipboardData = e.clipboardData || window.clipboardData;
@@ -248,7 +250,11 @@ function enableExcelPasteAndDragFill() {
             const startCellIndex = allCellsInRow.indexOf(currentCell);
 
             rowsData.forEach((rowText, rIdx) => {
-                const targetRow = allRows[startRowIndex + rIdx];
+                let targetRow = allRows[startRowIndex + rIdx];
+                if (!targetRow && typeof table.addRowFn === 'function') {
+                    targetRow = table.addRowFn(false);
+                    allRows.push(targetRow);
+                }
                 if (!targetRow) return;
 
                 const colsData = rowText.split('\t');
@@ -269,6 +275,8 @@ function enableExcelPasteAndDragFill() {
     // 2. السحب للتعبئة (Drag Fill Handle)
     const handles = table.querySelectorAll('.drag-handle');
     handles.forEach(handle => {
+        if (handle.dataset.bound) return;
+        handle.dataset.bound = '1';
         handle.addEventListener('mousedown', function(e) {
             e.preventDefault();
             const sourceCell = this.closest('td');
@@ -376,6 +384,9 @@ const DATA_CENTER_BRANDS = [
 
 let currentModelsSheetData = [];
 let currentModelsSheetBrand = '';
+let currentModelsSheetLabel = '';
+let currentModelsSheetColumns = [];
+const MODELS_SHEET_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 
 function escapeHtmlValue(val) {
     return String(val === null || val === undefined ? '' : val)
@@ -422,6 +433,7 @@ function renderDataCenterBrandsScreen() {
 async function renderDataCenterModelsSheet(brandKey, brandLabel) {
     closeSidebar();
     currentModelsSheetBrand = brandKey;
+    currentModelsSheetLabel = brandLabel;
 
     const container = document.getElementById('appContainer');
     container.innerHTML = `
@@ -435,6 +447,10 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                 <button type="button" onclick="renderDataCenterModelsSheet('${brandKey}', '${brandLabel}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span>تحديث</span>
+                </button>
+                <button type="button" onclick="addModelsSheetRow(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>إضافة صف</span>
                 </button>
                 <button type="button" onclick="saveModelsSheetToDB()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
@@ -507,11 +523,6 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${modelsList.length === 0 ? `
-                        <tr>
-                            <td colspan="${columns.length}" style="padding:24px !important" class="text-center text-gray-400 text-sm">لا توجد موديلات في هذا الجدول حالياً</td>
-                        </tr>
-                    ` : ''}
                     ${modelsList.map(row => `
                         <tr data-id="${escapeHtmlValue(row.id)}">
                             ${columns.map(col => {
@@ -532,7 +543,10 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
             </table>
         `;
 
+        currentModelsSheetColumns = columns;
+        document.getElementById('editableUsersTable').addRowFn = addModelsSheetRow;
         enableExcelPasteAndDragFill();
+        if (modelsList.length === 0) addModelsSheetRow(false);
     } catch (err) {
         console.error("Models sheet error:", err);
         sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
@@ -560,38 +574,116 @@ async function getModelsTableColumns(brandKey) {
     ];
 }
 
-// ---------- حفظ شيت الموديلات في قاعدة البيانات ----------
+// ---------- إضافة صف جديد فارغ للشيت ----------
+function addModelsSheetRow(focus = true) {
+    const table = document.getElementById('editableUsersTable');
+    if (!table) return null;
+    const tbody = table.querySelector('tbody');
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-new', '1');
+    tr.innerHTML = currentModelsSheetColumns.map(col => {
+        if (MODELS_SHEET_READONLY_COLS.includes(col)) {
+            return `<td class="p-2 font-mono text-slate-400 text-xs whitespace-nowrap min-w-[150px] text-center" dir="ltr">جديد</td>`;
+        }
+        return `
+            <td class="min-w-[160px] h-[38px] relative">
+                <input type="text" data-field="${escapeHtmlValue(col)}" value="" class="excel-input" dir="auto">
+                <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
+            </td>
+        `;
+    }).join('');
+    tbody.appendChild(tr);
+
+    enableExcelPasteAndDragFill();
+
+    if (focus) {
+        const firstInput = tr.querySelector('input.excel-input');
+        if (firstInput) {
+            firstInput.focus();
+            tr.scrollIntoView({ block: 'nearest' });
+        }
+    }
+    return tr;
+}
+
+// ---------- حفظ شيت الموديلات (تعديل الموجود + إضافة الجديد) ----------
 async function saveModelsSheetToDB() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
-    const payload = [];
+    const updatePayload = [];
+    const insertPayload = [];
+
     table.querySelectorAll('tbody tr').forEach(row => {
-        if (!row.hasAttribute('data-id')) return;
-        const rowData = { id: row.getAttribute('data-id') };
-        row.querySelectorAll('input[data-field]').forEach(input => {
-            const rawVal = input.value.trim();
-            rowData[input.getAttribute('data-field')] = rawVal !== '' ? rawVal : null;
-        });
-        payload.push(rowData);
+        const inputs = row.querySelectorAll('input[data-field]');
+
+        if (row.hasAttribute('data-id')) {
+            const rowData = { id: row.getAttribute('data-id') };
+            inputs.forEach(input => {
+                const rawVal = input.value.trim();
+                rowData[input.getAttribute('data-field')] = rawVal !== '' ? rawVal : null;
+            });
+            updatePayload.push(rowData);
+        } else {
+            const rowData = {};
+            let hasValue = false;
+            inputs.forEach(input => {
+                const rawVal = input.value.trim();
+                if (rawVal !== '') {
+                    rowData[input.getAttribute('data-field')] = rawVal;
+                    hasValue = true;
+                }
+            });
+            if (hasValue) insertPayload.push(rowData);
+        }
     });
 
-    try {
-        // دالة الحفظ الخاصة بكل ماركة: update_<brand>_models_for_data_center
-        const { data, error } = await supabaseClient.rpc(`update_${currentModelsSheetBrand}_models_for_data_center`, {
-            p_user_id: currentUserId,
-            p_payload: payload
-        });
+    if (updatePayload.length === 0 && insertPayload.length === 0) {
+        alert("لا توجد بيانات للحفظ");
+        return;
+    }
 
-        if (error) {
-            alert("حدث خطأ أثناء الحفظ: " + error.message);
-            return;
+    const messages = [];
+
+    try {
+        if (updatePayload.length > 0) {
+            const { data, error } = await supabaseClient.rpc(`update_${currentModelsSheetBrand}_models_for_data_center`, {
+                p_user_id: currentUserId,
+                p_payload: updatePayload
+            });
+            if (error) {
+                alert("حدث خطأ أثناء حفظ التعديلات: " + error.message);
+                return;
+            }
+            if (!data || !data.success) {
+                alert(data?.message || "فشل حفظ التعديلات");
+                return;
+            }
+            messages.push(data.message || "تم حفظ التعديلات");
         }
 
-        if (data && data.success) {
-            alert(data.message || "تم حفظ التعديلات بنجاح!");
-        } else {
-            alert(data?.message || "فشل حفظ التعديلات");
+        if (insertPayload.length > 0) {
+            const { data, error } = await supabaseClient.rpc(`insert_${currentModelsSheetBrand}_models_for_data_center`, {
+                p_user_id: currentUserId,
+                p_payload: insertPayload
+            });
+            if (error) {
+                alert((messages.length ? messages.join('\n') + '\n\n' : '') + "حدث خطأ أثناء إضافة الصفوف الجديدة: " + error.message);
+                return;
+            }
+            if (!data || !data.success) {
+                alert((messages.length ? messages.join('\n') + '\n\n' : '') + (data?.message || "فشلت إضافة الصفوف الجديدة"));
+                return;
+            }
+            messages.push(data.message || "تمت إضافة الصفوف الجديدة");
+        }
+
+        alert(messages.join('\n'));
+
+        // إعادة تحميل الشيت ليظهر الـ id للصفوف الجديدة
+        if (insertPayload.length > 0) {
+            await renderDataCenterModelsSheet(currentModelsSheetBrand, currentModelsSheetLabel);
         }
     } catch (err) {
         console.error("Save models sheet error:", err);
@@ -610,7 +702,7 @@ function exportModelsSheetToExcel() {
     const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
-        if (!row.hasAttribute('data-id')) return;
+        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '')) return;
         rowsData.push(Array.from(row.querySelectorAll('td')).map(td => {
             const input = td.querySelector('input.excel-input');
             return input ? input.value : td.innerText.trim();
