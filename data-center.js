@@ -167,7 +167,7 @@ async function loadUsersDataIntoSheetGrid() {
                                     }
                                     return `
                                         <td class="min-w-[160px] h-[38px] relative">
-                                            <input type="text" data-field="${col}" value="${val}" class="excel-input" dir="auto">
+                                            ${sheetCellInputHtml(col, val)}
                                             <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
                                         </td>
                                     `;
@@ -207,12 +207,12 @@ function exportUsersSheetToExcel() {
     const rows = table.querySelectorAll('tbody tr');
 
     rows.forEach(row => {
-        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '')) return;
+        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         const rowData = [];
         const cells = row.querySelectorAll('td');
 
         cells.forEach(td => {
-            const input = td.querySelector('input.excel-input');
+            const input = td.querySelector('.excel-input');
             const val = input ? input.value : td.innerText.trim();
             rowData.push(val);
         });
@@ -233,53 +233,85 @@ function exportUsersSheetToExcel() {
     XLSX.writeFile(workbook, fileName);
 }
 
+// ================= خلية الشيت (textarea بشكل سطر واحد) =================
+// نستخدم textarea بدل input لأن input يمسح الأسطر الجديدة عند اللصق (خصوصاً من كيبورد الموبايل)،
+// وبالتالي كانت كل القيم تتجمع في خلية واحدة. مع textarea نقدر نقسّم النص على الخلايا.
+function sheetCellInputHtml(col, val) {
+    return `<textarea rows="1" wrap="off" data-field="${escapeHtmlValue(col)}" class="excel-input" dir="auto" style="resize:none;overflow:hidden;display:block;white-space:nowrap;font-family:inherit;line-height:1.5;height:38px">${escapeHtmlValue(val)}</textarea>`;
+}
+
+// ================= توزيع نص منسوخ (صفوف وأعمدة) على خلايا الشيت =================
+// كل سطر = صف جديد، وكل Tab = عمود جديد، بدءاً من الخلية الواقف عليها.
+function distributePastedText(table, startInput, pastedData) {
+    const rowsData = pastedData.split(/\r\n|\n|\r/);
+    // إكسل يضيف سطراً فارغاً في النهاية
+    while (rowsData.length > 1 && rowsData[rowsData.length - 1] === '') rowsData.pop();
+    if (rowsData.length === 0) return;
+
+    const currentRow = startInput.closest('tr');
+    const currentCell = startInput.closest('td');
+    const allRows = Array.from(table.querySelectorAll('tbody tr'));
+    const startRowIndex = allRows.indexOf(currentRow);
+    const startCellIndex = Array.from(currentRow.querySelectorAll('td')).indexOf(currentCell);
+
+    rowsData.forEach((rowText, rIdx) => {
+        let targetRow = allRows[startRowIndex + rIdx];
+        if (!targetRow && typeof table.addRowFn === 'function') {
+            targetRow = table.addRowFn(false);
+            allRows.push(targetRow);
+        }
+        if (!targetRow) return;
+
+        const targetCells = Array.from(targetRow.querySelectorAll('td'));
+        rowText.split('\t').forEach((cellText, cIdx) => {
+            const targetCell = targetCells[startCellIndex + cIdx];
+            if (!targetCell) return;
+
+            const targetInput = targetCell.querySelector('.excel-input');
+            if (targetInput) {
+                targetInput.value = cellText.trim();
+            }
+        });
+    });
+}
+
 // ================= ميزات الإكسل (اللصق المتعدد والسحب للتعبئة) =================
 function enableExcelPasteAndDragFill() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
-    const inputs = table.querySelectorAll('input.excel-input');
+    const inputs = table.querySelectorAll('.excel-input');
 
-    // 1. اللصق الجماعي (Multi-cell Paste)
     inputs.forEach(input => {
         if (input.dataset.bound) return;
         input.dataset.bound = '1';
+
+        // 1. اللصق الجماعي: كل قيمة في خلية لوحدها
         input.addEventListener('paste', function(e) {
-            e.preventDefault();
             const clipboardData = e.clipboardData || window.clipboardData;
-            const pastedData = clipboardData.getData('Text');
-            if (!pastedData) return;
+            const pastedData = clipboardData ? clipboardData.getData('Text') : '';
+            // نص عادي بدون أسطر أو Tab: نترك اللصق الافتراضي
+            if (!pastedData || !/[\r\n\t]/.test(pastedData)) return;
+            e.preventDefault();
+            distributePastedText(table, this, pastedData);
+        });
 
-            const rowsData = pastedData.split(/\r\n|\n|\r/).filter(row => row !== '');
-            if (rowsData.length === 0) return;
+        // احتياطي: بعض كيبوردات الموبايل تلصق النص بدون حدث paste
+        input.addEventListener('input', function() {
+            if (/[\r\n\t]/.test(this.value)) {
+                distributePastedText(table, this, this.value);
+            }
+        });
 
-            const currentRow = this.closest('tr');
-            const currentCell = this.closest('td');
-            const allRows = Array.from(table.querySelectorAll('tbody tr'));
-            const startRowIndex = allRows.indexOf(currentRow);
-            const allCellsInRow = Array.from(currentRow.querySelectorAll('td'));
-            const startCellIndex = allCellsInRow.indexOf(currentCell);
-
-            rowsData.forEach((rowText, rIdx) => {
-                let targetRow = allRows[startRowIndex + rIdx];
-                if (!targetRow && typeof table.addRowFn === 'function') {
-                    targetRow = table.addRowFn(false);
-                    allRows.push(targetRow);
-                }
-                if (!targetRow) return;
-
-                const colsData = rowText.split('\t');
-                colsData.forEach((cellText, cIdx) => {
-                    const targetCells = Array.from(targetRow.querySelectorAll('td'));
-                    const targetCell = targetCells[startCellIndex + cIdx];
-                    if (!targetCell) return;
-
-                    const targetInput = targetCell.querySelector('input.excel-input');
-                    if (targetInput) {
-                        targetInput.value = cellText.trim();
-                    }
-                });
-            });
+        // Enter ينقل للخلية اللي تحت (زي إكسل) بدل ما يضيف سطر داخل الخلية
+        input.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const row = this.closest('tr');
+            const idx = Array.from(row.querySelectorAll('td')).indexOf(this.closest('td'));
+            const nextRow = row.nextElementSibling;
+            const next = nextRow ? nextRow.querySelectorAll('td')[idx]?.querySelector('.excel-input') : null;
+            if (next) next.focus();
         });
     });
 
@@ -291,7 +323,7 @@ function enableExcelPasteAndDragFill() {
         handle.addEventListener('mousedown', function(e) {
             e.preventDefault();
             const sourceCell = this.closest('td');
-            const sourceInput = sourceCell.querySelector('input.excel-input');
+            const sourceInput = sourceCell.querySelector('.excel-input');
             const sourceRow = sourceCell.closest('tr');
             const allRows = Array.from(table.querySelectorAll('tbody tr'));
             const sourceRowIndex = allRows.indexOf(sourceRow);
@@ -309,7 +341,7 @@ function enableExcelPasteAndDragFill() {
                     if (targetCellIndex === sourceCellIndex && targetRowIndex >= sourceRowIndex) {
                         for (let i = sourceRowIndex; i <= targetRowIndex; i++) {
                             const rowCells = Array.from(allRows[i].querySelectorAll('td'));
-                            const inputToFill = rowCells[sourceCellIndex]?.querySelector('input.excel-input');
+                            const inputToFill = rowCells[sourceCellIndex]?.querySelector('.excel-input');
                             if (inputToFill) {
                                 inputToFill.value = sourceVal;
                             }
@@ -338,7 +370,7 @@ async function saveUsersDataCenterSheetToDB() {
     const insertPayload = [];
 
     table.querySelectorAll('tbody tr').forEach(row => {
-        const inputs = row.querySelectorAll('input[data-field]');
+        const inputs = row.querySelectorAll('[data-field]');
 
         if (row.hasAttribute('data-id')) {
             const rowData = { id: row.getAttribute('data-id') };
@@ -580,7 +612,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                                 }
                                 return `
                                     <td class="min-w-[160px] h-[38px] relative">
-                                        <input type="text" data-field="${escapeHtmlValue(col)}" value="${escapeHtmlValue(val)}" class="excel-input" dir="auto">
+                                        ${sheetCellInputHtml(col, val)}
                                         <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
                                     </td>
                                 `;
@@ -636,7 +668,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
         }
         return `
             <td class="min-w-[160px] h-[38px] relative">
-                <input type="text" data-field="${escapeHtmlValue(col)}" value="" class="excel-input" dir="auto">
+                ${sheetCellInputHtml(col, '')}
                 <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
             </td>
         `;
@@ -646,7 +678,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
     enableExcelPasteAndDragFill();
 
     if (focus) {
-        const firstInput = tr.querySelector('input.excel-input');
+        const firstInput = tr.querySelector('.excel-input');
         if (firstInput) {
             firstInput.focus();
             tr.scrollIntoView({ block: 'nearest' });
@@ -672,7 +704,7 @@ async function saveModelsSheetToDB() {
     const insertPayload = [];
 
     table.querySelectorAll('tbody tr').forEach(row => {
-        const inputs = row.querySelectorAll('input[data-field]');
+        const inputs = row.querySelectorAll('[data-field]');
 
         if (row.hasAttribute('data-id')) {
             const rowData = { id: row.getAttribute('data-id') };
@@ -758,9 +790,9 @@ function exportModelsSheetToExcel() {
     const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
-        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '')) return;
+        if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         rowsData.push(Array.from(row.querySelectorAll('td')).map(td => {
-            const input = td.querySelector('input.excel-input');
+            const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
     });
