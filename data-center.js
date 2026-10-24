@@ -62,7 +62,7 @@ async function fetchAndDisplayDataCenterMenu() {
                 if (item.includes('جدول المستخدمين') || item.includes('بيانات المستخدمين')) {
                     clickAction = "renderUsersDataCenterSheet()";
                 } else if (item.includes('جداول الموديلات') || item.includes('الموديلات')) {
-                    clickAction = "renderBrandsScreen()";
+                    clickAction = "renderDataCenterBrandsScreen()";
                 }
 
                 return `
@@ -353,4 +353,168 @@ async function saveUsersDataCenterSheetToDB() {
         console.error("Save users sheet error:", err);
         alert("حدث خطأ غير متوقع أثناء الحفظ");
     }
+}
+
+// ================= جداول الموديلات في مركز البيانات =================
+// المفتاح (key) هو الجزء الذي يتوسط اسم الدالة: get_<key>_models_for_data_center
+const DATA_CENTER_BRANDS = [
+    { key: 'apple',   label: 'أبل - Apple' },
+    { key: 'samsung', label: 'سامسونج - Samsung' },
+    { key: 'xiaomi',  label: 'شاومي - Xiaomi' },
+    { key: 'redmi',   label: 'ريدمي - Redmi' },
+    { key: 'infinix', label: 'انفينكس - Infinix' },
+    { key: 'oppo',    label: 'أوبو - Oppo' },
+    { key: 'realme',  label: 'ريلمي - Realme' },
+    { key: 'huawei',  label: 'هواوي - Huawei' },
+    { key: 'vivo',    label: 'فيفو - Vivo' },
+    { key: 'honor',   label: 'هونر - Honor' },
+    { key: 'htc',     label: 'إتش تي سي - HTC' },
+    { key: 'nokia',   label: 'نوكيا - Nokia' },
+    { key: 'techno',  label: 'تكنو - Techno' },
+    { key: 'itel',    label: 'أيتل - Itel' }
+];
+
+let currentModelsSheetData = [];
+let currentModelsSheetBrand = '';
+
+function escapeHtmlValue(val) {
+    return String(val === null || val === undefined ? '' : val)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// ---------- شاشة اختيار الماركة ----------
+function renderDataCenterBrandsScreen() {
+    closeSidebar();
+
+    const container = document.getElementById('appContainer');
+    container.innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0 flex-wrap gap-2">
+            <button type="button" onclick="renderDataCenterScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>رجوع لمركز البيانات</span>
+            </button>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">جداول الموديلات - اختر الماركة</h2>
+        </div>
+
+        <div class="flex-1 overflow-y-auto space-y-3 p-1">
+            ${DATA_CENTER_BRANDS.map((brand, index) => {
+                const style = getRotatingCardStyle(index);
+                return `
+                    <div onclick="renderDataCenterModelsSheet('${brand.key}', '${brand.label}')" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
+                        <span class="font-bold text-gray-800" dir="auto">${brand.label}</span>
+                        <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    loadDynamicMenuIntoSidebar();
+}
+
+// ---------- شاشة جدول موديلات ماركة معينة ----------
+async function renderDataCenterModelsSheet(brandKey, brandLabel) {
+    closeSidebar();
+    currentModelsSheetBrand = brandKey;
+
+    const container = document.getElementById('appContainer');
+    container.innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center justify-between mb-3 flex-shrink-0 flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="renderDataCenterBrandsScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <span>رجوع للماركات</span>
+                </button>
+                <button type="button" onclick="renderDataCenterModelsSheet('${brandKey}', '${brandLabel}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>تحديث</span>
+                </button>
+                <button type="button" onclick="exportModelsSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>تصدير إلى إكسل</span>
+                </button>
+            </div>
+            <h2 id="modelsSheetTitle" class="text-sm sm:text-base font-bold text-gray-800">جدول موديلات ${brandLabel}</h2>
+        </div>
+
+        <div id="modelsSheetContainer" class="flex-1 overflow-y-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
+            <div class="text-center text-gray-400 text-sm py-8">جاري جلب الموديلات...</div>
+        </div>
+    `;
+
+    loadDynamicMenuIntoSidebar();
+
+    const sheetContainer = document.getElementById('modelsSheetContainer');
+    const titleElement = document.getElementById('modelsSheetTitle');
+
+    try {
+        const { data, error } = await supabaseClient.rpc(`get_${brandKey}_models_for_data_center`, {
+            p_user_id: currentUserId
+        });
+
+        if (error) {
+            sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">خطأ في جلب البيانات: ${escapeHtmlValue(error.message)}</div>`;
+            return;
+        }
+
+        let modelsList = [];
+        if (Array.isArray(data)) {
+            modelsList = data;
+        } else if (typeof data === 'string') {
+            try { modelsList = JSON.parse(data); } catch(e){}
+        }
+
+        currentModelsSheetData = modelsList;
+
+        if (titleElement) {
+            titleElement.innerText = `جدول موديلات ${brandLabel} (${modelsList.length})`;
+        }
+
+        if (modelsList.length === 0) {
+            sheetContainer.innerHTML = `<div class="text-center text-gray-500 py-12">لا توجد موديلات في هذا الجدول</div>`;
+            return;
+        }
+
+        const columns = Object.keys(modelsList[0]);
+
+        sheetContainer.innerHTML = `
+            <table class="w-full text-right text-xs sm:text-sm whitespace-nowrap border-collapse">
+                <thead class="bg-slate-100 text-slate-700">
+                    <tr>
+                        ${columns.map(col => `<th class="border border-slate-300 p-2.5 font-bold text-center">${escapeHtmlValue(col)}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    ${modelsList.map(row => `
+                        <tr class="hover:bg-blue-50/50 transition-all">
+                            ${columns.map(col => `<td class="border border-slate-300 p-2.5 text-gray-800 min-w-[120px]" dir="auto">${escapeHtmlValue(row[col])}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        console.error("Models sheet error:", err);
+        sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
+    }
+}
+
+// ---------- تصدير جدول الموديلات إلى XLSX ----------
+function exportModelsSheetToExcel() {
+    if (!currentModelsSheetData || currentModelsSheetData.length === 0) {
+        alert("لا توجد بيانات للتصدير حالياً");
+        return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(currentModelsSheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, currentModelsSheetBrand || 'models');
+
+    const fileName = `${currentModelsSheetBrand}_models_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
 }
