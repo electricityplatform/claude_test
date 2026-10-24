@@ -468,11 +468,19 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
             return;
         }
 
+        // الرد الجديد: { columns: [...], rows: [...] } — ويدعم أيضاً الشكل القديم (مصفوفة صفوف)
+        let payloadData = data;
+        if (typeof payloadData === 'string') {
+            try { payloadData = JSON.parse(payloadData); } catch(e){}
+        }
+
         let modelsList = [];
-        if (Array.isArray(data)) {
-            modelsList = data;
-        } else if (typeof data === 'string') {
-            try { modelsList = JSON.parse(data); } catch(e){}
+        let serverColumns = [];
+        if (Array.isArray(payloadData)) {
+            modelsList = payloadData;
+        } else if (payloadData && typeof payloadData === 'object') {
+            modelsList = Array.isArray(payloadData.rows) ? payloadData.rows : [];
+            serverColumns = Array.isArray(payloadData.columns) ? payloadData.columns : [];
         }
 
         currentModelsSheetData = modelsList;
@@ -481,17 +489,14 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
             titleElement.innerText = `جدول موديلات ${brandLabel} (${modelsList.length})`;
         }
 
-        if (modelsList.length === 0) {
-            const raw = escapeHtmlValue(JSON.stringify(data)).slice(0, 120);
-            sheetContainer.innerHTML = `
-                <div class="text-center text-gray-500 py-12 px-4 space-y-2">
-                    <p class="font-semibold">الدالة رجعت قائمة فارغة لهذا الجدول</p>
-                    <p class="text-xs text-gray-400" dir="ltr">${raw}</p>
-                </div>`;
-            return;
+        let columns = [];
+        if (serverColumns.length > 0) {
+            columns = serverColumns;
+        } else if (modelsList.length > 0) {
+            columns = Object.keys(modelsList[0]);
+        } else {
+            columns = await getModelsTableColumns(brandKey);
         }
-
-        const columns = Object.keys(modelsList[0]);
         const readOnlyCols = ['id', 'created_at', 'updated_at'];
 
         sheetContainer.innerHTML = `
@@ -502,6 +507,11 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                     </tr>
                 </thead>
                 <tbody>
+                    ${modelsList.length === 0 ? `
+                        <tr>
+                            <td colspan="${columns.length}" style="padding:24px !important" class="text-center text-gray-400 text-sm">لا توجد موديلات في هذا الجدول حالياً</td>
+                        </tr>
+                    ` : ''}
                     ${modelsList.map(row => `
                         <tr data-id="${escapeHtmlValue(row.id)}">
                             ${columns.map(col => {
@@ -529,6 +539,27 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
     }
 }
 
+// ---------- جلب أعمدة الجدول (للجداول الفارغة) ----------
+// يحاول أولاً دالة get_models_columns_for_data_center (أسماء الأعمدة الحقيقية)،
+// وإذا لم تكن موجودة يستخدم أسماء الأعمدة المتوقعة حسب نمط التسمية المستخدم في التطبيق.
+async function getModelsTableColumns(brandKey) {
+    try {
+        const { data, error } = await supabaseClient.rpc('get_models_columns_for_data_center', {
+            p_user_id: currentUserId,
+            p_table: `${brandKey}_models`
+        });
+        if (!error && Array.isArray(data) && data.length > 0) return data;
+    } catch (e) {}
+
+    return [
+        'id',
+        `${brandKey}_phone_name`,
+        `${brandKey}_phone_code`,
+        `${brandKey}_screen_compatibility`,
+        `${brandKey}_battery_model`
+    ];
+}
+
 // ---------- حفظ شيت الموديلات في قاعدة البيانات ----------
 async function saveModelsSheetToDB() {
     const table = document.getElementById('editableUsersTable');
@@ -536,6 +567,7 @@ async function saveModelsSheetToDB() {
 
     const payload = [];
     table.querySelectorAll('tbody tr').forEach(row => {
+        if (!row.hasAttribute('data-id')) return;
         const rowData = { id: row.getAttribute('data-id') };
         row.querySelectorAll('input[data-field]').forEach(input => {
             const rawVal = input.value.trim();
@@ -578,6 +610,7 @@ function exportModelsSheetToExcel() {
     const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
+        if (!row.hasAttribute('data-id')) return;
         rowsData.push(Array.from(row.querySelectorAll('td')).map(td => {
             const input = td.querySelector('input.excel-input');
             return input ? input.value : td.innerText.trim();
