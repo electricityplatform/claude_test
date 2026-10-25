@@ -84,6 +84,8 @@ async function loadDynamicMenuIntoSidebar() {
                     clickAction = "renderDataCenterScreen()";
                 } else if (item.includes('الإعدادات العامة')) {
                     clickAction = "renderGeneralSettingsScreen()";
+                } else if (item.includes('المنتجات المعروضة للبيع')) {
+                    clickAction = "renderMyProductsScreen()";
                 }
 
                 return `
