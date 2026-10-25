@@ -82,6 +82,8 @@ async function loadDynamicMenuIntoSidebar() {
                     clickAction = "renderUserProfilesScreen()";
                 } else if (item.includes('مركز البيانات')) {
                     clickAction = "renderDataCenterScreen()";
+                } else if (item.includes('الإعدادات العامة')) {
+                    clickAction = "renderGeneralSettingsScreen()";
                 }
 
                 return `
