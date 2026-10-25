@@ -56,7 +56,11 @@ async function fetchAndDisplayGeneralSettingsMenu() {
             box.innerHTML = itemsList.map((item, index) => {
                 const style = getRotatingCardStyle(index);
                 const safeItem = String(item).replace(/'/g, "\\'");
-                const clickAction = `alert('تم النقر على: ${safeItem}')`;
+                let clickAction = `alert('تم النقر على: ${safeItem}')`;
+
+                if (item.includes('المظهر')) {
+                    clickAction = "renderAppearanceScreen()";
+                }
 
                 return `
                     <div onclick="${clickAction}" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
@@ -72,4 +76,83 @@ async function fetchAndDisplayGeneralSettingsMenu() {
         console.error(err);
         box.innerHTML = `<div class="text-center text-red-400 text-sm py-8">خطأ في الاتصال</div>`;
     }
+}
+
+
+// ================= نظام المظهر (تلقائي / فاتح / داكن) =================
+function getThemeMode() {
+    try { return localStorage.getItem('theme') || 'system'; } catch (e) { return 'system'; }
+}
+
+function applyTheme(mode) {
+    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = mode === 'dark' || (mode === 'system' && systemDark);
+    document.documentElement.classList.toggle('dark', isDark);
+}
+
+function setThemeMode(mode) {
+    try { localStorage.setItem('theme', mode); } catch (e) {}
+    applyTheme(mode);
+    renderThemeOptions();
+}
+
+// لو الوضع "تلقائي" وتغيّر مظهر الجهاز، نتبعه فوراً
+if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (getThemeMode() === 'system') applyTheme('system');
+    });
+}
+
+// ================= شاشة المظهر =================
+function renderAppearanceScreen() {
+    closeSidebar();
+
+    const container = document.getElementById('appContainer');
+    container.innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="renderGeneralSettingsScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <span>رجوع</span>
+                </button>
+            </div>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800 flex items-center gap-2">
+                <span class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+                المظهر
+            </h2>
+        </div>
+
+        <div id="themeOptionsContainer" class="flex-1 overflow-y-auto space-y-2 p-1"></div>
+    `;
+
+    loadDynamicMenuIntoSidebar();
+    renderThemeOptions();
+}
+
+function renderThemeOptions() {
+    const box = document.getElementById('themeOptionsContainer');
+    if (!box) return;
+
+    const current = getThemeMode();
+    const options = [
+        { key: 'system', title: 'الإعداد التلقائي للنظام', desc: 'تفعيل المظهر الداكن عند تفعيل المظهر الداكن للجهاز' },
+        { key: 'light',  title: 'فاتح', desc: '' },
+        { key: 'dark',   title: 'داكن', desc: '' }
+    ];
+
+    box.innerHTML = options.map(opt => {
+        const selected = opt.key === current;
+        return `
+            <div onclick="setThemeMode('${opt.key}')" class="w-full bg-gray-50 border ${selected ? 'border-blue-400' : 'border-gray-200'} p-4 rounded-2xl shadow-sm flex items-center gap-4 cursor-pointer transition-all">
+                <span class="w-6 h-6 flex-shrink-0 rounded-full border-2 ${selected ? 'border-blue-600' : 'border-gray-400'} flex items-center justify-center">
+                    ${selected ? '<span class="w-3 h-3 rounded-full bg-blue-600"></span>' : ''}
+                </span>
+                <div class="flex-1 text-right">
+                    <div class="font-bold text-gray-800 text-sm sm:text-base">${opt.title}</div>
+                    ${opt.desc ? `<div class="text-gray-500 text-xs sm:text-sm mt-1 leading-relaxed">${opt.desc}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
