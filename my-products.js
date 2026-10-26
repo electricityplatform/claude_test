@@ -294,7 +294,8 @@ function sdcRenderPriceTable(columns, rows) {
     const body = document.getElementById('sdcBody');
     if (!body) return;
 
-    if (!columns.length || !rows.length) {
+    // الجدول يظهر حتى لو مفيش صفوف؛ الرسالة بس لو السيرفر ما رجّعش أعمدة أصلاً
+    if (!columns.length) {
         body.innerHTML = `<div class="text-center text-gray-500 py-12 bg-gray-50 rounded-2xl border border-gray-200"><p class="font-semibold">لا توجد بيانات في هذا الجدول</p></div>`;
         return;
     }
@@ -359,17 +360,19 @@ function sdcApplyFilter(q) {
         if (!needle || String(r[key] ?? '').toLowerCase().includes(needle)) visible.push(idx);
     });
 
-    tbody.innerHTML = visible.map(idx => {
+    tbody.innerHTML = visible.length === 0
+        ? emptyTableRowHtml(sdcTableCols.length, needle ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد صفوف في هذا الجدول')
+        : visible.map(idx => {
         const r = sdcWorkRows[idx];
         return `
         <tr data-idx="${idx}">
             ${sdcTableCols.map((c, i) => {
                 const v = (r[c] === null || r[c] === undefined) ? '' : r[c];
                 if (sdcIsReadonlyCol(c, i)) {
-                    return `<td class="min-w-[160px] h-[38px] whitespace-nowrap"><span class="block px-2.5 py-2 text-[13px] ${i === 0 ? 'font-semibold text-gray-800' : 'text-slate-500 font-mono'}" dir="auto">${sdcEsc(v)}</span></td>`;
+                    return `<td class="whitespace-nowrap"><span class="block px-2.5 py-2 text-[13px] ${i === 0 ? 'font-semibold text-gray-800' : 'text-slate-500 font-mono'}" dir="auto">${sdcEsc(v)}</span></td>`;
                 }
                 return `
-                    <td class="min-w-[160px] h-[38px] relative">
+                    <td class="relative">
                         ${sheetCellInputHtml(c, v)}
                         <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
                     </td>`;
