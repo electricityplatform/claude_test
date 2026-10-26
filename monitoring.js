@@ -95,7 +95,7 @@ async function fetchAndDisplayLoginHistory() {
         }
 
         let contentHtml = "";
-        if (historyList.length > 0) {
+        {
             contentHtml = `
                 <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
                     <table class="w-full text-right text-xs sm:text-sm whitespace-nowrap">
@@ -123,7 +123,7 @@ async function fetchAndDisplayLoginHistory() {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
-                            ${historyList.map(item => {
+                            ${historyList.length === 0 ? emptyTableRowHtml(19, 'لا توجد سجلات دخول متاحة حالياً') : historyList.map(item => {
                                 let rawTime = item.login_times || '';
                                 let datePart = '---';
                                 let timePart = '';
@@ -174,12 +174,6 @@ async function fetchAndDisplayLoginHistory() {
                             }).join('')}
                         </tbody>
                     </table>
-                </div>
-            `;
-        } else {
-            contentHtml = `
-                <div class="text-center text-gray-500 py-12 bg-gray-50 rounded-2xl border border-gray-200">
-                    <p class="font-semibold">لا توجد سجلات دخول متاحة حالياً</p>
                 </div>
             `;
         }
@@ -258,7 +252,7 @@ async function fetchAndDisplayActiveUsers() {
         }
 
         let contentHtml = "";
-        if (activeUsers.length > 0) {
+        {
             contentHtml = `
                 <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
                     <table class="w-full text-right text-xs sm:text-sm whitespace-nowrap">
@@ -285,7 +279,7 @@ async function fetchAndDisplayActiveUsers() {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
-                            ${activeUsers.map(user => `
+                            ${activeUsers.length === 0 ? emptyTableRowHtml(18, 'لا يوجد مستخدمون نشطون في آخر 21 ثانية') : activeUsers.map(user => `
                                 <tr class="hover:bg-blue-50/50 transition-all">
                                     <td class="p-3.5 font-bold text-blue-600" dir="auto">${user.user_role || '---'}</td>
                                     <td class="p-3.5 font-semibold text-gray-800" dir="auto">${user.user_name || '---'}</td>
@@ -309,12 +303,6 @@ async function fetchAndDisplayActiveUsers() {
                             `).join('')}
                         </tbody>
                     </table>
-                </div>
-            `;
-        } else {
-            contentHtml = `
-                <div class="text-center text-gray-500 py-12 bg-gray-50 rounded-2xl border border-gray-200">
-                    <p class="font-semibold">لا يوجد مستخدمون نشطون في آخر 21 ثانية</p>
                 </div>
             `;
         }
