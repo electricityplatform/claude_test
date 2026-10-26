@@ -442,7 +442,7 @@ async function saveUsersDataCenterSheetToDB() {
 }
 
 // ================= جداول الموديلات في مركز البيانات =================
-// المفتاح (key) هو الجزء الذي يتوسط اسم الدالة: get_<key>_models_for_data_center
+// المفتاح (key) هو اسم الماركة اللي بتتبعت للدالة الواحدة get_models_for_data_center
 const DATA_CENTER_BRANDS = [
     { key: 'apple',   label: 'أبل - Apple' },
     { key: 'samsung', label: 'سامسونج - Samsung' },
@@ -555,8 +555,9 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
     const titleElement = document.getElementById('modelsSheetTitle');
 
     try {
-        const { data, error } = await supabaseClient.rpc(`get_${brandKey}_models_for_data_center`, {
-            p_user_id: currentUserId
+        const { data, error } = await supabaseClient.rpc('get_models_for_data_center', {
+            p_user_id: currentUserId,
+            p_brand: brandKey
         });
 
         if (error) {
