@@ -289,7 +289,10 @@ function sdcIsReadonlyCol(col) {
 // ---------- جدول الأسعار بشكل شيت قابل للتعديل (نفس نمط شيت المستخدمين والموديلات) ----------
 function sdcRenderPriceTable(columns, rows) {
     sdcTableCols = columns;
-    sdcSearchCol = columns.find(c => c !== 'id') || columns[0];
+    // نحدد عمود الاسم/المجموعة باسمه (مش بترتيبه)، والاحتياطي أول عمود غير id
+    sdcSearchCol = columns.find(c => /_names$|_compatibility_groups$/.test(c))
+                || columns.find(c => c !== 'id')
+                || columns[0];
     sdcTableRows = rows;
     sdcWorkRows = rows.map(r => ({ ...r }));
 
