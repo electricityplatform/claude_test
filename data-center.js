@@ -488,6 +488,7 @@ let currentModelsSheetData = [];
 let currentModelsSheetBrand = '';
 let currentModelsSheetLabel = '';
 let currentModelsSheetColumns = [];
+let currentModelsSheetCanManage = false;
 const MODELS_SHEET_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 let currentUsersSheetColumns = [];
 const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at', 'seller_data_center_created'];
@@ -499,6 +500,13 @@ const USERS_SHEET_DEFAULT_COLUMNS = [
     'delivery_city', 'delivery_region', 'delivery_area',
     'phone_number', 'whatsapp_number', 'gmail', 'password'
 ];
+
+// الرتب اللي مسموح لها تدرج/تحذف صفوف في جدول الموديلات (نفس الرتب في profile.js)
+// الصلاحية الفعلية بتتأكد منها دوال الداتابيز كمان، ده بس لإظهار/إخفاء الأزرار.
+const DATA_CENTER_ROW_MANAGER_ROLES = ['أدمن', 'admin', 'مدير', 'head', 'manager'];
+function isDataCenterRowManager() {
+    return DATA_CENTER_ROW_MANAGER_ROLES.includes(String(currentUserRole || '').trim());
+}
 
 function escapeHtmlValue(val) {
     return String(val === null || val === undefined ? '' : val)
@@ -537,6 +545,19 @@ function renderDataCenterBrandsScreen() {
     `;
 
     loadDynamicMenuIntoSidebar();
+}
+
+// ---------- أزرار الصف (إدراج قبله / حذف) - للأدمن والمدير فقط ----------
+function modelsRowActionsHtml(id) {
+    const n = Number(id);
+    if (!Number.isFinite(n)) return '<td class="sheet-actions"></td>';
+    return `
+        <td class="sheet-actions">
+            <div class="flex items-center gap-1 px-2 py-1 whitespace-nowrap">
+                <button type="button" onclick="insertModelRowAt(${n})" title="إدراج صف جديد في مكان هذا الصف (وهو وما بعده ينزلوا خطوة)" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">+ إدراج</button>
+                <button type="button" onclick="deleteModelRow(${n})" title="حذف هذا الصف" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">حذف</button>
+            </div>
+        </td>`;
 }
 
 // ---------- شاشة جدول موديلات ماركة معينة (شيت قابل للتعديل) ----------
@@ -628,11 +649,16 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
         }
         const readOnlyCols = ['id', 'created_at', 'updated_at'];
 
+        // أزرار إدراج/حذف الصف: للأدمن والمدير فقط
+        const canManageRows = isDataCenterRowManager();
+        currentModelsSheetCanManage = canManageRows;
+
         sheetContainer.innerHTML = `
             <table id="editableUsersTable">
                 <thead>
                     <tr>
                         ${columns.map(col => `<th>${escapeHtmlValue(col)}</th>`).join('')}
+                        ${canManageRows ? '<th class="sheet-actions-th">إجراءات</th>' : ''}
                     </tr>
                 </thead>
                 <tbody>
@@ -650,6 +676,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
+                            ${canManageRows ? modelsRowActionsHtml(row.id) : ''}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -663,6 +690,88 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
     } catch (err) {
         console.error("Models sheet error:", err);
         sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
+    }
+}
+
+// ---------- إدراج صف جديد في مكان معين (أدمن / مدير) ----------
+// الصف الحالي رقم position وما بعده بينزلوا خطوة، والموديل الجديد ياخد رقم position.
+async function insertModelRowAt(position) {
+    if (!isDataCenterRowManager()) {
+        alert('هذا الإجراء للأدمن والمدير فقط');
+        return;
+    }
+
+    const keyCol = `${currentModelsSheetBrand}_model_names`;
+    const name = prompt(
+        `اكتب اسم الموديل الجديد ليتم إدراجه في المكان رقم ${position}.\n` +
+        `ملاحظة: الشيت هيتحدّث بعد الإدراج، فاحفظ أي تعديلات أخرى الأول.`
+    );
+    if (name === null) return;
+
+    const cleanName = name.trim();
+    if (!cleanName) {
+        alert('اسم الموديل مطلوب');
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient.rpc('insert_model_at_position_for_data_center', {
+            p_user_id: currentUserId,
+            p_brand: currentModelsSheetBrand,
+            p_position: position,
+            p_payload: { [keyCol]: cleanName }
+        });
+        if (error) {
+            alert('حدث خطأ أثناء الإدراج: ' + error.message);
+            return;
+        }
+        if (!data || !data.success) {
+            alert(data?.message || 'فشل الإدراج');
+            return;
+        }
+        await renderDataCenterModelsSheet(currentModelsSheetBrand, currentModelsSheetLabel);
+    } catch (err) {
+        console.error('Insert model at position error:', err);
+        alert('حدث خطأ غير متوقع أثناء الإدراج');
+    }
+}
+
+// ---------- حذف صف (أدمن / مدير) ----------
+// الصف بيتمسح والأرقام اللي بعده بترجع خطوة لورا.
+async function deleteModelRow(id) {
+    if (!isDataCenterRowManager()) {
+        alert('هذا الإجراء للأدمن والمدير فقط');
+        return;
+    }
+
+    const keyCol = `${currentModelsSheetBrand}_model_names`;
+    const rowData = currentModelsSheetData.find(r => String(r.id) === String(id));
+    const label = rowData && rowData[keyCol] ? `"${rowData[keyCol]}" (رقم ${id})` : `رقم ${id}`;
+
+    if (!confirm(
+        `هتحذف الموديل ${label} نهائياً.\n` +
+        `الأرقام اللي بعده هترجع خطوة لورا، وأسعاره عند التجار هتتمسح.\n` +
+        `الشيت هيتحدّث بعد الحذف، فاحفظ أي تعديلات أخرى الأول. متأكد؟`
+    )) return;
+
+    try {
+        const { data, error } = await supabaseClient.rpc('delete_model_at_position_for_data_center', {
+            p_user_id: currentUserId,
+            p_brand: currentModelsSheetBrand,
+            p_id: Number(id)
+        });
+        if (error) {
+            alert('حدث خطأ أثناء الحذف: ' + error.message);
+            return;
+        }
+        if (!data || !data.success) {
+            alert(data?.message || 'فشل الحذف');
+            return;
+        }
+        await renderDataCenterModelsSheet(currentModelsSheetBrand, currentModelsSheetLabel);
+    } catch (err) {
+        console.error('Delete model row error:', err);
+        alert('حدث خطأ غير متوقع أثناء الحذف');
     }
 }
 
@@ -688,7 +797,8 @@ async function getModelsTableColumns(brandKey) {
 }
 
 // ---------- إضافة صف جديد فارغ للشيت (مشترك بين شيت الموديلات وشيت المستخدمين) ----------
-function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
+// extraCellsHtml: خلايا إضافية في آخر الصف (مثلاً خلية الإجراءات في شيت الموديلات)
+function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml = '') {
     const table = document.getElementById('editableUsersTable');
     if (!table) return null;
     const tbody = table.querySelector('tbody');
@@ -705,7 +815,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
                 <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
             </td>
         `;
-    }).join('');
+    }).join('') + extraCellsHtml;
     tbody.appendChild(tr);
 
     enableExcelPasteAndDragFill();
@@ -721,7 +831,9 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
 }
 
 function addModelsSheetRow(focus = true) {
-    return appendBlankSheetRow(currentModelsSheetColumns, MODELS_SHEET_READONLY_COLS, focus);
+    // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية
+    const extra = currentModelsSheetCanManage ? '<td class="sheet-actions"></td>' : '';
+    return appendBlankSheetRow(currentModelsSheetColumns, MODELS_SHEET_READONLY_COLS, focus, extra);
 }
 
 function addUsersSheetRow(focus = true) {
@@ -822,11 +934,12 @@ function exportModelsSheetToExcel() {
         return;
     }
 
-    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+    // عمود/خلايا الإجراءات (إدراج/حذف) مش بتتصدّر
+    const headers = Array.from(table.querySelectorAll('thead th:not(.sheet-actions-th)')).map(th => th.innerText.trim());
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
-        rowsData.push(Array.from(row.querySelectorAll('td')).map(td => {
+        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
