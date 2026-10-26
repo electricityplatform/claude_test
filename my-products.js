@@ -175,9 +175,37 @@ async function sdcShowBrands() {
         return;
     }
 
-    body.innerHTML = sdcBrands.length
+    body.innerHTML = (sdcBrands.length
         ? sdcBrands.map((b, i) => sdcListCard(b, `sdcOpenBrand(${i})`, i)).join('')
-        : `<div class="text-center text-gray-500 py-6">لا توجد ماركات متاحة حالياً</div>`;
+        : `<div class="text-center text-gray-500 py-6">لا توجد ماركات متاحة حالياً</div>`)
+        + `
+        <button type="button" onclick="sdcDeleteDataCenter()" class="w-full mt-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer">
+            حذف مركز بيانات منتجاتي
+        </button>`;
+}
+
+let sdcDeleting = false;
+async function sdcDeleteDataCenter() {
+    if (sdcDeleting) return;
+    if (!confirm('سيتم حذف مركز بيانات منتجاتك وكل الأسعار التي أدخلتها نهائياً، ولا يمكن التراجع. هل أنت متأكد؟')) return;
+
+    sdcDeleting = true;
+    try {
+        const { error } = await supabaseClient.rpc('delete_seller_data_center', {
+            p_seller_id: currentUserId
+        });
+
+        if (error) {
+            showSystemAlert("فشل حذف مركز البيانات", currentUserId || "غير معروف", "delete_seller_data_center", error.message);
+            return;
+        }
+
+        renderMyProductsScreen();
+    } catch (err) {
+        showSystemAlert("استثناء غير متوقع", currentUserId || "غير معروف", "تنفيذ RPC", err.message);
+    } finally {
+        sdcDeleting = false;
+    }
 }
 
 // ---------- 4) قطع الغيار ----------
