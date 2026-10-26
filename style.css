@@ -7,7 +7,9 @@ body {
 /* تنسيق الجدول ليصبح شبكياً متصلاً تماماً مثل Excel */
 #editableUsersTable {
     border-collapse: collapse;
-    width: 100%;
+    /* العرض على قد المحتوى، ويتمدد لعرض الشاشة لو المحتوى أقل منها */
+    width: max-content;
+    min-width: 100%;
     background-color: #ffffff;
 }
 #editableUsersTable th, #editableUsersTable td {
@@ -25,10 +27,37 @@ body {
     white-space: nowrap;
 }
 
+/* خلية الشيت: تتمدد طولاً وعرضاً حسب النص اللي جواها.
+   السر: نسخة شبحية من النص (::after من data-value) بتحدد حجم الخلية،
+   والـ textarea فوقها بنفس المساحة بالظبط. */
+.sheet-cell {
+    display: grid;
+    width: 100%;
+    min-width: 64px;
+}
+.sheet-cell::after,
+.sheet-cell > .excel-input {
+    grid-area: 1 / 1 / 2 / 2;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 8px 10px !important;
+    white-space: pre;
+}
+.sheet-cell::after {
+    content: attr(data-value) " ";
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* حقل الإدخال يملأ الخلية بالكامل */
 .excel-input {
     width: 100%;
     height: 100%;
+    display: block;
+    resize: none;
+    overflow: hidden;
     border: none !important;
     outline: none !important;
     background: transparent !important;
