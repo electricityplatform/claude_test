@@ -68,7 +68,7 @@ async function renderBrandsScreen(partName = '') {
     if (partName) selectedPart = partName;
 
     document.getElementById('appContainer').innerHTML = `
-        ${getHeaderTemplate()}
+        ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
             <button onclick="renderMainDashboard()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -187,7 +187,7 @@ async function renderModelsScreen(brand) {
     }
 
     const html = `
-        ${getHeaderTemplate()}
+        ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
             <button onclick="renderBrandsScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -211,7 +211,7 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
     currentBatteryModel = batteryModel ? decodeURIComponent(batteryModel) : '';
 
     document.getElementById('appContainer').innerHTML = `
-        ${getHeaderTemplate()}
+        ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
             <button onclick="renderModelsScreen('${selectedBrand}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
