@@ -126,3 +126,16 @@ function showSystemAlert(title, idStatus, menuStatus, errorDetails = "") {
 function getRotatingCardStyle(index) {
     return { bg: "bg-gray-50 hover:bg-blue-50/60", border: "border-gray-200 hover:border-blue-200", text: "text-gray-800", icon: "text-gray-400 group-hover:text-blue-500" };
 }
+
+
+// ================= مساعدات الجداول (مشتركة بين كل الشاشات) =================
+// صف رسالة "لا توجد بيانات" داخل الجدول نفسه: الجدول يظهر دائماً بعناوينه حتى لو فاضي.
+// الرسالة ثابتة (sticky) عشان تفضل ظاهرة حتى لو الجدول عريض ومحتاج سكرول أفقي.
+function emptyTableRowHtml(colspan, message) {
+    return `
+        <tr>
+            <td colspan="${colspan}" class="p-0">
+                <div class="sticky right-0 w-72 max-w-[85vw] p-6 text-center text-gray-400 text-sm font-semibold">${message}</div>
+            </td>
+        </tr>`;
+}
