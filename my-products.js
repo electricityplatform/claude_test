@@ -233,7 +233,9 @@ async function sdcOpenBrand(index) {
 }
 
 // ---------- 5) جدول الأسعار ----------
+let sdcPartIndex = -1;
 async function sdcOpenPart(index) {
+    sdcPartIndex = index;
     sdcPart = sdcParts[index];
 
     const brandSlug = sdcBrandSlug(sdcBrand);
@@ -271,6 +273,7 @@ async function sdcOpenPart(index) {
 let sdcTableCols = [];
 let sdcTableRows = [];
 
+// ---------- جدول الأسعار بشكل شيت (نفس نمط شيت المستخدمين والموديلات) ----------
 function sdcRenderPriceTable(columns, rows) {
     sdcTableCols = columns;
     sdcTableRows = rows;
@@ -283,17 +286,31 @@ function sdcRenderPriceTable(columns, rows) {
         return;
     }
 
+    // الحاوية تتحول لعمود يملأ الشاشة عشان الشيت ياخد المساحة المتاحة زي إخواته
+    body.className = 'flex-1 flex flex-col gap-2 overflow-hidden p-1';
+
     body.innerHTML = `
-        <input id="sdcFilter" type="text" oninput="sdcApplyFilter(this.value)" placeholder="ابحث في ${sdcEsc(columns[0])}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <div class="overflow-auto rounded-2xl border border-gray-200 max-h-[60vh]">
-            <table class="min-w-full text-xs sm:text-sm text-right">
-                <thead class="bg-gray-100 text-gray-700 sticky top-0">
-                    <tr>${columns.map(c => `<th class="px-3 py-2 font-bold whitespace-nowrap border-b border-gray-200">${sdcEsc(c)}</th>`).join('')}</tr>
+        <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
+            <button type="button" onclick="sdcOpenPart(${sdcPartIndex})" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>تحديث</span>
+            </button>
+            <button type="button" onclick="sdcExportPriceSheet()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>تصدير إلى إكسل</span>
+            </button>
+            <input id="sdcFilter" type="text" oninput="sdcApplyFilter(this.value)" placeholder="ابحث في ${sdcEsc(columns[0])}" class="flex-1 min-w-[140px] px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div id="sdcSheetContainer" class="flex-1 overflow-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
+            <table id="editableUsersTable">
+                <thead>
+                    <tr>${columns.map(c => `<th class="sticky top-0 z-10">${sdcEsc(c)}</th>`).join('')}</tr>
                 </thead>
                 <tbody id="sdcTableBody"></tbody>
             </table>
         </div>
-        <div id="sdcRowsCount" class="text-xs text-gray-500 text-center"></div>
+        <div id="sdcRowsCount" class="text-xs text-gray-500 text-center flex-shrink-0"></div>
     `;
     sdcApplyFilter('');
 }
@@ -308,15 +325,33 @@ function sdcApplyFilter(q) {
         ? sdcTableRows.filter(r => String(r[key] ?? '').toLowerCase().includes(needle))
         : sdcTableRows;
 
+    // padding الخلايا مصفّر في ستايل الشيت، فالمسافة بتيجي من الـ span الداخلي
     tbody.innerHTML = rows.map(r => `
-        <tr class="border-b border-gray-100">
+        <tr>
             ${sdcTableCols.map((c, i) => {
                 const v = r[c];
-                const shown = (v === null || v === undefined || v === '') ? '—' : v;
-                return `<td class="px-3 py-2 whitespace-nowrap ${i === 0 ? 'font-semibold text-gray-800' : 'text-gray-600'}" dir="auto">${sdcEsc(shown)}</td>`;
+                const shown = (v === null || v === undefined || v === '') ? '' : v;
+                return `<td class="min-w-[160px] h-[38px] whitespace-nowrap"><span class="block px-2.5 py-2 text-[13px] ${i === 0 ? 'font-semibold text-gray-800' : 'text-gray-600'}" dir="auto">${sdcEsc(shown)}</span></td>`;
             }).join('')}
         </tr>`).join('');
 
     const count = document.getElementById('sdcRowsCount');
     if (count) count.textContent = `${rows.length} صف`;
+}
+
+// ---------- تصدير شيت الأسعار إلى XLSX (كل الصفوف بغض النظر عن البحث) ----------
+function sdcExportPriceSheet() {
+    if (!sdcTableCols.length || !sdcTableRows.length) {
+        alert("لا توجد بيانات للتصدير حالياً");
+        return;
+    }
+
+    const data = [sdcTableCols, ...sdcTableRows.map(r => sdcTableCols.map(c => r[c] ?? ''))];
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    const sheetName = String(sdcPart || 'prices').replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName || 'prices');
+
+    const fileName = `${sdcBrandSlug(sdcBrand)}_${sdcPartSuffix(sdcPart)}_prices_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
 }
