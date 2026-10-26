@@ -161,7 +161,7 @@ async function loadUsersDataIntoSheetGrid() {
                             <tr data-id="${user.id}">
                                 ${columns.map(col => {
                                     const val = user[col] !== null && user[col] !== undefined ? user[col] : '';
-                                    const isId = (col === 'id' || col === 'created_at' || col === 'last_active_at');
+                                    const isId = USERS_SHEET_READONLY_COLS.includes(col);
                                     if (isId) {
                                         return sheetReadonlyCellHtml(val);
                                     }
@@ -490,7 +490,7 @@ let currentModelsSheetLabel = '';
 let currentModelsSheetColumns = [];
 const MODELS_SHEET_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 let currentUsersSheetColumns = [];
-const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at'];
+const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at', 'seller_data_center_created'];
 // أعمدة افتراضية لشيت المستخدمين لما الجدول يكون فاضي (راجعها وعدّلها لو أعمدة جدول users عندك مختلفة)
 const USERS_SHEET_DEFAULT_COLUMNS = [
     'id', 'created_at', 'last_active_at', 'user_role', 'user_name',
