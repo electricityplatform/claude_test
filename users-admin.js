@@ -68,7 +68,7 @@ async function fetchAndDisplayNewUsers() {
             `;
         }
 
-        if (newUsersList.length > 0) {
+        {
             if (tableContainer) {
                 tableContainer.innerHTML = `
                     <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
@@ -98,7 +98,7 @@ async function fetchAndDisplayNewUsers() {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
-                                ${newUsersList.map(user => {
+                                ${newUsersList.length === 0 ? emptyTableRowHtml(20, 'لا توجد حسابات مسجلة في آخر ٢٤ ساعة') : newUsersList.map(user => {
                                     let rawTime = user.created_at || '';
                                     let datePart = '---';
                                     let timePart = '';
@@ -146,10 +146,6 @@ async function fetchAndDisplayNewUsers() {
                         </table>
                     </div>
                 `;
-            }
-        } else {
-            if (tableContainer) {
-                tableContainer.innerHTML = `<div class="text-center text-gray-500 py-12 bg-gray-50 rounded-2xl border border-gray-200"><p class="font-semibold">لا توجد حسابات مسجلة في آخر ٢٤ ساعة</p></div>`;
             }
         }
 
