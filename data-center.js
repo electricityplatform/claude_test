@@ -737,8 +737,9 @@ async function saveModelsSheetToDB() {
 
     try {
         if (updatePayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc(`update_${currentModelsSheetBrand}_models_for_data_center`, {
+            const { data, error } = await supabaseClient.rpc('update_models_for_data_center', {
                 p_user_id: currentUserId,
+                p_brand: currentModelsSheetBrand,
                 p_payload: updatePayload
             });
             if (error) {
