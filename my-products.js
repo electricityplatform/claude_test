@@ -234,6 +234,7 @@ async function sdcOpenBrand(index) {
 
 // ---------- 5) جدول الأسعار ----------
 let sdcPartIndex = -1;
+let sdcTableName = '';
 async function sdcOpenPart(index) {
     sdcPartIndex = index;
     sdcPart = sdcParts[index];
@@ -247,6 +248,7 @@ async function sdcOpenPart(index) {
     }
 
     const tableName = `${brandSlug}_model_${partSuffix}_prices`;
+    sdcTableName = tableName;
     const backIndex = sdcBrands.indexOf(sdcBrand);
 
     sdcShell(`sdcOpenBrand(${backIndex})`, `${sdcPart} - ${sdcBrand}`, 'sdcBody');
@@ -271,12 +273,23 @@ async function sdcOpenPart(index) {
 }
 
 let sdcTableCols = [];
-let sdcTableRows = [];
+let sdcTableRows = [];   // النسخة الأصلية من السيرفر (للمقارنة وقت الحفظ)
+let sdcWorkRows = [];    // النسخة اللي بيتعدل عليها (عشان التعديلات ما تضيعش مع البحث)
 
-// ---------- جدول الأسعار بشكل شيت (نفس نمط شيت المستخدمين والموديلات) ----------
+// دالة الحفظ في قاعدة البيانات (لازم تكون موجودة في Supabase بنفس الباراميترات)
+const SDC_SAVE_RPC = 'update_model_spare_part_price_tabls_for_seller_data_center';
+// أعمدة للقراءة فقط (الباقي قابل للتعديل)، وكمان أول عمود (اسم الموديل) للقراءة فقط
+const SDC_READONLY_COLS = ['id', 'created_at', 'updated_at'];
+
+function sdcIsReadonlyCol(col, index) {
+    return index === 0 || SDC_READONLY_COLS.includes(col);
+}
+
+// ---------- جدول الأسعار بشكل شيت قابل للتعديل (نفس نمط شيت المستخدمين والموديلات) ----------
 function sdcRenderPriceTable(columns, rows) {
     sdcTableCols = columns;
     sdcTableRows = rows;
+    sdcWorkRows = rows.map(r => ({ ...r }));
 
     const body = document.getElementById('sdcBody');
     if (!body) return;
@@ -286,7 +299,6 @@ function sdcRenderPriceTable(columns, rows) {
         return;
     }
 
-    // الحاوية تتحول لعمود يملأ الشاشة عشان الشيت ياخد المساحة المتاحة زي إخواته
     body.className = 'flex-1 flex flex-col gap-2 overflow-hidden p-1';
 
     body.innerHTML = `
@@ -294,6 +306,10 @@ function sdcRenderPriceTable(columns, rows) {
             <button type="button" onclick="sdcOpenPart(${sdcPartIndex})" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 <span>تحديث</span>
+            </button>
+            <button type="button" onclick="sdcSavePriceSheet()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span>حفظ التعديلات لقاعدة البيانات</span>
             </button>
             <button type="button" onclick="sdcExportPriceSheet()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -315,38 +331,123 @@ function sdcRenderPriceTable(columns, rows) {
     sdcApplyFilter('');
 }
 
+// يسحب القيم الحالية من الخلايا الظاهرة ويحفظها في النسخة الشغالة
+function sdcSyncInputs() {
+    const tbody = document.getElementById('sdcTableBody');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr[data-idx]').forEach(tr => {
+        const row = sdcWorkRows[Number(tr.getAttribute('data-idx'))];
+        if (!row) return;
+        tr.querySelectorAll('[data-field]').forEach(input => {
+            row[input.getAttribute('data-field')] = input.value;
+        });
+    });
+}
+
 function sdcApplyFilter(q) {
     const tbody = document.getElementById('sdcTableBody');
     if (!tbody) return;
 
+    // نحفظ التعديلات الحالية قبل ما نعيد رسم الصفوف بسبب البحث
+    sdcSyncInputs();
+
     const key = sdcTableCols[0];
     const needle = String(q || '').trim().toLowerCase();
-    const rows = needle
-        ? sdcTableRows.filter(r => String(r[key] ?? '').toLowerCase().includes(needle))
-        : sdcTableRows;
 
-    // padding الخلايا مصفّر في ستايل الشيت، فالمسافة بتيجي من الـ span الداخلي
-    tbody.innerHTML = rows.map(r => `
-        <tr>
+    const visible = [];
+    sdcWorkRows.forEach((r, idx) => {
+        if (!needle || String(r[key] ?? '').toLowerCase().includes(needle)) visible.push(idx);
+    });
+
+    tbody.innerHTML = visible.map(idx => {
+        const r = sdcWorkRows[idx];
+        return `
+        <tr data-idx="${idx}">
             ${sdcTableCols.map((c, i) => {
-                const v = r[c];
-                const shown = (v === null || v === undefined || v === '') ? '' : v;
-                return `<td class="min-w-[160px] h-[38px] whitespace-nowrap"><span class="block px-2.5 py-2 text-[13px] ${i === 0 ? 'font-semibold text-gray-800' : 'text-gray-600'}" dir="auto">${sdcEsc(shown)}</span></td>`;
+                const v = (r[c] === null || r[c] === undefined) ? '' : r[c];
+                if (sdcIsReadonlyCol(c, i)) {
+                    return `<td class="min-w-[160px] h-[38px] whitespace-nowrap"><span class="block px-2.5 py-2 text-[13px] ${i === 0 ? 'font-semibold text-gray-800' : 'text-slate-500 font-mono'}" dir="auto">${sdcEsc(v)}</span></td>`;
+                }
+                return `
+                    <td class="min-w-[160px] h-[38px] relative">
+                        ${sheetCellInputHtml(c, v)}
+                        <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
+                    </td>`;
             }).join('')}
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
+
+    enableExcelPasteAndDragFill();
 
     const count = document.getElementById('sdcRowsCount');
-    if (count) count.textContent = `${rows.length} صف`;
+    if (count) count.textContent = `${visible.length} صف`;
 }
 
-// ---------- تصدير شيت الأسعار إلى XLSX (كل الصفوف بغض النظر عن البحث) ----------
-function sdcExportPriceSheet() {
-    if (!sdcTableCols.length || !sdcTableRows.length) {
-        alert("لا توجد بيانات للتصدير حالياً");
+// ---------- حفظ التعديلات (بنبعت الصفوف اللي اتغيرت بس، وبالحقول اللي اتغيرت بس) ----------
+const sdcNorm = v => (v === null || v === undefined) ? '' : String(v).trim();
+
+async function sdcSavePriceSheet() {
+    sdcSyncInputs();
+
+    const hasId = sdcTableCols.includes('id');
+    const keyCol = hasId ? 'id' : sdcTableCols[0];
+    const payload = [];
+
+    sdcWorkRows.forEach((work, idx) => {
+        const orig = sdcTableRows[idx];
+        const changes = {};
+        sdcTableCols.forEach((c, i) => {
+            if (sdcIsReadonlyCol(c, i)) return;
+            if (sdcNorm(work[c]) !== sdcNorm(orig[c])) {
+                const val = sdcNorm(work[c]);
+                changes[c] = val !== '' ? val : null;
+            }
+        });
+        if (Object.keys(changes).length) {
+            payload.push({ [keyCol]: orig[keyCol], ...changes });
+        }
+    });
+
+    if (!payload.length) {
+        alert("لا توجد تعديلات للحفظ");
         return;
     }
 
-    const data = [sdcTableCols, ...sdcTableRows.map(r => sdcTableCols.map(c => r[c] ?? ''))];
+    try {
+        const { data, error } = await supabaseClient.rpc(SDC_SAVE_RPC, {
+            p_table_name: sdcTableName,
+            p_seller_id: currentUserId,
+            p_payload: payload
+        });
+
+        if (error) {
+            showSystemAlert("فشل حفظ جدول الأسعار", currentUserId || "غير معروف", SDC_SAVE_RPC, error.message);
+            alert("حدث خطأ أثناء حفظ التعديلات: " + error.message);
+            return;
+        }
+        if (data && data.success === false) {
+            alert(data.message || "فشل حفظ التعديلات");
+            return;
+        }
+
+        // التعديلات اتحفظت: النسخة الأصلية تبقى هي الحالية
+        sdcTableRows = sdcWorkRows.map(r => ({ ...r }));
+        alert((data && data.message) || `تم حفظ التعديلات (${payload.length} صف)`);
+    } catch (err) {
+        console.error("Save price sheet error:", err);
+        alert("حدث خطأ غير متوقع أثناء الحفظ");
+    }
+}
+
+// ---------- تصدير شيت الأسعار إلى XLSX (بالقيم الحالية بعد التعديل، كل الصفوف) ----------
+function sdcExportPriceSheet() {
+    if (!sdcTableCols.length || !sdcWorkRows.length) {
+        alert("لا توجد بيانات للتصدير حالياً");
+        return;
+    }
+    sdcSyncInputs();
+
+    const data = [sdcTableCols, ...sdcWorkRows.map(r => sdcTableCols.map(c => r[c] ?? ''))];
     const worksheet = XLSX.utils.aoa_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     const sheetName = String(sdcPart || 'prices').replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31);
