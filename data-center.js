@@ -754,8 +754,9 @@ async function saveModelsSheetToDB() {
         }
 
         if (insertPayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc(`insert_${currentModelsSheetBrand}_models_for_data_center`, {
+            const { data, error } = await supabaseClient.rpc('insert_models_for_data_center', {
                 p_user_id: currentUserId,
+                p_brand: currentModelsSheetBrand,
                 p_payload: insertPayload
             });
             if (error) {
