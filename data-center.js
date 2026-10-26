@@ -145,9 +145,9 @@ async function loadUsersDataIntoSheetGrid() {
             try { usersList = JSON.parse(data); } catch(e){}
         }
 
-        if (usersList.length > 0) {
-            const sampleObj = usersList[0];
-            const columns = Object.keys(sampleObj);
+        {
+            // لو الجدول فاضي مفيش صف نستخرج منه الأعمدة، فنستخدم الأعمدة الافتراضية
+            const columns = usersList.length > 0 ? Object.keys(usersList[0]) : USERS_SHEET_DEFAULT_COLUMNS.slice();
 
             sheetContainer.innerHTML = `
                 <table id="editableUsersTable">
@@ -163,10 +163,10 @@ async function loadUsersDataIntoSheetGrid() {
                                     const val = user[col] !== null && user[col] !== undefined ? user[col] : '';
                                     const isId = (col === 'id' || col === 'created_at' || col === 'last_active_at');
                                     if (isId) {
-                                        return `<td class="p-2 font-mono text-slate-500 text-xs whitespace-nowrap min-w-[150px]" dir="ltr">${val}</td>`;
+                                        return sheetReadonlyCellHtml(val);
                                     }
                                     return `
-                                        <td class="min-w-[160px] h-[38px] relative">
+                                        <td class="relative">
                                             ${sheetCellInputHtml(col, val)}
                                             <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
                                         </td>
@@ -181,9 +181,7 @@ async function loadUsersDataIntoSheetGrid() {
             currentUsersSheetColumns = columns;
             document.getElementById('editableUsersTable').addRowFn = addUsersSheetRow;
             enableExcelPasteAndDragFill();
-
-        } else {
-            sheetContainer.innerHTML = `<div class="text-center text-gray-500 py-12">لا توجد بيانات مستخدمين متاحة</div>`;
+            if (usersList.length === 0) addUsersSheetRow(false);
         }
     } catch (err) {
         console.error(err);
@@ -237,7 +235,22 @@ function exportUsersSheetToExcel() {
 // نستخدم textarea بدل input لأن input يمسح الأسطر الجديدة عند اللصق (خصوصاً من كيبورد الموبايل)،
 // وبالتالي كانت كل القيم تتجمع في خلية واحدة. مع textarea نقدر نقسّم النص على الخلايا.
 function sheetCellInputHtml(col, val) {
-    return `<textarea rows="1" wrap="off" data-field="${escapeHtmlValue(col)}" class="excel-input" dir="auto" style="resize:none;overflow:hidden;display:block;white-space:nowrap;font-family:inherit;line-height:1.5;height:38px">${escapeHtmlValue(val)}</textarea>`;
+    const v = escapeHtmlValue(val);
+    return `<div class="sheet-cell" data-value="${v}"><textarea rows="1" wrap="off" spellcheck="false" data-field="${escapeHtmlValue(col)}" class="excel-input" dir="auto">${v}</textarea></div>`;
+}
+
+// تحديث مقاس الخلية بعد أي تغيير في قيمتها (كتابة / لصق / سحب للتعبئة)
+function sheetFitCell(input) {
+    const wrap = input && input.closest ? input.closest('.sheet-cell') : null;
+    if (wrap) wrap.setAttribute('data-value', input.value);
+}
+function sheetFitAll(root) {
+    (root || document).querySelectorAll('.sheet-cell > .excel-input').forEach(sheetFitCell);
+}
+
+// خلية القراءة فقط (id / created_at ...) بنفس مقاس المحتوى
+function sheetReadonlyCellHtml(val, center = false, muted = false) {
+    return `<td class="relative"><span class="block px-2.5 py-2 font-mono ${muted ? 'text-slate-400' : 'text-slate-500'} text-xs whitespace-nowrap ${center ? 'text-center' : ''}" dir="ltr">${escapeHtmlValue(val)}</span></td>`;
 }
 
 // ================= توزيع نص منسوخ (صفوف وأعمدة) على خلايا الشيت =================
@@ -270,6 +283,7 @@ function distributePastedText(table, startInput, pastedData) {
             const targetInput = targetCell.querySelector('.excel-input');
             if (targetInput) {
                 targetInput.value = cellText.trim();
+                sheetFitCell(targetInput);
             }
         });
     });
@@ -281,6 +295,15 @@ function enableExcelPasteAndDragFill() {
     if (!table) return;
 
     const inputs = table.querySelectorAll('.excel-input');
+
+    // تحديث مقاس الخلية أثناء الكتابة (مرة واحدة لكل جدول)
+    if (!table.dataset.fitBound) {
+        table.dataset.fitBound = '1';
+        table.addEventListener('input', e => {
+            if (e.target.classList && e.target.classList.contains('excel-input')) sheetFitCell(e.target);
+        });
+    }
+    sheetFitAll(table);
 
     inputs.forEach(input => {
         if (input.dataset.bound) return;
@@ -344,6 +367,7 @@ function enableExcelPasteAndDragFill() {
                             const inputToFill = rowCells[sourceCellIndex]?.querySelector('.excel-input');
                             if (inputToFill) {
                                 inputToFill.value = sourceVal;
+                                sheetFitCell(inputToFill);
                             }
                         }
                     }
@@ -467,6 +491,14 @@ let currentModelsSheetColumns = [];
 const MODELS_SHEET_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 let currentUsersSheetColumns = [];
 const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at'];
+// أعمدة افتراضية لشيت المستخدمين لما الجدول يكون فاضي (راجعها وعدّلها لو أعمدة جدول users عندك مختلفة)
+const USERS_SHEET_DEFAULT_COLUMNS = [
+    'id', 'created_at', 'last_active_at', 'user_role', 'user_name',
+    'store_name', 'store_city', 'store_region', 'store_area', 'store_address',
+    'shop_name', 'shop_city', 'shop_region', 'shop_area', 'shop_address',
+    'delivery_city', 'delivery_region', 'delivery_area',
+    'phone_number', 'whatsapp_number', 'gmail', 'password'
+];
 
 function escapeHtmlValue(val) {
     return String(val === null || val === undefined ? '' : val)
@@ -609,10 +641,10 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                             ${columns.map(col => {
                                 const val = row[col] !== null && row[col] !== undefined ? row[col] : '';
                                 if (readOnlyCols.includes(col)) {
-                                    return `<td class="p-2 font-mono text-slate-500 text-xs whitespace-nowrap min-w-[150px]" dir="ltr">${escapeHtmlValue(val)}</td>`;
+                                    return sheetReadonlyCellHtml(val);
                                 }
                                 return `
-                                    <td class="min-w-[160px] h-[38px] relative">
+                                    <td class="relative">
                                         ${sheetCellInputHtml(col, val)}
                                         <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
                                     </td>
@@ -665,10 +697,10 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true) {
     tr.setAttribute('data-new', '1');
     tr.innerHTML = columns.map(col => {
         if (readOnlyCols.includes(col)) {
-            return `<td class="p-2 font-mono text-slate-400 text-xs whitespace-nowrap min-w-[150px] text-center" dir="ltr">جديد</td>`;
+            return sheetReadonlyCellHtml('جديد', true, true);
         }
         return `
-            <td class="min-w-[160px] h-[38px] relative">
+            <td class="relative">
                 ${sheetCellInputHtml(col, '')}
                 <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
             </td>
