@@ -1,5 +1,6 @@
 // ================= الهيدر العلوي =================
-function getHeaderTemplate() {
+// showSearch: يظهر البحث (كتابة / صوت / كاميرا) فقط داخل رحلة "شراء قطع الغيار"
+function getHeaderTemplate(showSearch = false) {
     const userInfoHtml = currentUserId && currentUserName ? `
         <div class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200 px-3 py-1.5 rounded-xl shadow-sm text-xs" dir="auto">
             <span class="font-bold text-blue-700">${currentUserRole || ''}</span>
@@ -16,7 +17,7 @@ function getHeaderTemplate() {
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 tracking-wide">Electricity</h1>
             </div>
 
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between ${showSearch ? 'mb-4' : ''}">
                 <button onclick="toggleSidebar()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm transition-all cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     <span>القائمة</span>
@@ -25,6 +26,7 @@ function getHeaderTemplate() {
                 ${userInfoHtml}
             </div>
 
+            ${showSearch ? `
             <div class="flex items-center gap-2">
                 <div class="flex-1 relative">
                     <input type="text" placeholder="ابحث" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-xs sm:text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
@@ -36,6 +38,7 @@ function getHeaderTemplate() {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
             </div>
+            ` : ''}
         </div>
     `;
 }
