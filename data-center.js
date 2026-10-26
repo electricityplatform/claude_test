@@ -597,6 +597,9 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
             <h2 id="modelsSheetTitle" class="text-sm sm:text-base font-bold text-gray-800">جدول موديلات ${brandLabel}</h2>
         </div>
 
+        <input id="modelsSearchInput" type="text" oninput="modelsSheetApplyFilter(this.value)" placeholder="ابحث بالاسم أو كود الموديل أو كود البطارية" class="w-full mb-2 flex-shrink-0 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" dir="auto">
+        <div id="modelsSearchCount" class="text-xs text-gray-500 mb-1 flex-shrink-0 hidden"></div>
+
         <div id="modelsSheetContainer" class="flex-1 overflow-y-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
             <div class="text-center text-gray-400 text-sm py-8">جاري جلب الموديلات...</div>
         </div>
@@ -923,6 +926,46 @@ async function saveModelsSheetToDB() {
     } catch (err) {
         console.error("Save models sheet error:", err);
         alert("حدث خطأ غير متوقع أثناء الحفظ");
+    }
+}
+
+// ---------- بحث في شيت الموديلات (الاسم / كود الموديل / كود البطارية) ----------
+// بنحدد الأعمدة باسمها (مش بترتيبها). الفلترة بإخفاء الصفوف بس (الخلايا فاضلة في الصفحة)،
+// فالتعديلات اللي اتكتبت ما بتضيعش، وزرار الحفظ بيحفظ كل الصفوف حتى المخفية.
+const MODELS_SEARCH_FIELD_RE = /_model_names$|_model_codes$|_model_battery_codes$/;
+
+function modelsSheetApplyFilter(q) {
+    const table = document.getElementById('editableUsersTable');
+    if (!table) return;
+
+    const norm = v => String(v ?? '').toLowerCase().replace(/\s+/g, '');
+    const needle = norm(q);
+
+    const rows = table.querySelectorAll('tbody tr');
+    let visible = 0;
+    let total = 0;
+
+    rows.forEach(tr => {
+        const inputs = Array.from(tr.querySelectorAll('.excel-input'))
+            .filter(i => MODELS_SEARCH_FIELD_RE.test(i.getAttribute('data-field') || ''));
+
+        // صف الرسالة الفاضي (لو مفيش بيانات) مالوش خلايا إدخال، نسيبه زي ما هو
+        if (!tr.querySelector('.excel-input')) return;
+
+        total++;
+        const match = !needle || inputs.some(i => norm(i.value).includes(needle));
+        tr.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+
+    const count = document.getElementById('modelsSearchCount');
+    if (count) {
+        if (needle) {
+            count.textContent = `${visible} من ${total} موديل`;
+            count.classList.remove('hidden');
+        } else {
+            count.classList.add('hidden');
+        }
     }
 }
 
