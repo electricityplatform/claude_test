@@ -43,12 +43,12 @@ async function renderMainDashboard() {
                 } else if (name.includes('الموديلات')) {
                     clickAction = "renderModelsScreen('Samsung')";
                 } else {
-                    clickAction = `alert('قسم ${name}')`;
+                    clickAction = `alert(${jsArg('قسم ' + name)})`;
                 }
 
                 return `
                     <div onclick="${clickAction}" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-5 sm:p-6 rounded-2xl shadow-md cursor-pointer transition-all flex items-center justify-between">
-                        <span class="font-bold text-lg sm:text-xl" dir="auto">${name}</span>
+                        <span class="font-bold text-lg sm:text-xl" dir="auto">${escapeHtmlValue(name)}</span>
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     </div>
                 `;
@@ -74,7 +74,7 @@ async function renderBrandsScreen(partName = '') {
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 <span>رجوع</span>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر الماركة (${selectedPart || 'شراء قطع الغيار'})</h2>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر الماركة (${escapeHtmlValue(selectedPart || 'شراء قطع الغيار')})</h2>
         </div>
         <div id="brandsListContainer" class="flex-1 overflow-y-auto space-y-3 p-1">
             <div class="text-center text-gray-400 text-sm py-8">جاري جلب الماركات...</div>
@@ -103,8 +103,8 @@ async function renderBrandsScreen(partName = '') {
         container.innerHTML = brands.map((brand, index) => {
             const style = getRotatingCardStyle(index);
             return `
-                <div onclick="renderModelsScreen('${brand}')" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
-                    <span class="font-bold text-gray-800" dir="auto">${brand}</span>
+                <div onclick="renderModelsScreen(${jsArg(brand)})" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
+                    <span class="font-bold text-gray-800" dir="auto">${escapeHtmlValue(brand)}</span>
                     <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </div>
             `;
@@ -139,7 +139,7 @@ async function renderModelsScreen(brand) {
     } else if (b.includes('oppo')) {
         tableName = 'oppo_models'; nameColumn = 'oppo_phone_name'; codeColumn = 'oppo_phone_code'; compatColumn = 'oppo_screen_compatibility'; batteryColumn = 'oppo_battery_model';
     } else if (b.includes('realme')) {
-        tableName = 'realme_models'; nameColumn = 'realme_phone_name'; compatColumn = 'realme_screen_compatibility'; batteryColumn = 'realme_battery_model';
+        tableName = 'realme_models'; nameColumn = 'realme_phone_name'; codeColumn = 'realme_phone_code'; compatColumn = 'realme_screen_compatibility'; batteryColumn = 'realme_battery_model';
     } else if (b.includes('itel')) {
         tableName = 'itel_models'; nameColumn = 'itel_phone_name'; codeColumn = 'itel_phone_code'; compatColumn = 'itel_screen_compatibility'; batteryColumn = 'itel_battery_model';
     } else if (b.includes('nokia')) {
@@ -148,6 +148,8 @@ async function renderModelsScreen(brand) {
         tableName = 'vivo_models'; nameColumn = 'vivo_phone_name'; codeColumn = 'vivo_phone_code'; compatColumn = 'vivo_screen_compatibility'; batteryColumn = 'vivo_battery_model';
     } else if (b.includes('techno') || b.includes('tecno')) {
         tableName = 'tecno_models'; nameColumn = 'tecno_phone_name'; codeColumn = 'tecno_phone_code'; compatColumn = 'tecno_screen_compatibility'; batteryColumn = 'tecno_battery_model';
+    } else if (b.includes('htc')) {
+        tableName = 'htc_models'; nameColumn = 'htc_phone_name'; codeColumn = 'htc_phone_code'; compatColumn = 'htc_screen_compatibility'; batteryColumn = 'htc_battery_model';
     } else if (b.includes('infinix')) {
         tableName = 'infinix_models'; nameColumn = 'infinix_phone_name'; codeColumn = 'infinix_phone_code'; compatColumn = 'infinix_screen_compatibility'; batteryColumn = 'infinix_battery_model';
     }
@@ -173,10 +175,10 @@ async function renderModelsScreen(brand) {
             const escapedBattery = m.battery_model ? encodeURIComponent(m.battery_model) : '';
             const escapedCode = m.model_code ? encodeURIComponent(m.model_code) : '';
             return `
-                <div onclick="renderPartsScreenAfterModel('${m.device_name}', '${escapedCode}', '${escapedCompat}', '${escapedBattery}')" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
+                <div onclick="renderPartsScreenAfterModel(${jsArg(m.device_name)}, ${jsArg(escapedCode)}, ${jsArg(escapedCompat)}, ${jsArg(escapedBattery)})" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
                     <div class="text-right">
-                        <span class="font-bold text-gray-800 block" dir="auto">${m.device_name}</span>
-                        ${m.model_code ? `<span class="text-xs text-gray-500 block mt-0.5" dir="auto">الكود: ${m.model_code}</span>` : ''}
+                        <span class="font-bold text-gray-800 block" dir="auto">${escapeHtmlValue(m.device_name)}</span>
+                        ${m.model_code ? `<span class="text-xs text-gray-500 block mt-0.5" dir="auto">الكود: ${escapeHtmlValue(m.model_code)}</span>` : ''}
                     </div>
                     <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </div>
@@ -193,7 +195,7 @@ async function renderModelsScreen(brand) {
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 <span>رجوع</span>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر موديل (${brand})</h2>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر موديل (${escapeHtmlValue(brand)})</h2>
         </div>
         <div class="flex-1 overflow-y-auto space-y-3 p-1">
             ${modelsHtml}
@@ -213,11 +215,11 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
     document.getElementById('appContainer').innerHTML = `
         ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <button onclick="renderModelsScreen('${selectedBrand}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+            <button onclick="renderModelsScreen(${jsArg(selectedBrand)})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 <span>رجوع</span>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر قطعة الغيار (${selectedModel})</h2>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">اختر قطعة الغيار (${escapeHtmlValue(selectedModel)})</h2>
         </div>
         <div id="partsListContainerAfter" class="flex-1 overflow-y-auto space-y-3 p-1">
             <div class="text-center text-gray-400 text-sm py-8">جاري جلب قطع الغيار...</div>
@@ -246,8 +248,8 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
         container.innerHTML = sparePartsList.map((part, index) => {
             const style = getRotatingCardStyle(index);
             return `
-                <div onclick="renderPartDetailsFinal('${part}')" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
-                    <span class="font-bold text-gray-800 text-right flex-1 ml-3" dir="auto">${part}</span>
+                <div onclick="renderPartDetailsFinal(${jsArg(part)})" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
+                    <span class="font-bold text-gray-800 text-right flex-1 ml-3" dir="auto">${escapeHtmlValue(part)}</span>
                     <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </div>
             `;
