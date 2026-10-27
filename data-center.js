@@ -264,6 +264,15 @@ function sheetReadonlyCellHtml(val, center = false, muted = false) {
     return `<td class="relative"><span class="block px-2.5 py-2 font-mono ${muted ? 'text-slate-400' : 'text-slate-500'} text-xs whitespace-nowrap ${center ? 'text-center' : ''}" dir="ltr">${escapeHtmlValue(val)}</span></td>`;
 }
 
+// عمود id مكرر في آخر الجدول (للموديلات والتوافقات والمجموعات فقط، مش المستخدمين).
+// بيتحط عليه كلاس sheet-id-dup عشان ما يتصدّرش لإكسل ولا يتحفظ.
+function sheetIdDupThHtml() {
+    return '<th class="sheet-id-dup"><div>id</div></th>';
+}
+function sheetIdDupCellHtml(val, center = false) {
+    return `<td class="relative sheet-id-dup"><span class="block px-2.5 py-2 font-mono text-slate-500 text-xs whitespace-nowrap ${center ? 'text-center' : ''}" dir="ltr">${escapeHtmlValue(val)}</span></td>`;
+}
+
 // ================= توزيع نص منسوخ (صفوف وأعمدة) على خلايا الشيت =================
 // كل سطر = صف جديد، وكل Tab = عمود جديد، بدءاً من الخلية الواقف عليها.
 function distributePastedText(table, startInput, pastedData) {
@@ -837,6 +846,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => sheetThHtml(col, modelsColLabel(col))).join('')}
+                        ${sheetIdDupThHtml()}
                         ${canManageRows ? '<th class="sheet-actions-th">إجراءات</th>' : ''}
                     </tr>
                 </thead>
@@ -855,6 +865,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
+                            ${sheetIdDupCellHtml(row.id)}
                             ${canManageRows ? modelsRowActionsHtml(row.id) : ''}
                         </tr>
                     `).join('')}
@@ -980,7 +991,7 @@ async function getModelsTableColumns(brandKey) {
 
 // ---------- إضافة صف جديد فارغ للشيت (مشترك بين شيت الموديلات وشيت المستخدمين) ----------
 // extraCellsHtml: خلايا إضافية في آخر الصف (مثلاً خلية الإجراءات في شيت الموديلات)
-function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml = '') {
+function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml = '', withIdDup = false) {
     const table = document.getElementById('editableUsersTable');
     if (!table) return null;
     const tbody = table.querySelector('tbody');
@@ -997,7 +1008,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml
                 <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
             </td>
         `;
-    }).join('') + extraCellsHtml;
+    }).join('') + (withIdDup ? sheetIdDupCellHtml('جديد', true) : '') + extraCellsHtml;
     tbody.appendChild(tr);
 
     enableExcelPasteAndDragFill();
@@ -1015,7 +1026,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml
 function addModelsSheetRow(focus = true) {
     // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية
     const extra = currentModelsSheetCanManage ? '<td class="sheet-actions"></td>' : '';
-    return appendBlankSheetRow(currentModelsSheetColumns, MODELS_SHEET_READONLY_COLS, focus, extra);
+    return appendBlankSheetRow(currentModelsSheetColumns, MODELS_SHEET_READONLY_COLS, focus, extra, true);
 }
 
 function addUsersSheetRow(focus = true) {
@@ -1161,7 +1172,7 @@ function exportModelsSheetToExcel() {
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
-        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions)')).map(td => {
+        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions):not(.sheet-id-dup)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
@@ -1347,6 +1358,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => sheetThHtml(col, cgColLabel(col))).join('')}
+                        ${sheetIdDupThHtml()}
                         <th class="sheet-actions-th">إجراءات</th>
                     </tr>
                 </thead>
@@ -1365,6 +1377,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
+                            ${sheetIdDupCellHtml(row.id)}
                             ${cgRowActionsHtml(row.id)}
                         </tr>
                     `).join('')}
@@ -1383,7 +1396,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
 
 function addCgSheetRow(focus = true) {
     // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية
-    return appendBlankSheetRow(currentCgColumns, CG_READONLY_COLS, focus, '<td class="sheet-actions"></td>');
+    return appendBlankSheetRow(currentCgColumns, CG_READONLY_COLS, focus, '<td class="sheet-actions"></td>', true);
 }
 
 // ---------- البحث في أي عمود توافق ----------
@@ -1633,7 +1646,7 @@ function exportCgSheetToExcel() {
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
-        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions)')).map(td => {
+        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions):not(.sheet-id-dup)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
@@ -1820,6 +1833,7 @@ async function renderCompatSheet(brandKey, brandLabel) {
                             const sticky = col === nameCol ? ' style="position:sticky;right:0;z-index:6;"' : '';
                             return sheetThHtml(col, cpColLabel(col), sticky);
                         }).join('')}
+                        ${sheetIdDupThHtml()}
                         <th class="sheet-actions-th">إجراءات</th>
                     </tr>
                 </thead>
@@ -1837,6 +1851,7 @@ async function renderCompatSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
+                            ${sheetIdDupCellHtml(row.id)}
                             ${cpRowActionsHtml(row.id)}
                         </tr>
                     `).join('')}
@@ -1855,7 +1870,7 @@ async function renderCompatSheet(brandKey, brandLabel) {
 
 function addCpSheetRow(focus = true) {
     // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية. اسم الموديل فيه خانة إدخال عشان يتكتب مرة واحدة
-    return appendBlankSheetRow(currentCpColumns, CP_READONLY_COLS, focus, '<td class="sheet-actions"></td>');
+    return appendBlankSheetRow(currentCpColumns, CP_READONLY_COLS, focus, '<td class="sheet-actions"></td>', true);
 }
 
 // ---------- البحث في اسم الموديل وأي عمود توافق ----------
@@ -2091,7 +2106,7 @@ function exportCpSheetToExcel() {
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
-        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions)')).map(td => {
+        rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions):not(.sheet-id-dup)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
@@ -2101,6 +2116,4 @@ function exportCpSheetToExcel() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, currentCpBrand || 'compatibility');
 
-    const fileName = `${currentCpBrand}_compatibility_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-}
+    const fileName = `${current
