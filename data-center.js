@@ -264,7 +264,7 @@ function sheetReadonlyCellHtml(val, center = false, muted = false) {
     return `<td class="relative"><span class="block px-2.5 py-2 font-mono ${muted ? 'text-slate-400' : 'text-slate-500'} text-xs whitespace-nowrap ${center ? 'text-center' : ''}" dir="ltr">${escapeHtmlValue(val)}</span></td>`;
 }
 
-// عمود id مكرر في آخر الجدول (للموديلات والتوافقات والمجموعات فقط، مش المستخدمين).
+// عمود id مكرر دايماً آخر عمود في الجدول (بعد عمود الإجراءات كمان) (للموديلات والتوافقات والمجموعات فقط، مش المستخدمين).
 // بيتحط عليه كلاس sheet-id-dup عشان ما يتصدّرش لإكسل ولا يتحفظ.
 function sheetIdDupThHtml() {
     return '<th class="sheet-id-dup"><div>id</div></th>';
@@ -842,8 +842,8 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => sheetThHtml(col, modelsColLabel(col))).join('')}
-                        ${sheetIdDupThHtml()}
                         ${canManageRows ? '<th class="sheet-actions-th">إجراءات</th>' : ''}
+                        ${sheetIdDupThHtml()}
                     </tr>
                 </thead>
                 <tbody>
@@ -861,8 +861,8 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
-                            ${sheetIdDupCellHtml(row.id)}
                             ${canManageRows ? modelsRowActionsHtml(row.id) : ''}
+                            ${sheetIdDupCellHtml(row.id)}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -1004,7 +1004,7 @@ function appendBlankSheetRow(columns, readOnlyCols, focus = true, extraCellsHtml
                 <div class="drag-handle" title="اسحب للتعبئة التلقائية"></div>
             </td>
         `;
-    }).join('') + (withIdDup ? sheetIdDupCellHtml('جديد', true) : '') + extraCellsHtml;
+    }).join('') + extraCellsHtml + (withIdDup ? sheetIdDupCellHtml('جديد', true) : '');
     tbody.appendChild(tr);
 
     enableExcelPasteAndDragFill();
@@ -1354,8 +1354,8 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => sheetThHtml(col, cgColLabel(col))).join('')}
-                        ${sheetIdDupThHtml()}
                         <th class="sheet-actions-th">إجراءات</th>
+                        ${sheetIdDupThHtml()}
                     </tr>
                 </thead>
                 <tbody>
@@ -1373,8 +1373,8 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
-                            ${sheetIdDupCellHtml(row.id)}
                             ${cgRowActionsHtml(row.id)}
+                            ${sheetIdDupCellHtml(row.id)}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -1832,8 +1832,8 @@ async function renderCompatSheet(brandKey, brandLabel) {
                         ${columns.map(col => {
                             return sheetThHtml(col, cpColLabel(col));
                         }).join('')}
-                        ${sheetIdDupThHtml()}
                         <th class="sheet-actions-th">إجراءات</th>
+                        ${sheetIdDupThHtml()}
                     </tr>
                 </thead>
                 <tbody>
@@ -1850,8 +1850,8 @@ async function renderCompatSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
-                            ${sheetIdDupCellHtml(row.id)}
                             ${cpRowActionsHtml(row.id)}
+                            ${sheetIdDupCellHtml(row.id)}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -2110,13 +2110,4 @@ function exportCpSheetToExcel() {
         rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions):not(.sheet-id-dup)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
-        }));
-    });
-
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rowsData]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, currentCpBrand || 'compatibility');
-
-    const fileName = `${currentCpBrand}_compatibility_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-}
+     
