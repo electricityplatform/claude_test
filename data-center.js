@@ -111,6 +111,10 @@ async function renderUsersDataCenterSheet() {
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     <span>حفظ التعديلات لقاعدة البيانات</span>
                 </button>
+                <button type="button" id="keyPinBtn" onclick="toggleKeyColumnPin()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                    <span id="keyPinLabel">تثبيت العمود المميز</span>
+                </button>
                 <button type="button" onclick="exportUsersSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span>تصدير إلى إكسل</span>
@@ -186,7 +190,7 @@ async function loadUsersDataIntoSheetGrid() {
             const usersTable = document.getElementById('editableUsersTable');
             usersTable.addRowFn = addUsersSheetRow;
             // تثبيت عمودي الرتبة والاسم على الجنب
-            usersTable.dataset.pinCols = 'user_role,user_name';
+            applyKeyPinState(usersTable, 'user_role,user_name', 'pin_key_users');
             enableExcelPasteAndDragFill();
             if (usersList.length === 0) addUsersSheetRow(false);
         }
@@ -352,6 +356,67 @@ function refreshPinnedColumns(table) {
 
         offset += ths[idx].offsetWidth;
     });
+}
+
+// إلغاء التثبيت: بنشيل الـ style الـ inline من عناوين وخلايا الأعمدة المثبتة
+function clearPinnedColumns(table, colsCsv) {
+    const cols = String(colsCsv || '').split(',').filter(Boolean);
+    const ths = Array.from(table.querySelectorAll('thead th'));
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const reset = el => {
+        el.style.position = '';
+        el.style.right = '';
+        el.style.zIndex = '';
+        el.style.background = '';
+    };
+    cols.forEach(col => {
+        const idx = ths.findIndex(th => th.getAttribute('data-col') === col);
+        if (idx < 0) return;
+        reset(ths[idx]);
+        rows.forEach(tr => { if (tr.children[idx]) reset(tr.children[idx]); });
+    });
+}
+
+// ================= زرار تثبيت / إلغاء تثبيت العمود المميز =================
+// العمود المميز: الرتبة والاسم في المستخدمين، واسم الموديل في الموديلات.
+// الاختيار بيتحفظ في المتصفح لكل شيت (افتراضياً: مثبّت).
+function applyKeyPinState(table, keyCols, storageKey) {
+    let enabled = true;
+    try { enabled = localStorage.getItem(storageKey) !== '0'; } catch (e) {}
+    table.dataset.pinKeys = keyCols;
+    table.dataset.pinStorage = storageKey;
+    table.dataset.pinCols = enabled ? keyCols : '';
+    updateKeyPinButton();
+}
+
+function updateKeyPinButton() {
+    const table = document.getElementById('editableUsersTable');
+    const label = document.getElementById('keyPinLabel');
+    const btn = document.getElementById('keyPinBtn');
+    if (!table || !label || !btn) return;
+    const on = !!table.dataset.pinCols;
+    label.textContent = on ? 'إلغاء تثبيت العمود المميز' : 'تثبيت العمود المميز';
+    btn.classList.toggle('ring-2', on);
+    btn.classList.toggle('ring-purple-400', on);
+}
+
+function toggleKeyColumnPin() {
+    const table = document.getElementById('editableUsersTable');
+    if (!table || !table.dataset.pinKeys) return;
+
+    const keys = table.dataset.pinKeys;
+    const wasOn = !!table.dataset.pinCols;
+
+    if (wasOn) {
+        clearPinnedColumns(table, keys);
+        table.dataset.pinCols = '';
+    } else {
+        table.dataset.pinCols = keys;
+        refreshPinnedColumns(table);
+    }
+
+    try { localStorage.setItem(table.dataset.pinStorage, wasOn ? '0' : '1'); } catch (e) {}
+    updateKeyPinButton();
 }
 
 // ================= ميزات الإكسل (اللصق المتعدد والسحب للتعبئة) =================
@@ -696,6 +761,10 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     <span>حفظ التعديلات لقاعدة البيانات</span>
                 </button>
+                <button type="button" id="keyPinBtn" onclick="toggleKeyColumnPin()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                    <span id="keyPinLabel">تثبيت العمود المميز</span>
+                </button>
                 <button type="button" onclick="exportModelsSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span>تصدير إلى إكسل</span>
@@ -797,7 +866,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
         const modelsTable = document.getElementById('editableUsersTable');
         modelsTable.addRowFn = addModelsSheetRow;
         // تثبيت عمود اسم الموديل على الجنب (أي ماركة)
-        modelsTable.dataset.pinCols = `${brandKey}_model_names`;
+        applyKeyPinState(modelsTable, `${brandKey}_model_names`, 'pin_key_models');
         enableExcelPasteAndDragFill();
         if (modelsList.length === 0) addModelsSheetRow(false);
     } catch (err) {
