@@ -231,6 +231,46 @@ function toggleKeyColumnPin() {
 }
 
 // ================= ميزات الإكسل (اللصق المتعدد والسحب للتعبئة) =================
+// ================= عمود الترقيم (num / الترقيم) =================
+// عمود عرض فقط (مش في الداتابيز) لشيت المستخدمين فقط: بيتحط بعد عمود id وكمان في آخر آخر الجدول.
+// بيتضاف أوتوماتيك لأي شيت (وللصفوف الجديدة) وبيتعاد ترقيمه من 1 بترتيب الصفوف.
+function sheetNumThHtml() {
+    return '<th class="sheet-num"><div>num</div><div class="text-[11px] font-semibold text-gray-500 mt-0.5">الترقيم</div></th>';
+}
+function sheetNumCellHtml() {
+    return '<td class="relative sheet-num"><span class="block px-2.5 py-2 font-mono text-slate-500 text-xs whitespace-nowrap text-center" dir="ltr"></span></td>';
+}
+function sheetEnsureNumColumns(table) {
+    // العمود ده لشيت المستخدمين بس: بيتفعّل بـ table.dataset.showNum = '1'
+    if (table.dataset.showNum !== '1') return;
+    const headRow = table.querySelector('thead tr');
+    if (!headRow) return;
+    const ths = Array.from(headRow.children);
+    const idIdx = ths.findIndex(th => th.getAttribute('data-col') === 'id');
+
+    const mk = html => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        if (tr.querySelector('td.sheet-num')) return;
+        if (!tr.querySelector('td')) return;
+        if (idIdx >= 0 && tr.children[idIdx]) tr.insertBefore(mk(sheetNumCellHtml()), tr.children[idIdx].nextSibling);
+        tr.appendChild(mk(sheetNumCellHtml()));
+    });
+
+    if (!headRow.querySelector('th.sheet-num')) {
+        if (idIdx >= 0) headRow.insertBefore(mk(sheetNumThHtml()), ths[idIdx].nextSibling);
+        headRow.appendChild(mk(sheetNumThHtml()));
+    }
+
+    let n = 0;
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        const cells = tr.querySelectorAll('td.sheet-num > span');
+        if (!cells.length) return;
+        n++;
+        cells.forEach(sp => { sp.textContent = n; });
+    });
+}
+
 function enableExcelPasteAndDragFill() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
@@ -248,6 +288,7 @@ function enableExcelPasteAndDragFill() {
         });
     }
     sheetFitAll(table);
+    sheetEnsureNumColumns(table);
     refreshPinnedColumns(table);
     requestAnimationFrame(() => refreshPinnedColumns(table));
 
