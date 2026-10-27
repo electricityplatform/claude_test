@@ -61,7 +61,13 @@ async function fetchAndDisplayDataCenterMenu() {
                 const style = getRotatingCardStyle(index);
                 let clickAction = `alert('تم النقر على قسم: ${item}')`;
 
-                if (item.includes('جدول المستخدمين') || item.includes('بيانات المستخدمين')) {
+                if (item.includes('المستخدمين الجدد')) {
+                    clickAction = "renderNewUsersScreen()";
+                } else if (item.includes('سجل دخول المستخدمين')) {
+                    clickAction = "renderLoginHistoryScreen()";
+                } else if (item.includes('المستخدمين النشطين')) {
+                    clickAction = "renderActiveUsersScreen()";
+                } else if (item.includes('جدول المستخدمين') || item.includes('بيانات المستخدمين')) {
                     clickAction = "renderUsersDataCenterSheet()";
                 } else if (item.includes('مجموعات التوافقات')) {
                     clickAction = "renderCompatGroupsBrandsScreen()";
