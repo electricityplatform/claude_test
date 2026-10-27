@@ -190,7 +190,7 @@ async function loadUsersDataIntoSheetGrid() {
             const usersTable = document.getElementById('editableUsersTable');
             usersTable.addRowFn = addUsersSheetRow;
             // تثبيت عمودي الرتبة والاسم على الجنب
-            applyKeyPinState(usersTable, 'user_role,user_name', 'pin_key_users');
+            applyKeyPinState(usersTable, 'user_role,user_name');
             enableExcelPasteAndDragFill();
             if (usersList.length === 0) addUsersSheetRow(false);
         }
@@ -388,13 +388,10 @@ function clearPinnedColumns(table, colsCsv) {
 
 // ================= زرار تثبيت / إلغاء تثبيت العمود المميز =================
 // العمود المميز: الرتبة والاسم في المستخدمين، واسم الموديل في الموديلات.
-// الاختيار بيتحفظ في المتصفح لكل شيت (افتراضياً: مثبّت).
-function applyKeyPinState(table, keyCols, storageKey) {
-    let enabled = true;
-    try { enabled = localStorage.getItem(storageKey) !== '0'; } catch (e) {}
+// الوضع الطبيعي: من غير تثبيت، والتثبيت بيتفعّل بالزرار وقت ما تحتاجه.
+function applyKeyPinState(table, keyCols) {
     table.dataset.pinKeys = keyCols;
-    table.dataset.pinStorage = storageKey;
-    table.dataset.pinCols = enabled ? keyCols : '';
+    table.dataset.pinCols = '';
     updateKeyPinButton();
 }
 
@@ -424,7 +421,6 @@ function toggleKeyColumnPin() {
         refreshPinnedColumns(table);
     }
 
-    try { localStorage.setItem(table.dataset.pinStorage, wasOn ? '0' : '1'); } catch (e) {}
     updateKeyPinButton();
 }
 
@@ -877,7 +873,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
         const modelsTable = document.getElementById('editableUsersTable');
         modelsTable.addRowFn = addModelsSheetRow;
         // تثبيت عمود اسم الموديل على الجنب (أي ماركة)
-        applyKeyPinState(modelsTable, `${brandKey}_model_names`, 'pin_key_models');
+        applyKeyPinState(modelsTable, `${brandKey}_model_names`);
         enableExcelPasteAndDragFill();
         if (modelsList.length === 0) addModelsSheetRow(false);
     } catch (err) {
@@ -1739,9 +1735,9 @@ function cpRowActionsHtml(id) {
         </td>`;
 }
 
-// خلية اسم الموديل (للقراءة فقط) مثبّتة على الجنب عشان تفضل ظاهرة مع السكرول الأفقي
+// خلية اسم الموديل (للقراءة فقط). التثبيت بيتم بزرار تثبيت العمود المميز
 function cpNameCellHtml(val) {
-    return `<td style="position:sticky;right:0;z-index:5;background:Canvas;"><span class="block px-2.5 py-2 text-[13px] font-semibold text-gray-800 whitespace-nowrap" dir="auto">${escapeHtmlValue(val)}</span></td>`;
+    return `<td class="relative"><span class="block px-2.5 py-2 text-[13px] font-semibold text-gray-800 whitespace-nowrap" dir="auto">${escapeHtmlValue(val)}</span></td>`;
 }
 
 // ---------- شيت التوافقات لماركة معينة ----------
@@ -1771,6 +1767,10 @@ async function renderCompatSheet(brandKey, brandLabel) {
                 <button type="button" onclick="saveCpSheetToDB()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     <span>حفظ التعديلات لقاعدة البيانات</span>
+                </button>
+                <button type="button" id="keyPinBtn" onclick="toggleKeyColumnPin()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                    <span id="keyPinLabel">تثبيت العمود المميز</span>
                 </button>
                 <button type="button" onclick="exportCpSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -1830,8 +1830,7 @@ async function renderCompatSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => {
-                            const sticky = col === nameCol ? ' style="position:sticky;right:0;z-index:6;"' : '';
-                            return sheetThHtml(col, cpColLabel(col), sticky);
+                            return sheetThHtml(col, cpColLabel(col));
                         }).join('')}
                         ${sheetIdDupThHtml()}
                         <th class="sheet-actions-th">إجراءات</th>
@@ -1859,7 +1858,9 @@ async function renderCompatSheet(brandKey, brandLabel) {
             </table>
         `;
 
-        document.getElementById('editableUsersTable').addRowFn = addCpSheetRow;
+        const cpTable = document.getElementById('editableUsersTable');
+        cpTable.addRowFn = addCpSheetRow;
+        applyKeyPinState(cpTable, nameCol);
         enableExcelPasteAndDragFill();
         if (rows.length === 0) addCpSheetRow(false);
     } catch (err) {
@@ -2112,8 +2113,4 @@ function exportCpSheetToExcel() {
         }));
     });
 
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rowsData]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, currentCpBrand || 'compatibility');
-
-    const fileName = `${current
+    const worksheet =
