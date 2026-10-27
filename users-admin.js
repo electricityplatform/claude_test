@@ -118,27 +118,27 @@ async function fetchAndDisplayNewUsers() {
                                     return `
                                         <tr class="hover:bg-blue-50/50 transition-all">
                                             <td class="p-3.5 font-mono text-gray-700 leading-tight min-w-[130px]" dir="ltr">
-                                                <div class="font-bold text-gray-800">${datePart}</div>${timePart ? `<div class="text-[11px] text-gray-500 mt-0.5">${timePart}</div>` : ''}
+                                                <div class="font-bold text-gray-800">${escapeHtmlValue(datePart)}</div>${timePart ? `<div class="text-[11px] text-gray-500 mt-0.5">${escapeHtmlValue(timePart)}</div>` : ''}
                                             </td>
-                                            <td class="p-3.5 font-bold text-blue-600" dir="auto">${user.user_role || '---'}</td>
-                                            <td class="p-3.5 font-semibold text-gray-800" dir="auto">${user.user_name || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.store_name || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.store_city || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.store_region || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.store_area || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.store_address || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.shop_name || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.shop_city || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.shop_region || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.shop_area || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.shop_address || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.delivery_city || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.delivery_region || '---'}</td>
-                                            <td class="p-3.5 text-gray-700" dir="auto">${user.delivery_area || '---'}</td>
-                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${user.phone_number || '---'}</td>
-                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${user.whatsapp_number || '---'}</td>
-                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${user.gmail || '---'}</td>
-                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${user.password || '---'}</td>
+                                            <td class="p-3.5 font-bold text-blue-600" dir="auto">${escapeHtmlValue(user.user_role || '---')}</td>
+                                            <td class="p-3.5 font-semibold text-gray-800" dir="auto">${escapeHtmlValue(user.user_name || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.store_name || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.store_city || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.store_region || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.store_area || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.store_address || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.shop_name || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.shop_city || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.shop_region || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.shop_area || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.shop_address || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.delivery_city || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.delivery_region || '---')}</td>
+                                            <td class="p-3.5 text-gray-700" dir="auto">${escapeHtmlValue(user.delivery_area || '---')}</td>
+                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${escapeHtmlValue(user.phone_number || '---')}</td>
+                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${escapeHtmlValue(user.whatsapp_number || '---')}</td>
+                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${escapeHtmlValue(user.gmail || '---')}</td>
+                                            <td class="p-3.5 font-mono text-gray-600" dir="ltr">${escapeHtmlValue(user.password || '---')}</td>
                                         </tr>
                                     `;
                                 }).join('')}
