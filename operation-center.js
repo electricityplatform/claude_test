@@ -61,6 +61,10 @@ async function fetchAndDisplayOperationCenterMenu() {
                 // أي عنصر جديد يتربط بشاشته هنا، وحالياً بيظهر alert
                 let clickAction = `alert(${jsArg(item)})`;
 
+                if (item.includes('تسجيل مندوب جديد')) {
+                    clickAction = "renderRegisterRepresentativeScreen()";
+                }
+
                 return `
                     <div onclick="${clickAction}" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
                         <span class="font-bold text-gray-800" dir="auto">${escapeHtmlValue(item)}</span>
@@ -75,5 +79,117 @@ async function fetchAndDisplayOperationCenterMenu() {
     } catch (err) {
         console.error(err);
         operationCenterContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
+    }
+}
+
+// ================= تسجيل مندوب جديد (مركز العمليات) =================
+async function renderRegisterRepresentativeScreen() {
+    closeSidebar();
+
+    const container = document.getElementById('appContainer');
+
+    container.innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <button type="button" onclick="renderOperationCenterScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>رجوع</span>
+            </button>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800 flex items-center gap-2">
+                <span class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+                تسجيل مندوب جديد
+            </h2>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2">
+            <form onsubmit="handleRegisterRepresentative(event)" class="space-y-4 max-w-xl mx-auto bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">الرتبة</label>
+                    <input type="text" value="مندوب" disabled class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 text-sm font-bold text-center" dir="auto">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">الاسم</label>
+                    <input type="text" id="repName" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center" dir="auto" placeholder="ادخل اسم المندوب">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">محافظة التوصيل</label>
+                    <select id="repCity" onchange="updateRegionsDropdown('repCity', 'repRegion', 'repArea')" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center cursor-pointer">
+                        ${getGovernoratesOptionsHtml()}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">منطقة التوصيل</label>
+                    <select id="repRegion" onchange="updateAreasDropdown('repRegion', 'repArea')" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center cursor-pointer">
+                        <option value="">اختر المحافظة أولاً...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">نطاق التوصيل</label>
+                    <select id="repArea" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center cursor-pointer">
+                        <option value="">اختر منطقة التوصيل أولاً...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">رقم الهاتف</label>
+                    <input type="text" id="repPhone" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center" dir="ltr" placeholder="01xxxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">رقم الواتساب</label>
+                    <input type="text" id="repWhatsapp" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center" dir="ltr" placeholder="01xxxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">البريد الإلكترونى</label>
+                    <input type="email" id="repGmail" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center" dir="ltr" placeholder="example@gmail.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">رمز المرور</label>
+                    <div class="relative">
+                        <input type="password" id="repPassword" required class="w-full px-4 py-2.5 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 text-center" dir="ltr" placeholder="••••••••">
+                        <button type="button" onclick="togglePasswordVisibility('repPassword', 'repEyeIcon')" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 focus:outline-none p-1">
+                            <svg id="repEyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-sm cursor-pointer">
+                    حفظ وتسجيل المندوب
+                </button>
+            </form>
+        </div>
+    `;
+
+    loadDynamicMenuIntoSidebar();
+}
+
+async function handleRegisterRepresentative(e) {
+    e.preventDefault();
+    try {
+        const { data, error } = await supabaseClient.rpc('register_representative', {
+            p_user_id: currentUserId,
+            p_user_name: document.getElementById('repName').value.trim(),
+            p_delivery_city: document.getElementById('repCity').value,
+            p_delivery_region: document.getElementById('repRegion').value,
+            p_delivery_area: document.getElementById('repArea').value,
+            phone_number: document.getElementById('repPhone').value.trim(),
+            whatsapp_number: document.getElementById('repWhatsapp').value.trim(),
+            gmail: document.getElementById('repGmail').value.trim(),
+            password: document.getElementById('repPassword').value.trim()
+        });
+
+        if (error) {
+            alert("خطأ: " + error.message);
+            return;
+        }
+
+        if (data && data.success) {
+            alert(data.message || "تم تسجيل المندوب بنجاح");
+            renderOperationCenterScreen();
+        } else {
+            alert(data?.message || "عفواً، لا تملك الصلاحية لتنفيذ هذا الإجراء");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ غير متوقع أثناء التسجيل");
     }
 }
