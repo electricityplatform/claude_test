@@ -71,13 +71,7 @@ async function loadDynamicMenuIntoSidebar() {
             sidebarContainer.innerHTML = menuItems.map(item => {
                 let clickAction = `alert(${jsArg(item)})`;
 
-                if (item.includes('المستخدمون النشطون')) {
-                    clickAction = "renderActiveUsersScreen()";
-                } else if (item.includes('سجل دخول المستخدمين')) {
-                    clickAction = "renderLoginHistoryScreen()";
-                } else if (item.includes('المستخدمون الجدد')) {
-                    clickAction = "renderNewUsersScreen()";
-                } else if (item.includes('تسجيل مندوب جديد')) {
+                if (item.includes('تسجيل مندوب جديد')) {
                     clickAction = "renderRegisterRepresentativeScreen()";
                 } else if (item.includes('البيانات الشخصية')) {
                     clickAction = "renderPersonalProfileScreen()";
