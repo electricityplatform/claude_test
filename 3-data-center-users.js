@@ -1,8 +1,9 @@
 // مركز البيانات (3/6) - شيت جدول المستخدمين
 
 // ================= شيت جدول المستخدمين (النمط الشبكي لإكسل) =================
-async function renderUsersDataCenterSheet() {
+async function renderUsersDataCenterSheet(keepFilters = false) {
     closeSidebar();
+    if (!keepFilters) usersFilterState = { sort: null, role: null, cityCol: null, cityLabel: null, city: null };
 
     const container = document.getElementById('appContainer');
     container.innerHTML = `
@@ -13,9 +14,13 @@ async function renderUsersDataCenterSheet() {
                     <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     <span>رجوع لمركز البيانات</span>
                 </button>
-                <button type="button" onclick="renderUsersDataCenterSheet()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
+                <button type="button" onclick="renderUsersDataCenterSheet(true)" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span>تحديث</span>
+                </button>
+                <button type="button" onclick="usersFilterOpen('main')" class="bg-blue-800 hover:bg-blue-900 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18l-7 8v6l-4 2v-8L3 4z"></path></svg>
+                    <span>فلترة البيانات</span>
                 </button>
                 <button type="button" onclick="addUsersSheetRow(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -36,6 +41,8 @@ async function renderUsersDataCenterSheet() {
             </div>
             <h2 class="text-sm sm:text-base font-bold text-gray-800">شيت جدول المستخدمين (النمط الشبكي لإكسل)</h2>
         </div>
+
+        <div id="usersFilterStatus" class="hidden mb-2 flex-shrink-0 flex items-center justify-between gap-2 flex-wrap bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2 text-xs font-semibold"></div>
 
         <div id="usersSheetContainer" class="flex-1 overflow-y-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
             <div class="text-center text-gray-400 text-sm py-8">جاري جلب بيانات المستخدمين كشيت...</div>
@@ -70,17 +77,21 @@ async function loadUsersDataIntoSheetGrid() {
         {
             // لو الجدول فاضي مفيش صف نستخرج منه الأعمدة، فنستخدم الأعمدة الافتراضية
             const columns = usersList.length > 0 ? Object.keys(usersList[0]) : USERS_SHEET_DEFAULT_COLUMNS.slice();
+            // أزرار الحذف: للأدمن والمدير فقط (الصلاحية الفعلية بتتأكد منها دالة الداتابيز كمان)
+            const canManage = isDataCenterRowManager();
+            currentUsersSheetCanManage = canManage;
 
             sheetContainer.innerHTML = `
                 <table id="editableUsersTable">
                     <thead>
                         <tr>
                             ${columns.map(col => sheetThHtml(col, usersColLabel(col))).join('')}
+                            ${canManage ? '<th class="sheet-actions-th">إجراءات</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
                         ${usersList.map((user, idx) => `
-                            <tr data-id="${user.id}">
+                            <tr data-id="${escapeHtmlValue(user.id)}" data-created="${escapeHtmlValue(user.created_at)}" data-orig="${idx}">
                                 ${columns.map(col => {
                                     const val = user[col] !== null && user[col] !== undefined ? user[col] : '';
                                     const isId = USERS_SHEET_READONLY_COLS.includes(col);
@@ -94,6 +105,7 @@ async function loadUsersDataIntoSheetGrid() {
                                         </td>
                                     `;
                                 }).join('')}
+                                ${canManage ? usersRowActionsHtml(user.id) : ''}
                             </tr>
                         `).join('')}
                     </tbody>
@@ -107,6 +119,7 @@ async function loadUsersDataIntoSheetGrid() {
             applyKeyPinState(usersTable, 'user_role,user_name');
             usersTable.dataset.showNum = '1'; // عمود الترقيم (num) لجدول المستخدمين بس
             enableExcelPasteAndDragFill();
+            usersApplyFilters();
             if (usersList.length === 0) addUsersSheetRow(false);
         }
     } catch (err) {
@@ -124,7 +137,7 @@ function exportUsersSheetToExcel() {
     }
 
     // 1. عناوين الأعمدة (بأسماء الأعمدة الحقيقية بدون الترجمة العربية)
-    const headers = Array.from(table.querySelectorAll('thead th:not(.sheet-num)')).map(th => th.getAttribute('data-col') || th.innerText.trim());
+    const headers = Array.from(table.querySelectorAll('thead th:not(.sheet-num):not(.sheet-actions-th)')).map(th => th.getAttribute('data-col') || th.innerText.trim());
 
     // 2. بيانات الصفوف من الـ Inputs الحالية
     const rowsData = [];
@@ -133,7 +146,7 @@ function exportUsersSheetToExcel() {
     rows.forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         const rowData = [];
-        const cells = row.querySelectorAll('td:not(.sheet-num)');
+        const cells = row.querySelectorAll('td:not(.sheet-num):not(.sheet-actions)');
 
         cells.forEach(td => {
             const input = td.querySelector('.excel-input');
@@ -275,7 +288,11 @@ const USERS_COL_LABELS = {
 function usersColLabel(col) { return USERS_COL_LABELS[col] || ''; }
 
 function addUsersSheetRow(focus = true) {
-    return appendBlankSheetRow(currentUsersSheetColumns, USERS_SHEET_READONLY_COLS, focus);
+    // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية
+    const extra = currentUsersSheetCanManage ? '<td class="sheet-actions"></td>' : '';
+    const tr = appendBlankSheetRow(currentUsersSheetColumns, USERS_SHEET_READONLY_COLS, focus, extra);
+    usersRenumberVisible();
+    return tr;
 }
 
 // ================= جدول المستخدمين النشطين (مركز البيانات) =================
@@ -750,4 +767,222 @@ async function fetchAndDisplayNewUsers() {
         console.error(err);
         if (tableContainer) tableContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
     }
+}
+
+// ================= حذف مستخدم من الشيت (أدمن / مدير) =================
+let currentUsersSheetCanManage = false;
+
+function usersRowActionsHtml(id) {
+    if (!id) return '<td class="sheet-actions"></td>';
+    return `
+        <td class="sheet-actions">
+            <div class="flex items-center gap-1 px-2 py-1 whitespace-nowrap">
+                <button type="button" onclick="deleteUserRow(${jsArg(id)})" title="حذف هذا المستخدم" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">حذف</button>
+            </div>
+        </td>`;
+}
+
+async function deleteUserRow(id) {
+    if (!isDataCenterRowManager()) {
+        alert('هذا الإجراء للأدمن والمدير فقط');
+        return;
+    }
+
+    const tr = Array.from(document.querySelectorAll('#editableUsersTable tbody tr[data-id]'))
+        .find(r => r.getAttribute('data-id') === String(id));
+    const fieldVal = col => (tr?.querySelector(`[data-field="${col}"]`)?.value || '').trim();
+    const parts = [fieldVal('user_name'), fieldVal('user_role'), fieldVal('phone_number')].filter(Boolean);
+    const label = parts.length ? `"${parts.join(' - ')}"` : 'ده';
+
+    if (!confirm(
+        `هتحذف المستخدم ${label} نهائياً ولا يمكن التراجع.\n` +
+        `الشيت هيتحدّث بعد الحذف، فاحفظ أي تعديلات أخرى الأول. متأكد؟`
+    )) return;
+
+    try {
+        const { data, error } = await supabaseClient.rpc('delete_users_at_position_for_data_center', {
+            p_user_id: currentUserId,
+            p_id: id
+        });
+        if (error) {
+            alert('حدث خطأ أثناء الحذف: ' + error.message);
+            return;
+        }
+        if (!data || !data.success) {
+            alert(data?.message || 'فشل الحذف');
+            return;
+        }
+        await loadUsersDataIntoSheetGrid();
+    } catch (err) {
+        console.error('Delete user row error:', err);
+        alert('حدث خطأ غير متوقع أثناء الحذف');
+    }
+}
+
+// ================= فلترة بيانات شيت المستخدمين =================
+// الفلترة بإخفاء الصفوف بس (الخلايا فاضلة في الصفحة)، فالتعديلات اللي اتكتبت ما بتضيعش،
+// وزرار الحفظ بيحفظ كل الصفوف حتى المخفية. الترتيب بيحرّك الصفوف من غير ما يمس محتواها.
+let usersFilterState = { sort: null, role: null, cityCol: null, cityLabel: null, city: null };
+
+const USERS_FILTER_ROLES = ['أدمن', 'مدير', 'مندوب', 'تاجر', 'فنى'];
+const USERS_FILTER_CITY_KINDS = [
+    { col: 'store_city', label: 'محافظة المتجر' },
+    { col: 'shop_city', label: 'محافظة المحل' },
+    { col: 'delivery_city', label: 'محافظة التوصيل' }
+];
+
+function usersRenumberVisible() {
+    const table = document.getElementById('editableUsersTable');
+    if (!table) return;
+    let n = 0;
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const cells = tr.querySelectorAll('td.sheet-num > span');
+        if (!cells.length) return;
+        n++;
+        cells.forEach(sp => { sp.textContent = n; });
+    });
+}
+
+function usersApplyFilters() {
+    const table = document.getElementById('editableUsersTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const f = usersFilterState;
+
+    // 1) الترتيب (الصفوف المحفوظة بس، والصفوف الجديدة اللي لسه ما اتحفظتش تفضل في الآخر)
+    const savedRows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+    const newRows = Array.from(tbody.querySelectorAll('tr:not([data-id])'));
+    const time = tr => Date.parse(tr.getAttribute('data-created')) || 0;
+    if (f.sort === 'desc') savedRows.sort((a, b) => time(b) - time(a));
+    else if (f.sort === 'asc') savedRows.sort((a, b) => time(a) - time(b));
+    else savedRows.sort((a, b) => Number(a.getAttribute('data-orig')) - Number(b.getAttribute('data-orig')));
+    savedRows.forEach(tr => tbody.appendChild(tr));
+    newRows.forEach(tr => tbody.appendChild(tr));
+
+    // 2) الإخفاء حسب الرتبة / المحافظة
+    const val = (tr, col) => (tr.querySelector(`[data-field="${col}"]`)?.value || '').trim();
+    let total = 0;
+    let visible = 0;
+    tbody.querySelectorAll('tr').forEach(tr => {
+        if (!tr.querySelector('.excel-input')) return;
+        // الصف الجديد اللي لسه ما اتحفظش بيفضل ظاهر دايماً، عشان ما يختفيش وأنت بتكتب فيه
+        if (!tr.hasAttribute('data-id')) { tr.style.display = ''; return; }
+        total++;
+        let ok = true;
+        if (f.role && val(tr, 'user_role') !== f.role) ok = false;
+        if (ok && f.city && val(tr, f.cityCol) !== f.city) ok = false;
+        tr.style.display = ok ? '' : 'none';
+        if (ok) visible++;
+    });
+
+    usersRenumberVisible();
+    if (typeof refreshPinnedColumns === 'function') refreshPinnedColumns(table);
+
+    // 3) شريط الحالة
+    const status = document.getElementById('usersFilterStatus');
+    if (!status) return;
+    const chips = [];
+    if (f.sort) chips.push(f.sort === 'desc' ? 'الأحدث أولاً' : 'الأقدم أولاً');
+    if (f.role) chips.push(`الرتبة: ${f.role}`);
+    if (f.city) chips.push(`${f.cityLabel}: ${f.city}`);
+    if (chips.length === 0) {
+        status.classList.add('hidden');
+        status.innerHTML = '';
+        return;
+    }
+    status.classList.remove('hidden');
+    status.innerHTML = `
+        <span>${escapeHtmlValue(chips.join(' | '))}${(f.role || f.city) ? ` — ${visible} من ${total}` : ''}</span>
+        <button type="button" onclick="usersFilterClear()" class="bg-white hover:bg-gray-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">إلغاء الفلترة</button>
+    `;
+}
+
+function usersFilterClear() {
+    usersFilterState = { sort: null, role: null, cityCol: null, cityLabel: null, city: null };
+    usersApplyFilters();
+}
+
+// ---------- نافذة اختيار الفلترة ----------
+function usersFilterClose() {
+    const el = document.getElementById('usersFilterDialog');
+    if (el) el.remove();
+}
+
+function usersFilterOpen(step, kindCol) {
+    let overlay = document.getElementById('usersFilterDialog');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'usersFilterDialog';
+        overlay.className = 'fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4';
+        overlay.addEventListener('click', e => { if (e.target === overlay) usersFilterClose(); });
+        document.body.appendChild(overlay);
+    }
+
+    const chevronRight = '<svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+    const backLink = (label, target) => `
+        <button type="button" onclick="${target}" class="flex items-center gap-1 text-blue-600 text-sm font-semibold mb-3 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <span>${label}</span>
+        </button>`;
+    const optionBtn = (label, onclick, withArrow) => `
+        <button type="button" onclick="${onclick}" class="w-full bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-2 text-gray-800 text-base cursor-pointer transition-all">
+            <span dir="auto">${escapeHtmlValue(label)}</span>
+            ${withArrow ? chevronRight : ''}
+        </button>`;
+
+    let title = '';
+    let body = '';
+
+    if (step === 'date') {
+        title = 'ترتيب حسب تاريخ الإنشاء';
+        body = backLink('رجوع للخلف', "usersFilterOpen('main')") +
+            optionBtn('من الأحدث للأقدم', "usersFilterPick('sort','desc')") +
+            optionBtn('من الأقدم للأحدث', "usersFilterPick('sort','asc')");
+    } else if (step === 'role') {
+        title = 'اختر الرتبة المطلوبة';
+        body = backLink('رجوع للخلف', "usersFilterOpen('main')") +
+            USERS_FILTER_ROLES.map(r => optionBtn(r, `usersFilterPick('role',${jsArg(r)})`)).join('');
+    } else if (step === 'cityKind') {
+        title = 'اختر نوع المحافظة';
+        body = backLink('رجوع للخلف', "usersFilterOpen('main')") +
+            USERS_FILTER_CITY_KINDS.map(k => optionBtn(k.label, `usersFilterOpen('city',${jsArg(k.col)})`)).join('');
+    } else if (step === 'city') {
+        const kind = USERS_FILTER_CITY_KINDS.find(k => k.col === kindCol) || USERS_FILTER_CITY_KINDS[0];
+        title = `اختر ${kind.label}`;
+        body = backLink('رجوع لأنواع المحافظات', "usersFilterOpen('cityKind')") +
+            EGYPTIAN_GOVERNORATES.map(g => optionBtn(g, `usersFilterPick('city',${jsArg(g)},${jsArg(kind.col)})`)).join('');
+    } else {
+        title = 'اختر نوع الفلترة';
+        body = optionBtn('فلترة بناءً على تاريخ الإنشاء', "usersFilterOpen('date')", true) +
+            optionBtn('فلترة بناءً على الرتبة', "usersFilterOpen('role')", true) +
+            optionBtn('فلترة بناءً على المحافظة', "usersFilterOpen('cityKind')", true);
+    }
+
+    overlay.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-[2rem] shadow-2xl p-6 border border-gray-200 flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between pb-4 mb-3 border-b border-gray-100 flex-shrink-0">
+                <h3 class="font-bold text-gray-800 text-lg">${escapeHtmlValue(title)}</h3>
+                <button type="button" onclick="usersFilterClose()" class="text-gray-400 hover:text-gray-600 cursor-pointer" title="إغلاق">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="overflow-y-auto space-y-2.5 pr-0.5" style="max-height:55vh">${body}</div>
+        </div>
+    `;
+}
+
+function usersFilterPick(type, value, cityCol) {
+    if (type === 'sort') {
+        usersFilterState.sort = value;
+    } else if (type === 'role') {
+        usersFilterState.role = value;
+    } else if (type === 'city') {
+        const kind = USERS_FILTER_CITY_KINDS.find(k => k.col === cityCol);
+        usersFilterState.cityCol = cityCol;
+        usersFilterState.cityLabel = kind ? kind.label : 'المحافظة';
+        usersFilterState.city = value;
+    }
+    usersFilterClose();
+    usersApplyFilters();
 }
