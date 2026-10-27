@@ -44,7 +44,7 @@ function sdcPartSuffix(part) {
     if (has('فليكس', 'فلات', 'flex') && has('شحن', 'charg')) return 'charging_flex_cable';
     if (has('سماعة', 'سماعه', 'speaker') && has('داخل', 'مكالم', 'internal')) return 'internal_speaker';
     if (has('سماعة', 'سماعه', 'speaker') && has('خارج', 'external')) return 'external_speaker';
-    if (has('لاود', 'loud')) return 'loud';
+    if (has('لاود', 'loud', 'جرس')) return 'loud_speaker';
     if (has('سوكت', 'socket')) return 'socket';
     if (has('بطارية', 'بطاريه', 'battery')) return 'battery';
     if (has('شاشة', 'شاشه', 'screen')) return 'screen';
