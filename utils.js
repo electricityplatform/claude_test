@@ -1,3 +1,10 @@
+// ================= تمرير قيمة نصية بأمان داخل onclick="..." =================
+// بيرجّع نص JS literal (بين " ") ومتهرّب منه HTML، فأي اسم فيه ' أو " أو \ ما بيكسرش الزرار.
+function jsArg(v) {
+    return JSON.stringify(String(v ?? ''))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ================= دوال مساعدة: المحافظات والمناطق والنطاقات =================
 function getGovernoratesOptionsHtml(selectedValue = "") {
     return `<option value="">اختر المحافظة...</option>` +
