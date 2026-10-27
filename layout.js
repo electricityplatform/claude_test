@@ -71,9 +71,7 @@ async function loadDynamicMenuIntoSidebar() {
             sidebarContainer.innerHTML = menuItems.map(item => {
                 let clickAction = `alert(${jsArg(item)})`;
 
-                if (item.includes('تسجيل مندوب جديد')) {
-                    clickAction = "renderRegisterRepresentativeScreen()";
-                } else if (item.includes('البيانات الشخصية')) {
+                if (item.includes('البيانات الشخصية')) {
                     clickAction = "renderPersonalProfileScreen()";
                 } else if (item.includes('بيانات المستخدمين')) {
                     clickAction = "renderUserProfilesScreen()";
