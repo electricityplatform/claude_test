@@ -79,6 +79,8 @@ async function loadDynamicMenuIntoSidebar() {
                     clickAction = "renderUserProfilesScreen()";
                 } else if (item.includes('مركز البيانات')) {
                     clickAction = "renderDataCenterScreen()";
+                } else if (item.includes('مركز العمليات')) {
+                    clickAction = "renderOperationCenterScreen()";
                 } else if (item.includes('الإعدادات العامة')) {
                     clickAction = "renderGeneralSettingsScreen()";
                 } else if (item.includes('المنتجات المعروضة للبيع')) {
