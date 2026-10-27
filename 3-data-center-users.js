@@ -105,6 +105,7 @@ async function loadUsersDataIntoSheetGrid() {
             usersTable.addRowFn = addUsersSheetRow;
             // تثبيت عمودي الرتبة والاسم على الجنب
             applyKeyPinState(usersTable, 'user_role,user_name');
+            usersTable.dataset.showNum = '1'; // عمود الترقيم (num) لجدول المستخدمين بس
             enableExcelPasteAndDragFill();
             if (usersList.length === 0) addUsersSheetRow(false);
         }
@@ -123,7 +124,7 @@ function exportUsersSheetToExcel() {
     }
 
     // 1. عناوين الأعمدة (بأسماء الأعمدة الحقيقية بدون الترجمة العربية)
-    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.getAttribute('data-col') || th.innerText.trim());
+    const headers = Array.from(table.querySelectorAll('thead th:not(.sheet-num)')).map(th => th.getAttribute('data-col') || th.innerText.trim());
 
     // 2. بيانات الصفوف من الـ Inputs الحالية
     const rowsData = [];
@@ -132,7 +133,7 @@ function exportUsersSheetToExcel() {
     rows.forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         const rowData = [];
-        const cells = row.querySelectorAll('td');
+        const cells = row.querySelectorAll('td:not(.sheet-num)');
 
         cells.forEach(td => {
             const input = td.querySelector('.excel-input');
