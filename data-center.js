@@ -157,7 +157,7 @@ async function loadUsersDataIntoSheetGrid() {
                 <table id="editableUsersTable">
                     <thead>
                         <tr>
-                            ${columns.map(col => `<th>${col}</th>`).join('')}
+                            ${columns.map(col => sheetThHtml(col, usersColLabel(col))).join('')}
                         </tr>
                     </thead>
                     <tbody>
@@ -183,7 +183,10 @@ async function loadUsersDataIntoSheetGrid() {
             `;
 
             currentUsersSheetColumns = columns;
-            document.getElementById('editableUsersTable').addRowFn = addUsersSheetRow;
+            const usersTable = document.getElementById('editableUsersTable');
+            usersTable.addRowFn = addUsersSheetRow;
+            // تثبيت عمودي الرتبة والاسم على الجنب
+            usersTable.dataset.pinCols = 'user_role,user_name';
             enableExcelPasteAndDragFill();
             if (usersList.length === 0) addUsersSheetRow(false);
         }
@@ -201,8 +204,8 @@ function exportUsersSheetToExcel() {
         return;
     }
 
-    // 1. عناوين الأعمدة
-    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+    // 1. عناوين الأعمدة (بأسماء الأعمدة الحقيقية بدون الترجمة العربية)
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.getAttribute('data-col') || th.innerText.trim());
 
     // 2. بيانات الصفوف من الـ Inputs الحالية
     const rowsData = [];
@@ -293,6 +296,64 @@ function distributePastedText(table, startInput, pastedData) {
     });
 }
 
+// ================= عناوين الأعمدة (إنجليزي فوق وعربي تحت) =================
+function sheetThHtml(col, ar, extra = '') {
+    return `<th data-col="${escapeHtmlValue(col)}"${extra}>
+        <div>${escapeHtmlValue(col)}</div>
+        ${ar ? `<div class="text-[11px] font-semibold text-gray-500 mt-0.5">${escapeHtmlValue(ar)}</div>` : ''}
+    </th>`;
+}
+
+// ================= تثبيت أعمدة على الجنب =================
+// أسماء الأعمدة المطلوب تثبيتها في table.dataset.pinCols مفصولة بفاصلة (بالترتيب من الجنب).
+// الإزاحة بتتحسب من عرض الأعمدة المثبتة قبلها. الـ style بيتحط inline لأن كلاس relative على الـ td كان هيلغي sticky.
+// لون الخلفية بيتجاب من الثيم الحالي (فاتح أو غامق) عشان الأعمدة اللي بتمر تحتها ما تظهرش من ورا.
+function sheetResolveBg(el) {
+    while (el) {
+        const c = getComputedStyle(el).backgroundColor;
+        if (c && c !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(c)) return c;
+        el = el.parentElement;
+    }
+    return '#ffffff';
+}
+
+function refreshPinnedColumns(table) {
+    const pins = (table.dataset.pinCols || '').split(',').filter(Boolean);
+    if (!pins.length) return;
+
+    const ths = Array.from(table.querySelectorAll('thead th'));
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    // نمسح الألوان المثبتة قبل كده عشان نقرا لون الثيم الحقيقي
+    pins.forEach(col => {
+        const idx = ths.findIndex(th => th.getAttribute('data-col') === col);
+        if (idx < 0) return;
+        ths[idx].style.background = '';
+        rows.forEach(tr => { if (tr.children[idx]) tr.children[idx].style.background = ''; });
+    });
+
+    let offset = 0;
+    pins.forEach(col => {
+        const idx = ths.findIndex(th => th.getAttribute('data-col') === col);
+        if (idx < 0) return;
+
+        const apply = (el, z) => {
+            el.style.position = 'sticky';
+            el.style.right = offset + 'px';
+            el.style.zIndex = z;
+            el.style.background = sheetResolveBg(el);
+        };
+
+        apply(ths[idx], 6);
+        rows.forEach(tr => {
+            const td = tr.children[idx];
+            if (td) apply(td, 5);
+        });
+
+        offset += ths[idx].offsetWidth;
+    });
+}
+
 // ================= ميزات الإكسل (اللصق المتعدد والسحب للتعبئة) =================
 function enableExcelPasteAndDragFill() {
     const table = document.getElementById('editableUsersTable');
@@ -304,10 +365,15 @@ function enableExcelPasteAndDragFill() {
     if (!table.dataset.fitBound) {
         table.dataset.fitBound = '1';
         table.addEventListener('input', e => {
-            if (e.target.classList && e.target.classList.contains('excel-input')) sheetFitCell(e.target);
+            if (e.target.classList && e.target.classList.contains('excel-input')) {
+                sheetFitCell(e.target);
+                requestAnimationFrame(() => refreshPinnedColumns(table));
+            }
         });
     }
     sheetFitAll(table);
+    refreshPinnedColumns(table);
+    requestAnimationFrame(() => refreshPinnedColumns(table));
 
     inputs.forEach(input => {
         if (input.dataset.bound) return;
@@ -321,6 +387,7 @@ function enableExcelPasteAndDragFill() {
             if (!pastedData || !/[\r\n\t]/.test(pastedData)) return;
             e.preventDefault();
             distributePastedText(table, this, pastedData);
+            requestAnimationFrame(() => refreshPinnedColumns(table));
         });
 
         // احتياطي: بعض كيبوردات الموبايل تلصق النص بدون حدث paste
@@ -505,6 +572,42 @@ const USERS_SHEET_DEFAULT_COLUMNS = [
     'phone_number', 'whatsapp_number', 'gmail', 'password'
 ];
 
+// ---------- التسميات العربية لأعمدة المستخدمين ----------
+const USERS_COL_LABELS = {
+    user_role: 'الرتبة',
+    user_name: 'الاسم',
+    store_name: 'اسم المتجر',
+    store_city: 'محافظة المتجر',
+    store_region: 'منطقة المتجر',
+    store_area: 'نطاق المتجر',
+    store_address: 'عنوان المتجر',
+    shop_name: 'اسم المحل',
+    shop_city: 'محافظة المحل',
+    shop_region: 'منطقة المحل',
+    shop_area: 'نطاق المحل',
+    shop_address: 'عنوان المحل',
+    delivery_city: 'محافظة التوصيل',
+    delivery_region: 'منطقة التوصيل',
+    delivery_area: 'نطاق التوصيل',
+    phone_number: 'رقم الهاتف',
+    whatsapp_number: 'رقم الواتساب',
+    gmail: 'البريد الإلكترونى',
+    password: 'رمز المرور',
+    last_active_at: 'آخر ظهور',
+    created_at: 'تاريخ الإنشاء',
+    seller_data_center_created: 'حالة إنشاء مركز بيانات التاجر'
+};
+function usersColLabel(col) { return USERS_COL_LABELS[col] || ''; }
+
+// ---------- التسميات العربية لأعمدة الموديلات (أي ماركة) ----------
+function modelsColLabel(col) {
+    if (col === 'created_at') return 'تاريخ الإنشاء';
+    if (/_model_names$/.test(col)) return 'اسم الموديل';
+    if (/_model_codes$/.test(col)) return 'كود الموديل';
+    if (/_battery_codes$/.test(col)) return 'كود البطارية';
+    return '';
+}
+
 // الرتب اللي مسموح لها تدرج/تحذف صفوف في جدول الموديلات (نفس الرتب في profile.js)
 // الصلاحية الفعلية بتتأكد منها دوال الداتابيز كمان، ده بس لإظهار/إخفاء الأزرار.
 const DATA_CENTER_ROW_MANAGER_ROLES = ['أدمن', 'admin', 'مدير', 'head', 'manager'];
@@ -664,7 +767,7 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
             <table id="editableUsersTable">
                 <thead>
                     <tr>
-                        ${columns.map(col => `<th>${escapeHtmlValue(col)}</th>`).join('')}
+                        ${columns.map(col => sheetThHtml(col, modelsColLabel(col))).join('')}
                         ${canManageRows ? '<th class="sheet-actions-th">إجراءات</th>' : ''}
                     </tr>
                 </thead>
@@ -691,7 +794,10 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
         `;
 
         currentModelsSheetColumns = columns;
-        document.getElementById('editableUsersTable').addRowFn = addModelsSheetRow;
+        const modelsTable = document.getElementById('editableUsersTable');
+        modelsTable.addRowFn = addModelsSheetRow;
+        // تثبيت عمود اسم الموديل على الجنب (أي ماركة)
+        modelsTable.dataset.pinCols = `${brandKey}_model_names`;
         enableExcelPasteAndDragFill();
         if (modelsList.length === 0) addModelsSheetRow(false);
     } catch (err) {
@@ -981,8 +1087,8 @@ function exportModelsSheetToExcel() {
         return;
     }
 
-    // عمود/خلايا الإجراءات (إدراج/حذف) مش بتتصدّر
-    const headers = Array.from(table.querySelectorAll('thead th:not(.sheet-actions-th)')).map(th => th.innerText.trim());
+    // عمود/خلايا الإجراءات (إدراج/حذف) مش بتتصدّر، والعناوين بأسماء الأعمدة الحقيقية
+    const headers = Array.from(table.querySelectorAll('thead th[data-col]')).map(th => th.getAttribute('data-col'));
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
@@ -1012,21 +1118,21 @@ const CG_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 // أي عمود اسمه بينتهي بـ _compatibility_groups = عمود توافق (البحث بيدوّر في كلهم)
 const CG_SEARCH_FIELD_RE = /_compatibility_groups$/;
 
-// الاسم العربي لكل عمود (بعد شيل {brand}_model_ من الأول و _compatibility_groups من الآخر)
+// الاسم العربي لكل قطعة (بعد شيل {brand}_model_ من الأول و _compatibility_groups من الآخر)
 const CG_PART_LABELS = {
     screen: 'شاشة',
     battery: 'بطارية',
-    back_cover: 'غطاء خلفي (ضهر)',
-    charging_flex_cable: 'فليكس شحن',
-    charging_linking_flex_cable: 'فليكس ربط شحن',
-    screen_linking_flex_cable: 'فليكس ربط شاشة',
-    power_flex_cable: 'فليكس باور',
+    back_cover: 'ضهرية',
+    charging_flex_cable: 'فلاتة شحن',
+    charging_linking_flex_cable: 'فلاتة ربط شحن',
+    screen_linking_flex_cable: 'فلاتة ربط شاشة',
+    power_flex_cable: 'فلاتة باور',
     frame: 'فريم',
-    middle_frame: 'ميدل فريم',
+    middle_frame: 'ميدل',
     internal_speaker: 'سماعة داخلية',
     external_speaker: 'سماعة خارجية',
-    loud_speaker: 'لاود سبيكر',
-    socket: 'سوكت'
+    loud_speaker: 'علبة جرس',
+    socket: 'سوكيت'
 };
 
 let currentCgBrand = '';
@@ -1035,10 +1141,12 @@ let currentCgColumns = [];
 let currentCgData = [];
 
 function cgColLabel(col) {
+    if (col === 'created_at') return 'تاريخ الانشاء';
     const key = String(col)
         .replace(`${currentCgBrand}_model_`, '')
         .replace(/_compatibility_groups$/, '');
-    return CG_PART_LABELS[key] || '';
+    const base = CG_PART_LABELS[key];
+    return base ? `مجموعات توافق ${base}` : '';
 }
 
 // ---------- شاشة اختيار الماركة ----------
@@ -1169,13 +1277,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
             <table id="editableUsersTable">
                 <thead>
                     <tr>
-                        ${columns.map(col => {
-                            const ar = cgColLabel(col);
-                            return `<th data-col="${escapeHtmlValue(col)}">
-                                <div>${escapeHtmlValue(col)}</div>
-                                ${ar ? `<div class="text-[11px] font-semibold text-gray-500 mt-0.5">${ar}</div>` : ''}
-                            </th>`;
-                        }).join('')}
+                        ${columns.map(col => sheetThHtml(col, cgColLabel(col))).join('')}
                         <th class="sheet-actions-th">إجراءات</th>
                     </tr>
                 </thead>
@@ -1501,13 +1603,14 @@ function cpNameCol() {
 
 function cpColLabel(col) {
     if (col === cpNameCol()) return 'اسم الموديل';
+    if (col === 'created_at') return 'تاريخ الانشاء';
     const isGroups = /_compatibility_selected_groups$/.test(col);
     const key = String(col)
         .replace(`${currentCpBrand}_model_`, '')
         .replace(/_compatibility(_selected_groups)?$/, '');
     const base = CG_PART_LABELS[key];
     if (!base) return '';
-    return isGroups ? `${base} — المجموعات المختارة` : `${base} — التوافق`;
+    return isGroups ? `مجموعات توافق ${base} المختارة` : `توافق ${base}`;
 }
 
 // ---------- شاشة اختيار الماركة ----------
@@ -1645,12 +1748,8 @@ async function renderCompatSheet(brandKey, brandLabel) {
                 <thead>
                     <tr>
                         ${columns.map(col => {
-                            const ar = cpColLabel(col);
                             const sticky = col === nameCol ? ' style="position:sticky;right:0;z-index:6;"' : '';
-                            return `<th data-col="${escapeHtmlValue(col)}"${sticky}>
-                                <div>${escapeHtmlValue(col)}</div>
-                                ${ar ? `<div class="text-[11px] font-semibold text-gray-500 mt-0.5">${ar}</div>` : ''}
-                            </th>`;
+                            return sheetThHtml(col, cpColLabel(col), sticky);
                         }).join('')}
                         <th class="sheet-actions-th">إجراءات</th>
                     </tr>
