@@ -794,8 +794,11 @@ async function deleteUserRow(id) {
     const parts = [fieldVal('user_name'), fieldVal('user_role'), fieldVal('phone_number')].filter(Boolean);
     const label = parts.length ? `"${parts.join(' - ')}"` : 'ده';
 
+    const isSeller = ['تاجر', 'merchant', 'trader'].includes(fieldVal('user_role'));
     if (!confirm(
         `هتحذف المستخدم ${label} نهائياً ولا يمكن التراجع.\n` +
+        `وسجل دخوله هيتمسح معاه.\n` +
+        (isSeller ? `ولو عامل مركز بيانات لمنتجاته، هيتمسح هو وكل أسعاره من جداول الأسعار.\n` : '') +
         `الشيت هيتحدّث بعد الحذف، فاحفظ أي تعديلات أخرى الأول. متأكد؟`
     )) return;
 
