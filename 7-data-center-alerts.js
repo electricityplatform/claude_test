@@ -21,7 +21,7 @@ function alertsColLabel(col) {
     
     // استخراج اسم القطعة وترجمتها بالعربي إن وجدت
     const key = String(col)
-        .replace(`${currentAlertsBrand}_model_`, '')
+        .replace(new RegExp('^' + currentAlertsBrand + '_(model_)?'), '')
         .replace(/_spare_part_maintenance_alerts$/, '')
         .replace(/_maintenance_alerts$/, '')
         .replace(/_alerts$/, '');
