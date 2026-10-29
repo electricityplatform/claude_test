@@ -1,5 +1,16 @@
+// مسار الرحلة الحالية: 'buy' (شراء قطع الغيار) أو 'alerts' (تنبيهات الصيانة)
+let currentFlow = 'buy';
+
+// بداية رحلة تنبيهات الصيانة: الماركات ← الموديلات ← قطع الغيار ← التنبيه
+function startMaintenanceAlertsFlow() {
+    currentFlow = 'alerts';
+    selectedPart = '';
+    renderBrandsScreen('تنبيهات الصيانة');
+}
+
 // ================= الشاشة الرئيسية =================
 async function renderMainDashboard() {
+    currentFlow = 'buy';
     const html = `
         ${getHeaderTemplate()}
         <div class="flex-1 overflow-y-auto space-y-4 px-1">
@@ -34,7 +45,9 @@ async function renderMainDashboard() {
         if (container && partitionsList && partitionsList.length > 0) {
             let partitionsHtml = partitionsList.map(name => {
                 let clickAction = "";
-                if (name.includes('شراء قطع الغيار')) {
+                if (name.includes('تنبيهات الصيانة')) {
+                    clickAction = "startMaintenanceAlertsFlow()";
+                } else if (name.includes('شراء قطع الغيار')) {
                     clickAction = "renderBrandsScreen()";
                 } else if (name.includes('قطع الغيار')) {
                     clickAction = "renderPartsScreen()";
@@ -117,53 +130,47 @@ async function renderBrandsScreen(partName = '') {
 // ================= شاشة الموديلات =================
 async function renderModelsScreen(brand) {
     selectedBrand = brand;
-    let tableName = "";
-    let nameColumn = "device_name";
-    let codeColumn = "model_code";
-    let compatColumn = "screen_compatibility";
-    let batteryColumn = "battery_model";
 
-    const b = brand.toLowerCase();
-    if (b.includes('samsung')) {
-        tableName = 'samsung_models'; nameColumn = 'samsung_phone_name'; codeColumn = 'samsung_phone_code'; compatColumn = 'samsung_screen_compatibility'; batteryColumn = 'samsung_battery_model';
-    } else if (b.includes('iphone') || b.includes('apple')) {
-        tableName = 'apple_models'; nameColumn = 'apple_phone_name'; codeColumn = 'apple_phone_code'; compatColumn = 'apple_screen_compatibility'; batteryColumn = 'apple_battery_model';
-    } else if (b.includes('xiaomi') || b.includes('poco')) {
-        tableName = 'xiaomi_models'; nameColumn = 'xiaomi_phone_name'; codeColumn = 'xiaomi_phone_code'; compatColumn = 'xiaomi_screen_compatibility'; batteryColumn = 'xiaomi_battery_model';
-    } else if (b.includes('redmi')) {
-        tableName = 'redmi_models'; nameColumn = 'redmi_phone_name'; codeColumn = 'redmi_phone_code'; compatColumn = 'redmi_screen_compatibility'; batteryColumn = 'redmi_battery_model';
-    } else if (b.includes('huawei')) {
-        tableName = 'huawei_models'; nameColumn = 'huawei_phone_name'; codeColumn = 'huawei_phone_code'; compatColumn = 'huawei_screen_compatibility'; batteryColumn = 'huawei_battery_model';
-    } else if (b.includes('honor')) {
-        tableName = 'honor_models'; nameColumn = 'honor_phone_name'; codeColumn = 'honor_phone_code'; compatColumn = 'honor_screen_compatibility'; batteryColumn = 'honor_battery_model';
-    } else if (b.includes('oppo')) {
-        tableName = 'oppo_models'; nameColumn = 'oppo_phone_name'; codeColumn = 'oppo_phone_code'; compatColumn = 'oppo_screen_compatibility'; batteryColumn = 'oppo_battery_model';
-    } else if (b.includes('realme')) {
-        tableName = 'realme_models'; nameColumn = 'realme_phone_name'; codeColumn = 'realme_phone_code'; compatColumn = 'realme_screen_compatibility'; batteryColumn = 'realme_battery_model';
-    } else if (b.includes('itel')) {
-        tableName = 'itel_models'; nameColumn = 'itel_phone_name'; codeColumn = 'itel_phone_code'; compatColumn = 'itel_screen_compatibility'; batteryColumn = 'itel_battery_model';
-    } else if (b.includes('nokia')) {
-        tableName = 'nokia_models'; nameColumn = 'nokia_phone_name'; codeColumn = 'nokia_phone_code'; compatColumn = 'nokia_screen_compatibility'; batteryColumn = 'nokia_battery_model';
-    } else if (b.includes('vivo')) {
-        tableName = 'vivo_models'; nameColumn = 'vivo_phone_name'; codeColumn = 'vivo_phone_code'; compatColumn = 'vivo_screen_compatibility'; batteryColumn = 'vivo_battery_model';
-    } else if (b.includes('techno') || b.includes('tecno')) {
-        tableName = 'tecno_models'; nameColumn = 'tecno_phone_name'; codeColumn = 'tecno_phone_code'; compatColumn = 'tecno_screen_compatibility'; batteryColumn = 'tecno_battery_model';
-    } else if (b.includes('htc')) {
-        tableName = 'htc_models'; nameColumn = 'htc_phone_name'; codeColumn = 'htc_phone_code'; compatColumn = 'htc_screen_compatibility'; batteryColumn = 'htc_battery_model';
-    } else if (b.includes('infinix')) {
-        tableName = 'infinix_models'; nameColumn = 'infinix_phone_name'; codeColumn = 'infinix_phone_code'; compatColumn = 'infinix_screen_compatibility'; batteryColumn = 'infinix_battery_model';
-    }
-
+    // الموديلات بتتجاب من قاعدة البيانات بس (نفس دالة جداول الموديلات في مركز البيانات)
+    const brandSlug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(brand) : '';
     let models = [];
-    if (tableName) {
-        const { data, error } = await supabaseClient.from(tableName).select('*').order('id', { ascending: true });
-        if (!error && data) {
-            models = data.map(item => ({
-                device_name: item[nameColumn] || item['device_name'],
-                model_code: item[codeColumn] || item['model_code'],
-                screen_compatibility: item[compatColumn] || item['screen_compatibility'] || null,
-                battery_model: item[batteryColumn] || item['battery_model'] || null
-            }));
+    let modelsError = '';
+
+    if (!brandSlug) {
+        modelsError = 'الماركة غير معروفة: ' + brand;
+    } else {
+        try {
+            const { data, error } = await supabaseClient.rpc('get_models_for_data_center', {
+                p_user_id: currentUserId,
+                p_brand: brandSlug
+            });
+            if (error) {
+                modelsError = error.message;
+            } else {
+                let payload = data;
+                if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
+                const rows = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.rows) ? payload.rows : []);
+                const cols = (payload && Array.isArray(payload.columns) && payload.columns.length)
+                    ? payload.columns
+                    : (rows[0] ? Object.keys(rows[0]) : []);
+                const nameCol = cols.find(c => /_model_names$/.test(c));
+                const codeCol = cols.find(c => /_model_codes$/.test(c));
+                const batCol = cols.find(c => /_battery_codes$/.test(c));
+                if (nameCol) {
+                    models = rows
+                        .filter(r => r[nameCol] !== null && r[nameCol] !== undefined && String(r[nameCol]).trim() !== '')
+                        .map(r => ({
+                            device_name: r[nameCol],
+                            model_code: codeCol ? r[codeCol] : null,
+                            screen_compatibility: null,
+                            battery_model: batCol ? r[batCol] : null
+                        }));
+                } else {
+                    modelsError = 'عمود اسم الموديل غير موجود في الرد';
+                }
+            }
+        } catch (err) {
+            modelsError = err.message;
         }
     }
 
@@ -185,7 +192,7 @@ async function renderModelsScreen(brand) {
             `;
         }).join('');
     } else {
-        modelsHtml = `<div class="text-center text-gray-500 py-6">لا توجد موديلات متاحة</div>`;
+        modelsHtml = `<div class="text-center text-gray-500 py-6">لا توجد موديلات متاحة${modelsError ? `<div class="text-red-400 text-xs mt-2" dir="ltr">${escapeHtmlValue(modelsError)}</div>` : ''}</div>`;
     }
 
     const html = `
@@ -261,5 +268,96 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
 
 async function renderPartDetailsFinal(partName = '') {
     selectedPart = partName;
+    if (currentFlow === 'alerts') {
+        renderMaintenanceAlertScreen(partName);
+        return;
+    }
     alert(`بيانات الشراء النهائية:\n- الماركة: ${selectedBrand}\n- الموديل: ${selectedModel}\n- الكود: ${selectedModelCode}\n- قطعة الغيار: ${selectedPart}`);
+}
+
+
+// ================= شاشة تنبيه الصيانة (الموديل + قطعة الغيار) =================
+// بتجيب جدول تنبيهات الماركة، وتدوّر على صف الموديل المختار، وتعرض عمود القطعة المختارة بس.
+function maintAlertsNorm(v) {
+    return String(v ?? '').toLowerCase().replace(/\s+/g, '');
+}
+
+async function renderMaintenanceAlertScreen(partName = '') {
+    const slug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(selectedBrand) : '';
+    const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
+
+    const backAction = `renderPartsScreenAfterModel(${jsArg(selectedModel)}, ${jsArg(encodeURIComponent(selectedModelCode || ''))}, ${jsArg(encodeURIComponent(currentScreenCompatibility || ''))}, ${jsArg(encodeURIComponent(currentBatteryModel || ''))})`;
+
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate(true)}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <button onclick="${backAction}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>رجوع</span>
+            </button>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">تنبيهات الصيانة</h2>
+        </div>
+        <div id="maintAlertBox" class="flex-1 overflow-y-auto space-y-3 p-1">
+            <div class="text-center text-gray-400 text-sm py-8">جاري جلب التنبيه...</div>
+        </div>
+    `;
+    loadDynamicMenuIntoSidebar();
+
+    const box = document.getElementById('maintAlertBox');
+    const msg = (text, color = 'text-gray-500') => {
+        if (box) box.innerHTML = `<div class="text-center ${color} text-sm py-8">${escapeHtmlValue(text)}</div>`;
+    };
+
+    if (!slug) { msg('الماركة غير معروفة لجدول التنبيهات'); return; }
+    if (!partKey) { msg(`قطعة الغيار "${partName}" غير مربوطة بعمود تنبيهات`); return; }
+
+    try {
+        const { data, error } = await supabaseClient.rpc('get_brand_model_spare_part_maintenance_alerts_for_data_center', {
+            p_user_id: currentUserId,
+            p_brand: slug
+        });
+        if (error) { msg('خطأ في جلب التنبيهات: ' + error.message, 'text-red-400'); return; }
+
+        let payload = data;
+        if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
+        const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
+        const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
+        if (!columns.length) { msg('جدول التنبيهات غير موجود لهذه الماركة'); return; }
+
+        const nameCol = `${slug}_model_names`;
+        const alertCol = columns.find(col => {
+            if (col === nameCol || col === 'id' || col === 'created_at' || col === 'updated_at') return false;
+            const key = String(col)
+                .replace(`${slug}_model_`, '')
+                .replace(/_spare_part_maintenance_alerts$/, '')
+                .replace(/_maintenance_alerts$/, '')
+                .replace(/_alerts$/, '');
+            return key === partKey;
+        });
+        if (!alertCol) { msg(`لا يوجد عمود تنبيهات للقطعة "${partName}"`); return; }
+
+        // صف الموديل: تطابق تام على اسم الموديل
+        const target = maintAlertsNorm(selectedModel);
+        const row = rows.find(r => maintAlertsNorm(r[nameCol]) === target);
+
+        const alertText = row && row[alertCol] !== null && row[alertCol] !== undefined ? String(row[alertCol]).trim() : '';
+
+        box.innerHTML = `
+            <div class="w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl shadow-sm">
+                <div class="text-xs text-gray-500 mb-1">الموديل</div>
+                <div class="font-bold text-gray-800 mb-3" dir="auto">${escapeHtmlValue(selectedModel)}</div>
+                <div class="text-xs text-gray-500 mb-1">قطعة الغيار</div>
+                <div class="font-bold text-gray-800" dir="auto">${escapeHtmlValue(partName)}</div>
+            </div>
+            <div class="w-full bg-blue-50 border border-blue-200 p-4 rounded-2xl shadow-sm">
+                <div class="text-xs font-bold text-blue-700 mb-2">تنبيهات صيانة ${escapeHtmlValue(partName)}</div>
+                ${alertText
+                    ? `<div class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" dir="auto">${escapeHtmlValue(alertText)}</div>`
+                    : `<div class="text-sm text-gray-500">${row ? 'لا توجد تنبيهات صيانة لهذه القطعة' : 'هذا الموديل غير موجود في جدول التنبيهات'}</div>`}
+            </div>
+        `;
+    } catch (err) {
+        console.error('Maintenance alert error:', err);
+        msg('حدث خطأ غير متوقع', 'text-red-400');
+    }
 }
