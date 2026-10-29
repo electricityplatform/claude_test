@@ -3,8 +3,12 @@
 // =====================================================================
 // ================= جدول قطع الغيار في مركز البيانات =================
 // الجدول: spare_parts (id + spare_part_items + created_at)
-// الدوال في الداتابيز (مشتركة): get / update / insert / insert_at_position / delete_at_position
-// بنبعت p_table = 'spare_parts'
+// الدوال في الداتابيز (مستقلة لكل جدول، من غير p_table):
+//   get_spare_parts_for_data_center
+//   update_spare_parts_for_data_center
+//   insert_spare_parts_for_data_center
+//   insert_spare_parts_at_position_for_data_center
+//   delete_spare_parts_at_position_for_data_center
 // =====================================================================
 const SPARE_PARTS_TABLE = 'spare_parts';
 const SPARE_PARTS_NAME_COL = 'spare_part_items';
@@ -80,9 +84,8 @@ async function renderSparePartsSheet() {
     const titleElement = document.getElementById('sparePartsSheetTitle');
 
     try {
-        const { data, error } = await supabaseClient.rpc('get_lookup_table_for_data_center', {
-            p_user_id: currentUserId,
-            p_table: SPARE_PARTS_TABLE
+        const { data, error } = await supabaseClient.rpc('get_spare_parts_for_data_center', {
+            p_user_id: currentUserId
         });
 
         if (error) {
@@ -233,9 +236,8 @@ async function submitSparePartsInsert(position) {
     }
 
     try {
-        const { data, error } = await supabaseClient.rpc('insert_lookup_table_at_position_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('insert_spare_parts_at_position_for_data_center', {
             p_user_id: currentUserId,
-            p_table: SPARE_PARTS_TABLE,
             p_position: position,
             p_payload: { [SPARE_PARTS_NAME_COL]: val }
         });
@@ -268,9 +270,8 @@ async function deleteSparePartsRow(id) {
     )) return;
 
     try {
-        const { data, error } = await supabaseClient.rpc('delete_lookup_table_at_position_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('delete_spare_parts_at_position_for_data_center', {
             p_user_id: currentUserId,
-            p_table: SPARE_PARTS_TABLE,
             p_id: Number(id)
         });
         if (error) {
@@ -329,9 +330,8 @@ async function saveSparePartsSheetToDB() {
 
     try {
         if (updatePayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('update_lookup_table_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('update_spare_parts_for_data_center', {
                 p_user_id: currentUserId,
-                p_table: SPARE_PARTS_TABLE,
                 p_payload: updatePayload
             });
             if (error) {
@@ -346,9 +346,8 @@ async function saveSparePartsSheetToDB() {
         }
 
         if (insertPayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('insert_lookup_table_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('insert_spare_parts_for_data_center', {
                 p_user_id: currentUserId,
-                p_table: SPARE_PARTS_TABLE,
                 p_payload: insertPayload
             });
             if (error) {
