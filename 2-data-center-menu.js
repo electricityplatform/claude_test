@@ -61,21 +61,21 @@ async function fetchAndDisplayDataCenterMenu() {
                 const style = getRotatingCardStyle(index);
                 let clickAction = `alert('تم النقر على قسم: ${item}')`;
 
-                if (item.includes('المستخدمين الجدد')) {
-                    clickAction = "renderNewUsersScreen()";
-                } else if (item.includes('سجل دخول المستخدمين')) {
-                    clickAction = "renderLoginHistoryScreen()";
-                } else if (item.includes('المستخدمين النشطين')) {
-                    clickAction = "renderActiveUsersScreen()";
-                } else if (item.includes('جدول المستخدمين') || item.includes('بيانات المستخدمين')) {
+                if (item === 'جدول المستخدمين' || item.includes('بيانات المستخدمين')) {
                     clickAction = "renderUsersDataCenterSheet()";
-                } else if (item.includes('مجموعات التوافقات')) {
+                } else if (item === 'جدول المستخدمين الجدد') {
+                    clickAction = "renderNewUsersScreen()";
+                } else if (item === 'جدول المستخدمين النشطين') {
+                    clickAction = "renderActiveUsersScreen()";
+                } else if (item === 'جدول سجل دخول المستخدمين') {
+                    clickAction = "renderLoginHistoryScreen()";
+                } else if (item === 'جداول مجموعات التوافقات') {
                     clickAction = "renderCompatGroupsBrandsScreen()";
-                } else if (item.includes('جداول التوافقات')) {
+                } else if (item === 'جداول التوافقات') {
                     clickAction = "renderCompatBrandsScreen()";
-                } else if (item.includes('جداول الموديلات') || item.includes('الموديلات')) {
+                } else if (item === 'جداول الموديلات') {
                     clickAction = "renderDataCenterBrandsScreen()";
-                } else if (item.includes('جداول التنبيهات')) {
+                } else if (item === 'جداول تنبيهات الصيانة') {
                     clickAction = "renderAlertsBrandsScreen()";
                 }
 
