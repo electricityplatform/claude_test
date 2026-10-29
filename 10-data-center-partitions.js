@@ -3,8 +3,12 @@
 // =====================================================================
 // ================= جدول الأقسام في مركز البيانات =================
 // الجدول: partitions (id + partition_names + created_at)
-// الدوال في الداتابيز (مشتركة): get / update / insert / insert_at_position / delete_at_position
-// بنبعت p_table = 'partitions'
+// الدوال في الداتابيز (مستقلة لكل جدول، من غير p_table):
+//   get_partitions_for_data_center
+//   update_partitions_for_data_center
+//   insert_partitions_for_data_center
+//   insert_partitions_at_position_for_data_center
+//   delete_partitions_at_position_for_data_center
 // =====================================================================
 const PARTITIONS_TABLE = 'partitions';
 const PARTITIONS_NAME_COL = 'partition_names';
@@ -80,9 +84,8 @@ async function renderPartitionsSheet() {
     const titleElement = document.getElementById('partitionsSheetTitle');
 
     try {
-        const { data, error } = await supabaseClient.rpc('get_lookup_table_for_data_center', {
-            p_user_id: currentUserId,
-            p_table: PARTITIONS_TABLE
+        const { data, error } = await supabaseClient.rpc('get_partitions_for_data_center', {
+            p_user_id: currentUserId
         });
 
         if (error) {
@@ -233,9 +236,8 @@ async function submitPartitionsInsert(position) {
     }
 
     try {
-        const { data, error } = await supabaseClient.rpc('insert_lookup_table_at_position_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('insert_partitions_at_position_for_data_center', {
             p_user_id: currentUserId,
-            p_table: PARTITIONS_TABLE,
             p_position: position,
             p_payload: { [PARTITIONS_NAME_COL]: val }
         });
@@ -268,9 +270,8 @@ async function deletePartitionsRow(id) {
     )) return;
 
     try {
-        const { data, error } = await supabaseClient.rpc('delete_lookup_table_at_position_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('delete_partitions_at_position_for_data_center', {
             p_user_id: currentUserId,
-            p_table: PARTITIONS_TABLE,
             p_id: Number(id)
         });
         if (error) {
@@ -329,9 +330,8 @@ async function savePartitionsSheetToDB() {
 
     try {
         if (updatePayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('update_lookup_table_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('update_partitions_for_data_center', {
                 p_user_id: currentUserId,
-                p_table: PARTITIONS_TABLE,
                 p_payload: updatePayload
             });
             if (error) {
@@ -346,9 +346,8 @@ async function savePartitionsSheetToDB() {
         }
 
         if (insertPayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('insert_lookup_table_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('insert_partitions_for_data_center', {
                 p_user_id: currentUserId,
-                p_table: PARTITIONS_TABLE,
                 p_payload: insertPayload
             });
             if (error) {
