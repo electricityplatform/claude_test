@@ -206,34 +206,20 @@ async function renderDataCenterModelsSheet(brandKey, brandLabel) {
     }
 }
 
-// ---------- إدراج صف جديد في مكان معين (أدمن / مدير) ----------
-// الصف الحالي رقم position وما بعده بينزلوا خطوة، والموديل الجديد ياخد رقم position.
-// اسم الموديل اختياري: لو سيبته فاضي بيتعمل صف فاضي (id بس).
+// ---------- إدراج صف فاضي مباشرة في المكان المحدد (من غير أي نافذة) ----------
+// الصف الحالي رقم position وما بعده بينزلوا خطوة، والصف الجديد بيتعمل فاضي (id بس).
 async function insertModelRowAt(position) {
     if (!isDataCenterRowManager()) {
         alert('هذا الإجراء للأدمن والمدير فقط');
         return;
     }
 
-    const keyCol = `${currentModelsSheetBrand}_model_names`;
-    const name = prompt(
-        `اكتب اسم الموديل الجديد ليتم إدراجه في المكان رقم ${position}.\n` +
-        `(اختياري - سيبه فاضي واضغط موافق لو عايز صف فاضي)\n` +
-        `ملاحظة: الشيت هيتحدّث بعد الإدراج، فاحفظ أي تعديلات أخرى الأول.`
-    );
-    // null معناها المستخدم داس إلغاء
-    if (name === null) return;
-
-    const cleanName = name.trim();
-    // لو الاسم فاضي نبعت payload فاضي والداتابيز تعمل صف بـ id بس
-    const payload = cleanName ? { [keyCol]: cleanName } : {};
-
     try {
         const { data, error } = await supabaseClient.rpc('insert_model_at_position_for_data_center', {
             p_user_id: currentUserId,
             p_brand: currentModelsSheetBrand,
             p_position: position,
-            p_payload: payload
+            p_payload: {}
         });
         if (error) {
             alert('حدث خطأ أثناء الإدراج: ' + error.message);
@@ -245,7 +231,7 @@ async function insertModelRowAt(position) {
         }
         await renderDataCenterModelsSheet(currentModelsSheetBrand, currentModelsSheetLabel);
     } catch (err) {
-        console.error('Insert model at position error:', err);
+        console.error('Insert row at position error:', err);
         alert('حدث خطأ غير متوقع أثناء الإدراج');
     }
 }
