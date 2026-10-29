@@ -75,6 +75,8 @@ async function fetchAndDisplayDataCenterMenu() {
                     clickAction = "renderCompatBrandsScreen()";
                 } else if (item.includes('جداول الموديلات') || item.includes('الموديلات')) {
                     clickAction = "renderDataCenterBrandsScreen()";
+                } else if (item.includes('جداول التنبيهات')) {
+                    clickAction = "renderAlertsBrandsScreen()";
                 }
 
                 return `
