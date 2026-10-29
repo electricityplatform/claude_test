@@ -1,128 +1,91 @@
-// مركز البيانات (5/6) - جداول مجموعات التوافقات
+// مركز البيانات (8) - جدول الماركات
 
 // =====================================================================
-// ================= جداول مجموعات التوافقات في مركز البيانات =================
-// الجداول: {brand}_model_spare_part_compatibility_groups
-// أعمدة كل جدول: id + 13 عمود توافق (كلها بتنتهي بـ _compatibility_groups) + created_at
-// الدوال في الداتابيز: get / update / insert / insert_at_position / delete_at_position
+// ================= جدول الماركات في مركز البيانات =================
+// الجدول: brands (id + brand_names + created_at)
+// الدوال في الداتابيز (مستقلة لكل جدول، من غير p_table):
+//   get_brands_for_data_center
+//   update_brands_for_data_center
+//   insert_brands_for_data_center
+//   insert_brands_at_position_for_data_center
+//   delete_brands_at_position_for_data_center
 // =====================================================================
-const CG_READONLY_COLS = ['id', 'created_at', 'updated_at'];
+const BRANDS_TABLE = 'brands';
+const BRANDS_NAME_COL = 'brand_names';
+const BRANDS_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 
-// أي عمود اسمه بينتهي بـ _compatibility_groups = عمود توافق (البحث بيدوّر في كلهم)
-const CG_SEARCH_FIELD_RE = /_compatibility_groups$/;
+let currentBrandsColumns = [];
+let currentBrandsData = [];
 
-
-let currentCgBrand = '';
-let currentCgLabel = '';
-let currentCgColumns = [];
-let currentCgData = [];
-
-function cgColLabel(col) {
+function brandsColLabel(col) {
     if (col === 'created_at') return 'تاريخ الانشاء';
-    const key = String(col)
-        .replace(`${currentCgBrand}_model_`, '')
-        .replace(/_compatibility_groups$/, '');
-    const base = CG_PART_LABELS[key];
-    return base ? `مجموعات توافق ${base}` : '';
-}
-
-// ---------- شاشة اختيار الماركة ----------
-function renderCompatGroupsBrandsScreen() {
-    closeSidebar();
-
-    const container = document.getElementById('appContainer');
-    container.innerHTML = `
-        ${getHeaderTemplate()}
-        <div class="flex items-center justify-between mb-4 flex-shrink-0 flex-wrap gap-2">
-            <button type="button" onclick="renderDataCenterScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
-                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                <span>رجوع لمركز البيانات</span>
-            </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800">جداول مجموعات التوافقات - اختر الماركة</h2>
-        </div>
-
-        <div class="flex-1 overflow-y-auto space-y-3 p-1">
-            ${DATA_CENTER_BRANDS.map((brand, index) => {
-                const style = getRotatingCardStyle(index);
-                return `
-                    <div onclick="renderCompatGroupsSheet('${brand.key}', '${brand.label}')" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
-                        <span class="font-bold text-gray-800" dir="auto">${brand.label}</span>
-                        <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `;
-
-    loadDynamicMenuIntoSidebar();
+    if (col === BRANDS_NAME_COL) return 'اسم الماركة';
+    return '';
 }
 
 // ---------- أزرار الصف (إدراج قبله / حذف) ----------
-function cgRowActionsHtml(id) {
+function brandsRowActionsHtml(id) {
     const n = Number(id);
     if (!Number.isFinite(n)) return '<td class="sheet-actions"></td>';
     return `
         <td class="sheet-actions">
             <div class="flex items-center gap-1 px-2 py-1 whitespace-nowrap">
-                <button type="button" onclick="insertCgRowAt(${n})" title="إدراج صف جديد في مكان هذا الصف (وهو وما بعده ينزلوا خطوة)" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">+ إدراج</button>
-                <button type="button" onclick="deleteCgRow(${n})" title="حذف هذا الصف" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">حذف</button>
+                <button type="button" onclick="insertBrandsRowAt(${n})" title="إدراج صف جديد في مكان هذا الصف (وهو وما بعده ينزلوا خطوة)" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">+ إدراج</button>
+                <button type="button" onclick="deleteBrandsRow(${n})" title="حذف هذا الصف" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer">حذف</button>
             </div>
         </td>`;
 }
 
-// ---------- شيت مجموعات التوافقات لماركة معينة ----------
+// ---------- شيت جدول الماركات ----------
 // بنستخدم نفس id الشيت (editableUsersTable) عشان نفس التنسيق واللصق الجماعي والسحب للتعبئة
-async function renderCompatGroupsSheet(brandKey, brandLabel) {
+async function renderBrandsSheet() {
     closeSidebar();
-    currentCgBrand = brandKey;
-    currentCgLabel = brandLabel;
 
     const container = document.getElementById('appContainer');
     container.innerHTML = `
         ${getHeaderTemplate()}
         <div class="flex items-center justify-between mb-3 flex-shrink-0 flex-wrap gap-2">
             <div class="flex items-center gap-2 flex-wrap">
-                <button type="button" onclick="renderCompatGroupsBrandsScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="renderDataCenterScreen()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <span>رجوع للماركات</span>
+                    <span>رجوع لمركز البيانات</span>
                 </button>
-                <button type="button" onclick="renderCompatGroupsSheet('${brandKey}', '${brandLabel}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
+                <button type="button" onclick="renderBrandsSheet()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span>تحديث</span>
                 </button>
-                <button type="button" onclick="addCgSheetRow(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="addBrandsSheetRow(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span>إضافة صف</span>
                 </button>
-                <button type="button" onclick="saveCgSheetToDB()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="saveBrandsSheetToDB()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     <span>حفظ التعديلات لقاعدة البيانات</span>
                 </button>
-                <button type="button" onclick="exportCgSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="exportBrandsSheetToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span>تصدير إلى إكسل</span>
                 </button>
             </div>
-            <h2 id="cgSheetTitle" class="text-sm sm:text-base font-bold text-gray-800">مجموعات توافقات ${brandLabel}</h2>
+            <h2 id="brandsSheetTitle" class="text-sm sm:text-base font-bold text-gray-800">جدول الماركات</h2>
         </div>
 
-        <input id="cgSearchInput" type="text" oninput="cgSheetApplyFilter(this.value)" placeholder="ابحث في أي عمود توافق" class="w-full mb-2 flex-shrink-0 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" dir="auto">
-        <div id="cgSearchCount" class="text-xs text-gray-500 mb-1 flex-shrink-0 hidden"></div>
+        <input id="brandsSearchInput" type="text" oninput="brandsSheetApplyFilter(this.value)" placeholder="ابحث في اسم الماركة" class="w-full mb-2 flex-shrink-0 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" dir="auto">
+        <div id="brandsSearchCount" class="text-xs text-gray-500 mb-1 flex-shrink-0 hidden"></div>
 
-        <div id="cgSheetContainer" class="flex-1 overflow-y-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
-            <div class="text-center text-gray-400 text-sm py-8">جاري جلب مجموعات التوافقات...</div>
+        <div id="brandsSheetContainer" class="flex-1 overflow-y-auto p-1 border border-slate-300 rounded-xl bg-white shadow-inner">
+            <div class="text-center text-gray-400 text-sm py-8">جاري جلب البيانات...</div>
         </div>
     `;
 
     loadDynamicMenuIntoSidebar();
 
-    const sheetContainer = document.getElementById('cgSheetContainer');
-    const titleElement = document.getElementById('cgSheetTitle');
+    const sheetContainer = document.getElementById('brandsSheetContainer');
+    const titleElement = document.getElementById('brandsSheetTitle');
 
     try {
-        const { data, error } = await supabaseClient.rpc('get_model_spare_part_compatibility_groups_for_data_center', {
-            p_user_id: currentUserId,
-            p_brand: brandKey
+        const { data, error } = await supabaseClient.rpc('get_brands_for_data_center', {
+            p_user_id: currentUserId
         });
 
         if (error) {
@@ -139,22 +102,22 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
         const columns = payloadData && Array.isArray(payloadData.columns) ? payloadData.columns : [];
 
         if (!columns.length) {
-            sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">جدول مجموعات التوافقات غير موجود لهذه الماركة</div>`;
+            sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">الجدول غير موجود</div>`;
             return;
         }
 
-        currentCgData = rows;
-        currentCgColumns = columns;
+        currentBrandsData = rows;
+        currentBrandsColumns = columns;
 
         if (titleElement) {
-            titleElement.innerText = `مجموعات توافقات ${brandLabel} (${rows.length})`;
+            titleElement.innerText = `جدول الماركات (${rows.length})`;
         }
 
         sheetContainer.innerHTML = `
             <table id="editableUsersTable">
                 <thead>
                     <tr>
-                        ${columns.map(col => sheetThHtml(col, cgColLabel(col))).join('')}
+                        ${columns.map(col => sheetThHtml(col, brandsColLabel(col))).join('')}
                         <th class="sheet-actions-th">إجراءات</th>
                         ${sheetIdDupThHtml()}
                     </tr>
@@ -164,7 +127,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                         <tr data-id="${escapeHtmlValue(row.id)}">
                             ${columns.map(col => {
                                 const val = row[col] !== null && row[col] !== undefined ? row[col] : '';
-                                if (CG_READONLY_COLS.includes(col)) {
+                                if (BRANDS_READONLY_COLS.includes(col)) {
                                     return sheetReadonlyCellHtml(val);
                                 }
                                 return `
@@ -174,7 +137,7 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
                                     </td>
                                 `;
                             }).join('')}
-                            ${cgRowActionsHtml(row.id)}
+                            ${brandsRowActionsHtml(row.id)}
                             ${sheetIdDupCellHtml(row.id)}
                         </tr>
                     `).join('')}
@@ -182,24 +145,24 @@ async function renderCompatGroupsSheet(brandKey, brandLabel) {
             </table>
         `;
 
-        document.getElementById('editableUsersTable').addRowFn = addCgSheetRow;
+        document.getElementById('editableUsersTable').addRowFn = addBrandsSheetRow;
         enableExcelPasteAndDragFill();
-        if (rows.length === 0) addCgSheetRow(false);
+        if (rows.length === 0) addBrandsSheetRow(false);
     } catch (err) {
-        console.error('Compat groups sheet error:', err);
+        console.error('brands sheet error:', err);
         sheetContainer.innerHTML = `<div class="text-center text-red-400 text-sm py-8">حدث خطأ غير متوقع</div>`;
     }
 }
 
-function addCgSheetRow(focus = true) {
+function addBrandsSheetRow(focus = true) {
     // الصف الجديد لسه مالوش id، فخلية الإجراءات بتاعته فاضية
-    return appendBlankSheetRow(currentCgColumns, CG_READONLY_COLS, focus, '<td class="sheet-actions"></td>', true);
+    return appendBlankSheetRow(currentBrandsColumns, BRANDS_READONLY_COLS, focus, '<td class="sheet-actions"></td>', true);
 }
 
-// ---------- البحث في أي عمود توافق ----------
+// ---------- البحث في اسم الماركة ----------
 // الفلترة بإخفاء الصفوف بس (الخلايا فاضلة في الصفحة)، فالتعديلات ما بتضيعش،
 // وزرار الحفظ بيحفظ كل الصفوف حتى المخفية.
-function cgSheetApplyFilter(q) {
+function brandsSheetApplyFilter(q) {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
@@ -213,7 +176,7 @@ function cgSheetApplyFilter(q) {
         if (!tr.querySelector('.excel-input')) return;
 
         const inputs = Array.from(tr.querySelectorAll('.excel-input'))
-            .filter(i => CG_SEARCH_FIELD_RE.test(i.getAttribute('data-field') || ''));
+            .filter(i => (i.getAttribute('data-field') || '') === BRANDS_NAME_COL);
 
         total++;
         const match = !needle || inputs.some(i => norm(i.value).includes(needle));
@@ -221,7 +184,7 @@ function cgSheetApplyFilter(q) {
         if (match) visible++;
     });
 
-    const count = document.getElementById('cgSearchCount');
+    const count = document.getElementById('brandsSearchCount');
     if (count) {
         if (needle) {
             count.textContent = `${visible} من ${total} صف`;
@@ -235,7 +198,7 @@ function cgSheetApplyFilter(q) {
 // ---------- إدراج صف فاضي في مكانه مباشرة ----------
 // الصف بيظهر على طول قبل الصف المختار (من غير أي نافذة). اكتب في العمود اللي عايزه وبعدين دوس "حفظ".
 // لو سيبت الصف فاضي خالص مش هيتحفظ. الإدراج الفعلي في الداتابيز بيحصل وقت الحفظ.
-function insertCgRowAt(position) {
+function insertBrandsRowAt(position) {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
@@ -248,7 +211,7 @@ function insertCgRowAt(position) {
 
     // نعمل الصف بنفس دالة "إضافة صف" (بتحطه في الآخر)، وبعدين ننقله قبل الصف المختار
     const before = new Set(Array.from(tbody.children));
-    addCgSheetRow(false);
+    addBrandsSheetRow(false);
     const newRow = Array.from(tbody.children).find(tr => !before.has(tr));
     if (!newRow) return;
 
@@ -262,23 +225,20 @@ function insertCgRowAt(position) {
 }
 
 // ---------- حذف صف ----------
-async function deleteCgRow(id) {
-    const rowData = currentCgData.find(r => String(r.id) === String(id));
-    const firstVal = rowData
-        ? currentCgColumns.filter(c => CG_SEARCH_FIELD_RE.test(c)).map(c => rowData[c]).find(v => v)
-        : '';
+async function deleteBrandsRow(id) {
+    const rowData = currentBrandsData.find(r => String(r.id) === String(id));
+    const firstVal = rowData ? rowData[BRANDS_NAME_COL] : '';
     const label = firstVal ? `"${firstVal}" (رقم ${id})` : `رقم ${id}`;
 
     if (!confirm(
-        `هتحذف الصف ${label} نهائياً بكل المجموعات اللي فيه.\n` +
+        `هتحذف الصف ${label} نهائياً.\n` +
         `الأرقام اللي بعده هترجع خطوة لورا.\n` +
         `الشيت هيتحدّث بعد الحذف، فاحفظ أي تعديلات أخرى الأول. متأكد؟`
     )) return;
 
     try {
-        const { data, error } = await supabaseClient.rpc('delete_model_spare_part_compatibility_group_at_position_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('delete_brands_at_position_for_data_center', {
             p_user_id: currentUserId,
-            p_brand: currentCgBrand,
             p_id: Number(id)
         });
         if (error) {
@@ -289,15 +249,15 @@ async function deleteCgRow(id) {
             alert(data?.message || 'فشل الحذف');
             return;
         }
-        await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
+        await renderBrandsSheet();
     } catch (err) {
-        console.error('Delete compat group row error:', err);
+        console.error('Delete brands row error:', err);
         alert('حدث خطأ غير متوقع أثناء الحذف');
     }
 }
 
 // ---------- حفظ الشيت (تعديل الموجود + إدراج في أماكن + إضافة الجديد) ----------
-async function saveCgSheetToDB() {
+async function saveBrandsSheetToDB() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
@@ -347,9 +307,8 @@ async function saveCgSheetToDB() {
 
     try {
         if (updatePayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('update_model_spare_part_compatibility_groups_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('update_brands_for_data_center', {
                 p_user_id: currentUserId,
-                p_brand: currentCgBrand,
                 p_payload: updatePayload
             });
             if (error) {
@@ -367,9 +326,8 @@ async function saveCgSheetToDB() {
         let insertedAt = 0;
         for (let i = positionalInserts.length - 1; i >= 0; i--) {
             const item = positionalInserts[i];
-            const { data, error } = await supabaseClient.rpc('insert_model_spare_part_compatibility_group_at_position_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('insert_brands_at_position_for_data_center', {
                 p_user_id: currentUserId,
-                p_brand: currentCgBrand,
                 p_position: item.position,
                 p_payload: item.payload
             });
@@ -377,7 +335,7 @@ async function saveCgSheetToDB() {
             if (failMsg) {
                 alert(prefix() + "حدث خطأ أثناء إدراج صف جديد: " + failMsg +
                     (insertedAt ? `\n\nاتدرج ${insertedAt} صف قبل الخطأ، والشيت هيتحدّث.` : ''));
-                if (insertedAt) await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
+                if (insertedAt) await renderBrandsSheet();
                 return;
             }
             insertedAt++;
@@ -388,19 +346,18 @@ async function saveCgSheetToDB() {
         }
 
         if (insertPayload.length > 0) {
-            const { data, error } = await supabaseClient.rpc('insert_model_spare_part_compatibility_groups_for_data_center', {
+            const { data, error } = await supabaseClient.rpc('insert_brands_for_data_center', {
                 p_user_id: currentUserId,
-                p_brand: currentCgBrand,
                 p_payload: insertPayload
             });
             if (error) {
                 alert(prefix() + "حدث خطأ أثناء إضافة الصفوف الجديدة: " + error.message);
-                if (reloadNeeded) await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
+                if (reloadNeeded) await renderBrandsSheet();
                 return;
             }
             if (!data || !data.success) {
                 alert(prefix() + (data?.message || "فشلت إضافة الصفوف الجديدة"));
-                if (reloadNeeded) await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
+                if (reloadNeeded) await renderBrandsSheet();
                 return;
             }
             messages.push(data.message || "تمت إضافة الصفوف الجديدة");
@@ -411,7 +368,7 @@ async function saveCgSheetToDB() {
 
         // إعادة تحميل الشيت ليظهر الـ id للصفوف الجديدة
         if (reloadNeeded) {
-            await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
+            await renderBrandsSheet();
         }
     } catch (err) {
         console.error("Save sheet error:", err);
@@ -420,7 +377,7 @@ async function saveCgSheetToDB() {
 }
 
 // ---------- تصدير الشيت (بالقيم الحالية بعد التعديل) إلى XLSX ----------
-function exportCgSheetToExcel() {
+function exportBrandsSheetToExcel() {
     const table = document.getElementById('editableUsersTable');
     if (!table) {
         alert("لا توجد بيانات للتصدير حالياً");
@@ -440,8 +397,8 @@ function exportCgSheetToExcel() {
 
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rowsData]);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, currentCgBrand || 'compat_groups');
+    XLSX.utils.book_append_sheet(workbook, worksheet, BRANDS_TABLE);
 
-    const fileName = `${currentCgBrand}_compatibility_groups_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const fileName = `${BRANDS_TABLE}_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(workbook, fileName);
 }
