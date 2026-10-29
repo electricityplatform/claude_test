@@ -226,19 +226,25 @@ async function saveAlertsSheetToDB() {
     if (!table) return;
 
     const updatePayload = [];
+    const changedInputs = [];
 
+    // بنبعت بس الصفوف/الخلايا اللي اتعدّلت فعلاً (المقارنة بالقيمة الأصلية اللي اتحمّلت من القاعدة)
     table.querySelectorAll('tbody tr[data-id]').forEach(row => {
         // دالة الحفظ بتحدّث بالاسم (upsert على عمود اسم الموديل)، وخلية الاسم مش input فبنبعتها من data-name
         const rowData = { id: row.getAttribute('data-id'), [alertsNameCol()]: row.getAttribute('data-name') };
+        let changed = false;
         row.querySelectorAll('[data-field]').forEach(input => {
             const rawVal = input.value.trim();
+            if (rawVal === (input.defaultValue || '').trim()) return;
             rowData[input.getAttribute('data-field')] = rawVal !== '' ? rawVal : null;
+            changedInputs.push(input);
+            changed = true;
         });
-        updatePayload.push(rowData);
+        if (changed) updatePayload.push(rowData);
     });
 
     if (updatePayload.length === 0) {
-        alert("لا توجد بيانات للحفظ");
+        alert("لا توجد تعديلات للحفظ");
         return;
     }
 
@@ -257,6 +263,8 @@ async function saveAlertsSheetToDB() {
             alert(data?.message || "فشل حفظ التعديلات");
             return;
         }
+        // القيم المحفوظة بقت هي القيمة الأصلية الجديدة (عشان الحفظ الجاي يبعت التعديلات الجديدة بس)
+        changedInputs.forEach(i => { i.defaultValue = i.value; });
         alert(data.message || "تم حفظ التعديلات بنجاح");
     } catch (err) {
         console.error("Save alerts sheet error:", err);
