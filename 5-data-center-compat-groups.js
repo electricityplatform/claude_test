@@ -232,63 +232,15 @@ function cgSheetApplyFilter(q) {
     }
 }
 
-// ---------- نافذة الإدراج (اختيار العمود + اسم المجموعة - اختياري) ----------
-function closeCgDialog() {
-    const old = document.getElementById('cgDialog');
-    if (old) old.remove();
-}
-
-function insertCgRowAt(position) {
-    const cols = currentCgColumns.filter(c => CG_SEARCH_FIELD_RE.test(c));
-    if (!cols.length) return;
-
-    closeCgDialog();
-
-    const overlay = document.createElement('div');
-    overlay.id = 'cgDialog';
-    overlay.className = 'fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4';
-    overlay.innerHTML = `
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-3 border border-gray-200">
-            <h3 class="font-bold text-gray-800 text-sm">إدراج صف جديد في المكان رقم ${position}</h3>
-            <p class="text-xs text-gray-500 leading-relaxed">الصف الحالي رقم ${position} وما بعده هينزلوا خطوة. احفظ أي تعديلات أخرى الأول لأن الشيت هيتحدّث بعد الإدراج.</p>
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-600">العمود</label>
-                <select id="cgInsertCol" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    ${cols.map(c => {
-                        const ar = cgColLabel(c);
-                        return `<option value="${escapeHtmlValue(c)}">${ar ? ar + ' — ' : ''}${escapeHtmlValue(c)}</option>`;
-                    }).join('')}
-                </select>
-            </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-600">اسم المجموعة (اختياري - سيبه فاضي لو عايز صف فاضي)</label>
-                <input id="cgInsertVal" type="text" dir="auto" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCgInsert(${position});}" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex items-center gap-2 pt-1">
-                <button type="button" onclick="submitCgInsert(${position})" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer">إدراج</button>
-                <button type="button" onclick="closeCgDialog()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm cursor-pointer">إلغاء</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const input = document.getElementById('cgInsertVal');
-    if (input) input.focus();
-}
-
-async function submitCgInsert(position) {
-    const col = document.getElementById('cgInsertCol')?.value;
-    const val = (document.getElementById('cgInsertVal')?.value || '').trim();
-
-    // الاسم اختياري: لو فاضي نبعت payload فاضي والداتابيز تعمل صف بـ id بس
-    const payload = (col && val) ? { [col]: val } : {};
-
+// ---------- إدراج صف فاضي مباشرة في المكان المحدد (من غير أي نافذة) ----------
+// الصف الحالي رقم position وما بعده بينزلوا خطوة، والصف الجديد بيتعمل فاضي (id بس).
+async function insertCgRowAt(position) {
     try {
         const { data, error } = await supabaseClient.rpc('insert_model_spare_part_compatibility_group_at_position_for_data_center', {
             p_user_id: currentUserId,
             p_brand: currentCgBrand,
             p_position: position,
-            p_payload: payload
+            p_payload: {}
         });
         if (error) {
             alert('حدث خطأ أثناء الإدراج: ' + error.message);
@@ -298,10 +250,9 @@ async function submitCgInsert(position) {
             alert(data?.message || 'فشل الإدراج');
             return;
         }
-        closeCgDialog();
         await renderCompatGroupsSheet(currentCgBrand, currentCgLabel);
     } catch (err) {
-        console.error('Insert compat group at position error:', err);
+        console.error('Insert row at position error:', err);
         alert('حدث خطأ غير متوقع أثناء الإدراج');
     }
 }
