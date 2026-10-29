@@ -247,7 +247,8 @@ async function sdcOpenPart(index) {
         return;
     }
 
-    const tableName = `${brandSlug}_model_${partSuffix}_prices`;
+    // جدول سماعة الجرس اسمه *_model_loud_prices (مش loud_speaker)
+    const tableName = `${brandSlug}_model_${partSuffix === 'loud_speaker' ? 'loud' : partSuffix}_prices`;
     sdcTableName = tableName;
     const backIndex = sdcBrands.indexOf(sdcBrand);
 
