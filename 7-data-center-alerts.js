@@ -243,7 +243,7 @@ async function saveAlertsSheetToDB() {
     }
 
     try {
-        const { data, error } = await supabaseClient.rpc('update_brand_model_spare_part_maintenance_alerts_for_data_center', {
+        const { data, error } = await supabaseClient.rpc('update_model_spare_part_maintenance_alerts_for_data_center', {
             p_user_id: currentUserId,
             p_brand: currentAlertsBrand,
             p_payload: updatePayload
