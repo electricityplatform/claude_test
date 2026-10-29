@@ -1,11 +1,18 @@
 // مسار الرحلة الحالية: 'buy' (شراء قطع الغيار) أو 'alerts' (تنبيهات الصيانة)
-let currentFlow = 'buy';
+let currentFlow = 'buy'; // 'buy' | 'alerts' | 'compat'
 
 // بداية رحلة تنبيهات الصيانة: الماركات ← الموديلات ← قطع الغيار ← التنبيه
 function startMaintenanceAlertsFlow() {
     currentFlow = 'alerts';
     selectedPart = '';
     renderBrandsScreen('تنبيهات الصيانة');
+}
+
+// بداية رحلة التوافقات: الماركات ← الموديلات ← قطع الغيار ← التوافقات
+function startCompatFlow() {
+    currentFlow = 'compat';
+    selectedPart = '';
+    renderBrandsScreen('التوافقات');
 }
 
 // ================= الشاشة الرئيسية =================
@@ -47,6 +54,8 @@ async function renderMainDashboard() {
                 let clickAction = "";
                 if (name.includes('تنبيهات الصيانة')) {
                     clickAction = "startMaintenanceAlertsFlow()";
+                } else if (name.includes('التوافقات')) {
+                    clickAction = "startCompatFlow()";
                 } else if (name.includes('شراء قطع الغيار')) {
                     clickAction = "renderBrandsScreen()";
                 } else if (name.includes('قطع الغيار')) {
@@ -268,96 +277,212 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
 
 async function renderPartDetailsFinal(partName = '') {
     selectedPart = partName;
-    if (currentFlow === 'alerts') {
-        renderMaintenanceAlertScreen(partName);
+    if (currentFlow === 'alerts' || currentFlow === 'compat') {
+        renderModelPartResultScreen(currentFlow, partName);
         return;
     }
-    alert(`بيانات الشراء النهائية:\n- الماركة: ${selectedBrand}\n- الموديل: ${selectedModel}\n- الكود: ${selectedModelCode}\n- قطعة الغيار: ${selectedPart}`);
+    renderBuyPartScreen(partName);
 }
 
 
-// ================= شاشة تنبيه الصيانة (الموديل + قطعة الغيار) =================
-// بتجيب جدول تنبيهات الماركة، وتدوّر على صف الموديل المختار، وتعرض عمود القطعة المختارة بس.
-function maintAlertsNorm(v) {
+// ================= الشاشة النهائية: تنبيهات / توافقات (الموديل + قطعة الغيار) =================
+// بتجيب جدول الماركة من مركز البيانات، وتدوّر على صف الموديل (تطابق تام على الاسم)، وتعرض عمود القطعة المختارة.
+function mprNorm(v) {
     return String(v ?? '').toLowerCase().replace(/\s+/g, '');
 }
 
-async function renderMaintenanceAlertScreen(partName = '') {
-    const slug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(selectedBrand) : '';
-    const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
+const MPR_CONFIG = {
+    alerts: {
+        title: 'تنبيهات الصيانة',
+        rpc: 'get_brand_model_spare_part_maintenance_alerts_for_data_center',
+        splitRe: /\r\n|\n|\r/,
+        empty: 'لا توجد تنبيهات صيانة لهذه القطعة',
+        // بيرجّع مفتاح القطعة من اسم العمود (أو null لو مش عمود تنبيهات)
+        keyOf: (col, slug) => {
+            if (!/_alerts$/.test(col)) return null;
+            return { groups: false, key: String(col).replace(`${slug}_model_`, '')
+                .replace(/_spare_part_maintenance_alerts$/, '').replace(/_maintenance_alerts$/, '').replace(/_alerts$/, '') };
+        }
+    },
+    compat: {
+        title: 'التوافقات',
+        rpc: 'get_model_spare_part_compatibility_for_data_center',
+        splitRe: /\r\n|\n|\r|,|،/,
+        empty: 'لا توجد توافقات لهذه القطعة',
+        keyOf: (col, slug) => {
+            if (!/_compatibility(_selected_groups)?$/.test(col)) return null;
+            return { groups: /_selected_groups$/.test(col), key: String(col).replace(`${slug}_model_`, '')
+                .replace(/^spare_part_/, '').replace(/_compatibility(_selected_groups)?$/, '') };
+        }
+    }
+};
 
-    const backAction = `renderPartsScreenAfterModel(${jsArg(selectedModel)}, ${jsArg(encodeURIComponent(selectedModelCode || ''))}, ${jsArg(encodeURIComponent(currentScreenCompatibility || ''))}, ${jsArg(encodeURIComponent(currentBatteryModel || ''))})`;
+function mprItems(raw, splitRe) {
+    return String(raw ?? '').split(splitRe).map(x => x.trim()).filter(Boolean);
+}
 
-    document.getElementById('appContainer').innerHTML = `
+function mprAlertItemHtml(text) {
+    return `
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl p-3.5">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <div class="text-sm text-gray-800 leading-relaxed flex-1" dir="auto">${escapeHtmlValue(text)}</div>
+        </div>`;
+}
+
+function mprChipHtml(text) {
+    return `<span class="inline-flex items-center bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-sm font-semibold" dir="auto">${escapeHtmlValue(text)}</span>`;
+}
+
+function mprSectionHtml(title, items, kind, emptyText) {
+    const body = items.length
+        ? (kind === 'alerts'
+            ? `<div class="space-y-2">${items.map(mprAlertItemHtml).join('')}</div>`
+            : `<div class="flex flex-wrap gap-2">${items.map(mprChipHtml).join('')}</div>`)
+        : `<div class="text-sm text-gray-400 text-center py-2">${escapeHtmlValue(emptyText)}</div>`;
+    return `
+        <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div class="font-bold text-gray-800 text-sm sm:text-base">${escapeHtmlValue(title)}</div>
+                <span class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">${items.length}</span>
+            </div>
+            ${body}
+        </div>`;
+}
+
+function mprBackAction() {
+    return `renderPartsScreenAfterModel(${jsArg(selectedModel)}, ${jsArg(encodeURIComponent(selectedModelCode || ''))}, ${jsArg(encodeURIComponent(currentScreenCompatibility || ''))}, ${jsArg(encodeURIComponent(currentBatteryModel || ''))})`;
+}
+
+function mprShellHtml(title) {
+    return `
         ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <button onclick="${backAction}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+            <button onclick="${mprBackAction()}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 <span>رجوع</span>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800">تنبيهات الصيانة</h2>
+            <h2 class="text-sm sm:text-base font-bold text-gray-800">${escapeHtmlValue(title)}</h2>
         </div>
-        <div id="maintAlertBox" class="flex-1 overflow-y-auto space-y-3 p-1">
-            <div class="text-center text-gray-400 text-sm py-8">جاري جلب التنبيه...</div>
+        <div id="mprBox" class="flex-1 overflow-y-auto space-y-3 p-1">
+            <div class="text-center text-gray-400 text-sm py-8">جاري التحميل...</div>
         </div>
     `;
+}
+
+function mprHeaderCardHtml(partName) {
+    return `
+        <div class="w-full bg-gray-50 border border-gray-200 rounded-2xl shadow-sm p-4 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-xs text-gray-500">الموديل</div>
+                <div class="font-bold text-gray-800 truncate" dir="auto">${escapeHtmlValue(selectedModel)}</div>
+            </div>
+            <div class="text-left min-w-0">
+                <div class="text-xs text-gray-500">قطعة الغيار</div>
+                <div class="font-bold text-blue-700 truncate" dir="auto">${escapeHtmlValue(partName)}</div>
+            </div>
+        </div>`;
+}
+
+function mprErrorSectionHtml(title, msg) {
+    return `
+        <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+            <div class="font-bold text-gray-800 text-sm sm:text-base mb-2">${escapeHtmlValue(title)}</div>
+            <div class="text-xs text-red-600 text-center py-2" dir="auto">${escapeHtmlValue(msg)}</div>
+        </div>`;
+}
+
+// بيرجّع أقسام HTML (قسم للتنبيهات/التوافقات، وقسم تاني لمجموعات التوافق لو موجود). بيرمي Error برسالة واضحة لو حصل خطأ.
+async function mprBuildSections(kind, partName) {
+    const cfg = MPR_CONFIG[kind];
+    const slug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(selectedBrand) : '';
+    const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
+    if (!slug) throw new Error('الماركة غير معروفة: ' + selectedBrand);
+    if (!partKey) throw new Error(`قطعة الغيار "${partName}" غير مربوطة بعمود في الجدول`);
+
+    const { data, error } = await supabaseClient.rpc(cfg.rpc, { p_user_id: currentUserId, p_brand: slug });
+    if (error) throw new Error(error.message);
+
+    let payload = data;
+    if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
+    const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
+    const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
+    if (!columns.length) throw new Error('الجدول غير موجود لهذه الماركة');
+
+    const nameCol = `${slug}_model_names`;
+    const matched = columns.map(c => ({ col: c, info: cfg.keyOf(c, slug) }))
+        .filter(x => x.col !== nameCol && x.info && x.info.key === partKey);
+    const mainCol = (matched.find(x => !x.info.groups) || {}).col;
+    const groupsCol = (matched.find(x => x.info.groups) || {}).col;
+    if (!mainCol && !groupsCol) throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+
+    const target = mprNorm(selectedModel);
+    const row = rows.find(r => mprNorm(r[nameCol]) === target);
+
+    const sections = [];
+    if (mainCol) {
+        const items = row ? mprItems(row[mainCol], cfg.splitRe) : [];
+        sections.push(mprSectionHtml(kind === 'alerts' ? `تنبيهات صيانة ${partName}` : `توافقات ${partName}`, items, kind, cfg.empty));
+    }
+    if (groupsCol) {
+        const items = row ? mprItems(row[groupsCol], cfg.splitRe) : [];
+        sections.push(mprSectionHtml(`مجموعات توافق ${partName}`, items, kind, cfg.empty));
+    }
+    return sections;
+}
+
+// ---------- الشاشة النهائية لرحلة التوافقات أو التنبيهات ----------
+async function renderModelPartResultScreen(kind, partName = '') {
+    document.getElementById('appContainer').innerHTML = mprShellHtml(MPR_CONFIG[kind].title);
     loadDynamicMenuIntoSidebar();
-
-    const box = document.getElementById('maintAlertBox');
-    const msg = (text, color = 'text-gray-500') => {
-        if (box) box.innerHTML = `<div class="text-center ${color} text-sm py-8">${escapeHtmlValue(text)}</div>`;
-    };
-
-    if (!slug) { msg('الماركة غير معروفة لجدول التنبيهات'); return; }
-    if (!partKey) { msg(`قطعة الغيار "${partName}" غير مربوطة بعمود تنبيهات`); return; }
+    const box = document.getElementById('mprBox');
 
     try {
-        const { data, error } = await supabaseClient.rpc('get_brand_model_spare_part_maintenance_alerts_for_data_center', {
-            p_user_id: currentUserId,
-            p_brand: slug
-        });
-        if (error) { msg('خطأ في جلب التنبيهات: ' + error.message, 'text-red-400'); return; }
-
-        let payload = data;
-        if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
-        const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
-        const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
-        if (!columns.length) { msg('جدول التنبيهات غير موجود لهذه الماركة'); return; }
-
-        const nameCol = `${slug}_model_names`;
-        const alertCol = columns.find(col => {
-            if (col === nameCol || col === 'id' || col === 'created_at' || col === 'updated_at') return false;
-            const key = String(col)
-                .replace(`${slug}_model_`, '')
-                .replace(/_spare_part_maintenance_alerts$/, '')
-                .replace(/_maintenance_alerts$/, '')
-                .replace(/_alerts$/, '');
-            return key === partKey;
-        });
-        if (!alertCol) { msg(`لا يوجد عمود تنبيهات للقطعة "${partName}"`); return; }
-
-        // صف الموديل: تطابق تام على اسم الموديل
-        const target = maintAlertsNorm(selectedModel);
-        const row = rows.find(r => maintAlertsNorm(r[nameCol]) === target);
-
-        const alertText = row && row[alertCol] !== null && row[alertCol] !== undefined ? String(row[alertCol]).trim() : '';
-
-        box.innerHTML = `
-            <div class="w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl shadow-sm">
-                <div class="text-xs text-gray-500 mb-1">الموديل</div>
-                <div class="font-bold text-gray-800 mb-3" dir="auto">${escapeHtmlValue(selectedModel)}</div>
-                <div class="text-xs text-gray-500 mb-1">قطعة الغيار</div>
-                <div class="font-bold text-gray-800" dir="auto">${escapeHtmlValue(partName)}</div>
-            </div>
-            <div class="w-full bg-blue-50 border border-blue-200 p-4 rounded-2xl shadow-sm">
-                <div class="text-xs font-bold text-blue-700 mb-2">تنبيهات صيانة ${escapeHtmlValue(partName)}</div>
-                ${alertText
-                    ? `<div class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" dir="auto">${escapeHtmlValue(alertText)}</div>`
-                    : `<div class="text-sm text-gray-500">${row ? 'لا توجد تنبيهات صيانة لهذه القطعة' : 'هذا الموديل غير موجود في جدول التنبيهات'}</div>`}
-            </div>
-        `;
+        const sections = await mprBuildSections(kind, partName);
+        box.innerHTML = mprHeaderCardHtml(partName) + sections.join('');
     } catch (err) {
-        console.error('Maintenance alert error:', err);
-        msg('حدث خطأ غير متوقع', 'text-red-400');
+        console.error('Model part result error:', err);
+        box.innerHTML = mprHeaderCardHtml(partName) + mprErrorSectionHtml(MPR_CONFIG[kind].title, err.message);
     }
+}
+
+// ---------- الشاشة النهائية لرحلة شراء قطع الغيار ----------
+// الترتيب: كود البطارية (لو القطعة بطارية) ← الشراء (التجار وأسعارهم) ← التوافقات ← التنبيهات
+function mprBatteryCodeHtml() {
+    return `
+        <div class="w-full bg-blue-50 border border-blue-200 rounded-2xl shadow-sm p-4 flex items-center justify-between gap-3">
+            <div class="font-bold text-gray-800 text-sm sm:text-base">كود البطارية</div>
+            <div class="font-mono font-bold text-blue-700 text-base" dir="ltr">${currentBatteryModel ? escapeHtmlValue(currentBatteryModel) : '—'}</div>
+        </div>`;
+}
+
+function mprPurchasePlaceholderHtml() {
+    return `
+        <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+            <div class="font-bold text-gray-800 text-sm sm:text-base mb-3">الشراء</div>
+            <div class="text-sm text-gray-400 text-center py-2">هنا هتظهر أسعار كل تاجر</div>
+        </div>`;
+}
+
+async function renderBuyPartScreen(partName = '') {
+    document.getElementById('appContainer').innerHTML = mprShellHtml('شراء قطعة غيار');
+    loadDynamicMenuIntoSidebar();
+    const box = document.getElementById('mprBox');
+
+    const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
+    const [compatRes, alertsRes] = await Promise.allSettled([
+        mprBuildSections('compat', partName),
+        mprBuildSections('alerts', partName)
+    ]);
+
+    const part = (res, title) => res.status === 'fulfilled'
+        ? res.value.join('')
+        : mprErrorSectionHtml(title, res.reason && res.reason.message ? res.reason.message : 'حدث خطأ');
+
+    box.innerHTML = [
+        mprHeaderCardHtml(partName),
+        partKey === 'battery' ? mprBatteryCodeHtml() : '',
+        mprPurchasePlaceholderHtml(),
+        part(compatRes, `توافقات ${partName}`),
+        part(alertsRes, `تنبيهات صيانة ${partName}`)
+    ].join('');
 }
