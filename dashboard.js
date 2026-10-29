@@ -300,7 +300,9 @@ const MPR_CONFIG = {
         // بيرجّع مفتاح القطعة من اسم العمود (أو null لو مش عمود تنبيهات)
         keyOf: (col, slug) => {
             if (!/_alerts$/.test(col)) return null;
-            return { groups: false, key: String(col).replace(`${slug}_model_`, '')
+            // أعمدة جدول التنبيهات بالشكل: {brand}_{part}_maintenance_alerts (مثلاً samsung_screen_maintenance_alerts)
+            return { groups: false, key: String(col)
+                .replace(new RegExp('^' + slug + '_(model_)?'), '')
                 .replace(/_spare_part_maintenance_alerts$/, '').replace(/_maintenance_alerts$/, '').replace(/_alerts$/, '') };
         }
     },
@@ -455,12 +457,88 @@ function mprBatteryCodeHtml() {
         </div>`;
 }
 
-function mprPurchasePlaceholderHtml() {
+// ---------- قسم الشراء: كارت لكل تاجر وأسعاره (من دالة get_spare_part_prices_for_buyers) ----------
+// بيحوّل أعمدة الأسعار (سعر <النوع> "جملة" / "قطاعى") لجدول صغير: النوع | جملة | قطاعى
+function mprPriceTableHtml(prices) {
+    const types = [];
+    const map = {};
+    (prices || []).forEach(p => {
+        const m = String(p.label).match(/^\s*سعر\s*(.*?)\s*"(جملة|قطاعى)"\s*$/);
+        const type = m ? m[1].trim() : String(p.label);
+        const kind = m ? m[2] : 'سعر';
+        if (!(type in map)) { map[type] = {}; types.push(type); }
+        map[type][kind] = p.value;
+    });
+    const fmt = v => (v === undefined || v === null) ? '—' : Number(v).toLocaleString('en-US');
+
+    const rows = types.map(type => {
+        const r = map[type];
+        const cells = r['سعر'] !== undefined
+            ? `<div class="col-span-2 text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['سعر']))}</div>`
+            : `<div class="text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['جملة']))}</div>
+               <div class="text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['قطاعى']))}</div>`;
+        return `
+            <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-2 items-center py-2 border-b border-gray-100 last:border-0 text-sm">
+                <div class="font-semibold text-gray-800" dir="auto">${escapeHtmlValue(type || 'السعر')}</div>
+                ${cells}
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-2 text-xs font-bold text-gray-500 pb-1 border-b border-gray-200">
+            <div>النوع</div><div class="text-center">جملة</div><div class="text-center">قطاعى</div>
+        </div>
+        ${rows}`;
+}
+
+function mprSellerCardHtml(seller, groupBased) {
+    const items = (seller.items || []).map(it => `
+        <div class="mt-3 first:mt-0">
+            ${groupBased && it.key ? `<div class="mb-2">${mprChipHtml(it.key)}</div>` : ''}
+            ${mprPriceTableHtml(it.prices)}
+        </div>`).join('');
     return `
         <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-            <div class="font-bold text-gray-800 text-sm sm:text-base mb-3">الشراء</div>
-            <div class="text-sm text-gray-400 text-center py-2">هنا هتظهر أسعار كل تاجر</div>
+            <div class="flex items-center gap-2 mb-3">
+                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M5 10v10h14V10M4 10l1-6h14l1 6"></path></svg>
+                <div class="font-bold text-gray-800 text-sm sm:text-base" dir="auto">${escapeHtmlValue(seller.seller_name)}</div>
+            </div>
+            ${items}
         </div>`;
+}
+
+async function mprBuildPurchaseSection(partName) {
+    const slug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(selectedBrand) : '';
+    const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
+    if (!slug) throw new Error('الماركة غير معروفة: ' + selectedBrand);
+    if (!partKey) throw new Error(`قطعة الغيار "${partName}" غير مربوطة بجدول أسعار`);
+
+    const { data, error } = await supabaseClient.rpc('get_spare_part_prices_for_buyers', {
+        p_brand: slug,
+        p_part: partKey,
+        p_model_name: selectedModel
+    });
+    if (error) throw new Error(error.message);
+
+    let payload = data;
+    if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
+    const sellers = payload && Array.isArray(payload.sellers) ? payload.sellers : [];
+    const groupBased = !!(payload && payload.group_based);
+
+    const title = `
+        <div class="flex items-center justify-between px-1">
+            <div class="font-bold text-gray-800 text-sm sm:text-base">الشراء</div>
+            <span class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">${sellers.length}</span>
+        </div>`;
+
+    if (!sellers.length) {
+        return [`
+            <div class="w-full bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+                <div class="font-bold text-gray-800 text-sm sm:text-base mb-3">الشراء</div>
+                <div class="text-sm text-gray-400 text-center py-2">لا يوجد تجار عارضين لهذه القطعة حالياً</div>
+            </div>`];
+    }
+    return [title, ...sellers.map(sl => mprSellerCardHtml(sl, groupBased))];
 }
 
 async function renderBuyPartScreen(partName = '') {
@@ -469,7 +547,8 @@ async function renderBuyPartScreen(partName = '') {
     const box = document.getElementById('mprBox');
 
     const partKey = (typeof sdcPartSuffix === 'function') ? sdcPartSuffix(partName) : '';
-    const [compatRes, alertsRes] = await Promise.allSettled([
+    const [purchaseRes, compatRes, alertsRes] = await Promise.allSettled([
+        mprBuildPurchaseSection(partName),
         mprBuildSections('compat', partName),
         mprBuildSections('alerts', partName)
     ]);
@@ -481,7 +560,7 @@ async function renderBuyPartScreen(partName = '') {
     box.innerHTML = [
         mprHeaderCardHtml(partName),
         partKey === 'battery' ? mprBatteryCodeHtml() : '',
-        mprPurchasePlaceholderHtml(),
+        part(purchaseRes, 'الشراء'),
         part(compatRes, `توافقات ${partName}`),
         part(alertsRes, `تنبيهات صيانة ${partName}`)
     ].join('');
