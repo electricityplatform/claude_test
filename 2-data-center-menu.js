@@ -76,13 +76,13 @@ async function fetchAndDisplayDataCenterMenu() {
                 } else if (item === 'سجل التصفح') {
                     // clickAction = "اكتب_اسم_الدالة()";
                 } else if (item === 'الأقسام') {
-                    // clickAction = "اكتب_اسم_الدالة()";
+                    clickAction = "renderPartitionsSheet()";
                 } else if (item === 'الماركات') {
-                    // clickAction = "اكتب_اسم_الدالة()";
+                    clickAction = "renderBrandsSheet()";
                 } else if (item === 'الموديلات') {
                     clickAction = "renderDataCenterBrandsScreen()";
                 } else if (item === 'قطع الغيار') {
-                    // clickAction = "اكتب_اسم_الدالة()";
+                    clickAction = "renderSparePartsSheet()";
                 } else if (item === 'التوافقات') {
                     clickAction = "renderCompatBrandsScreen()";
                 } else if (item === 'مجموعات التوافقات') {
