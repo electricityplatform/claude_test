@@ -1,16 +1,8 @@
-// مركز البيانات (6/6) - جداول التوافقات
+// مركز البيانات - جداول التوافقات المحدثة
 
-// =====================================================================
-// ================= جداول التوافقات في مركز البيانات =================
-// الجداول: {brand}_compatibility
-// أعمدة كل جدول: id + {brand}_model_names + 13 قطعة × (عمود _compatibility
-// وعمود _compatibility_selected_groups) + created_at
-// الدوال في الداتابيز: get / update فقط
-// (اسم الموديل للقراءة فقط: بيتغير من جدول الموديلات)
-// =====================================================================
 const CP_READONLY_COLS = ['id', 'created_at', 'updated_at'];
 
-// البحث بيدوّر في أي عمود توافق (_compatibility و _compatibility_selected_groups) واسم الموديل
+// البحث بيدوّر في أي عمود توافق واسم الموديل
 const CP_SEARCH_FIELD_RE = /_model_names$|_compatibility$|_compatibility_selected_groups$/;
 
 let currentCpBrand = '';
@@ -24,13 +16,19 @@ function cpNameCol() {
 
 function cpColLabel(col) {
     if (col === cpNameCol()) return 'اسم الموديل';
+    if (col === 'id') return 'م';
     if (col === 'created_at') return 'تاريخ الانشاء';
+    
     const isGroups = /_compatibility_selected_groups$/.test(col);
+    
+    // استخراج اسم القطعة مع مراعاة المسميات الجديدة
     const key = String(col)
         .replace(`${currentCpBrand}_model_`, '')
+        .replace(/^spare_part_/, '')
         .replace(/_compatibility(_selected_groups)?$/, '');
+        
     const base = CG_PART_LABELS[key];
-    if (!base) return '';
+    if (!base) return col; // إرجاع اسم العمود الأصلي لو مفيش ترجمة
     return isGroups ? `مجموعات توافق ${base} المختارة` : `توافق ${base}`;
 }
 
@@ -65,13 +63,11 @@ function renderCompatBrandsScreen() {
     loadDynamicMenuIntoSidebar();
 }
 
-// خلية اسم الموديل (للقراءة فقط). التثبيت بيتم بزرار تثبيت العمود المميز
 function cpNameCellHtml(val) {
     return `<td class="relative"><span class="block px-2.5 py-2 text-[13px] font-semibold text-gray-800 whitespace-nowrap" dir="auto">${escapeHtmlValue(val)}</span></td>`;
 }
 
 // ---------- شيت التوافقات لماركة معينة ----------
-// بنستخدم نفس id الشيت (editableUsersTable) عشان نفس التنسيق واللصق الجماعي والسحب للتعبئة
 async function renderCompatSheet(brandKey, brandLabel) {
     closeSidebar();
     currentCpBrand = brandKey;
@@ -192,8 +188,6 @@ async function renderCompatSheet(brandKey, brandLabel) {
 }
 
 // ---------- البحث في اسم الموديل وأي عمود توافق ----------
-// الفلترة بإخفاء الصفوف بس (الخلايا فاضلة في الصفحة)، فالتعديلات ما بتضيعش،
-// وزرار الحفظ بيحفظ كل الصفوف حتى المخفية.
 function cpSheetApplyFilter(q) {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
@@ -210,7 +204,7 @@ function cpSheetApplyFilter(q) {
         const haystack = Array.from(tr.querySelectorAll('.excel-input'))
             .filter(i => CP_SEARCH_FIELD_RE.test(i.getAttribute('data-field') || ''))
             .map(i => i.value);
-        // اسم الموديل مش خانة إدخال، فبناخده من data-name
+            
         haystack.push(tr.getAttribute('data-name') || '');
 
         total++;
@@ -272,7 +266,7 @@ async function saveCpSheetToDB() {
     }
 }
 
-// ---------- تصدير الشيت (بالقيم الحالية بعد التعديل) إلى XLSX ----------
+// ---------- تصدير الشيت ----------
 function exportCpSheetToExcel() {
     const table = document.getElementById('editableUsersTable');
     if (!table) {
@@ -280,7 +274,6 @@ function exportCpSheetToExcel() {
         return;
     }
 
-    // العناوين بأسماء الأعمدة الحقيقية
     const headers = Array.from(table.querySelectorAll('thead th[data-col]')).map(th => th.getAttribute('data-col'));
     const rowsData = [];
     table.querySelectorAll('tbody tr').forEach(row => {
@@ -294,6 +287,6 @@ function exportCpSheetToExcel() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, currentCpBrand || 'compatibility');
 
-    const fileName = `${currentCpBrand}_compatibility_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const fileName = `${currentCpBrand}_model_spare_part_compatibility_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(workbook, fileName);
 }
