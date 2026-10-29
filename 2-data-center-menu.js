@@ -61,21 +61,33 @@ async function fetchAndDisplayDataCenterMenu() {
                 const style = getRotatingCardStyle(index);
                 let clickAction = `alert('تم النقر على قسم: ${item}')`;
 
-                if (item === 'جدول المستخدمين' || item.includes('بيانات المستخدمين')) {
+                if (item === 'المستخدمين') {
                     clickAction = "renderUsersDataCenterSheet()";
-                } else if (item === 'جدول المستخدمين الجدد') {
+                } else if (item === 'المستخدمين الجدد') {
                     clickAction = "renderNewUsersScreen()";
-                } else if (item === 'جدول المستخدمين النشطين') {
+                } else if (item === 'المستخدمين النشطين') {
                     clickAction = "renderActiveUsersScreen()";
-                } else if (item === 'جدول سجل دخول المستخدمين') {
+                } else if (item === 'سجل دخول المستخدمين') {
                     clickAction = "renderLoginHistoryScreen()";
-                } else if (item === 'جداول مجموعات التوافقات') {
-                    clickAction = "renderCompatGroupsBrandsScreen()";
-                } else if (item === 'جداول التوافقات') {
-                    clickAction = "renderCompatBrandsScreen()";
-                } else if (item === 'جداول الموديلات') {
+                } else if (item === 'سلة نواقص المستخدمين') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'سجل المبيعات') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'سجل التصفح') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'الأقسام') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'الماركات') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'الموديلات') {
                     clickAction = "renderDataCenterBrandsScreen()";
-                } else if (item === 'جداول تنبيهات الصيانة') {
+                } else if (item === 'قطع الغيار') {
+                    // clickAction = "اكتب_اسم_الدالة()";
+                } else if (item === 'التوافقات') {
+                    clickAction = "renderCompatBrandsScreen()";
+                } else if (item === 'مجموعات التوافقات') {
+                    clickAction = "renderCompatGroupsBrandsScreen()";
+                } else if (item === 'تنبيهات الصيانة') {
                     clickAction = "renderAlertsBrandsScreen()";
                 }
 
