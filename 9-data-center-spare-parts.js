@@ -195,28 +195,33 @@ function sparePartsSheetApplyFilter(q) {
     }
 }
 
-// ---------- إدراج صف فاضي مباشرة في المكان المحدد (من غير أي نافذة) ----------
-// الصف الحالي رقم position وما بعده بينزلوا خطوة، والصف الجديد بيتعمل فاضي (id بس).
-async function insertSparePartsRowAt(position) {
-    try {
-        const { data, error } = await supabaseClient.rpc('insert_spare_parts_at_position_for_data_center', {
-            p_user_id: currentUserId,
-            p_position: position,
-            p_payload: {}
-        });
-        if (error) {
-            alert('حدث خطأ أثناء الإدراج: ' + error.message);
-            return;
-        }
-        if (!data || !data.success) {
-            alert(data?.message || 'فشل الإدراج');
-            return;
-        }
-        await renderSparePartsSheet();
-    } catch (err) {
-        console.error('Insert row at position error:', err);
-        alert('حدث خطأ غير متوقع أثناء الإدراج');
+// ---------- إدراج صف فاضي في مكانه مباشرة ----------
+// الصف بيظهر على طول قبل الصف المختار (من غير أي نافذة). اكتب في العمود اللي عايزه وبعدين دوس "حفظ".
+// لو سيبت الصف فاضي خالص مش هيتحفظ. الإدراج الفعلي في الداتابيز بيحصل وقت الحفظ.
+function insertSparePartsRowAt(position) {
+    const table = document.getElementById('editableUsersTable');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    const target = tbody.querySelector(`tr[data-id="${position}"]`);
+    if (!target) {
+        alert('مش لاقي الصف ده، دوس تحديث وجرب تاني');
+        return;
     }
+
+    // نعمل الصف بنفس دالة "إضافة صف" (بتحطه في الآخر)، وبعدين ننقله قبل الصف المختار
+    const before = new Set(Array.from(tbody.children));
+    addSparePartsSheetRow(false);
+    const newRow = Array.from(tbody.children).find(tr => !before.has(tr));
+    if (!newRow) return;
+
+    newRow.setAttribute('data-insert-at', String(position));
+    tbody.insertBefore(newRow, target);
+    newRow.querySelectorAll('td').forEach(td => { td.style.background = '#fffbeb'; });
+
+    const first = newRow.querySelector('.excel-input');
+    if (first) first.focus();
+    newRow.scrollIntoView({ block: 'center' });
 }
 
 // ---------- حذف صف ----------
@@ -251,13 +256,14 @@ async function deleteSparePartsRow(id) {
     }
 }
 
-// ---------- حفظ الشيت (تعديل الموجود + إضافة الجديد) ----------
+// ---------- حفظ الشيت (تعديل الموجود + إدراج في أماكن + إضافة الجديد) ----------
 async function saveSparePartsSheetToDB() {
     const table = document.getElementById('editableUsersTable');
     if (!table) return;
 
     const updatePayload = [];
     const insertPayload = [];
+    const positionalInserts = []; // صفوف اتدرجت في مكان معين، بنفس ترتيبها في الشيت
 
     table.querySelectorAll('tbody tr').forEach(row => {
         const inputs = row.querySelectorAll('[data-field]');
@@ -279,16 +285,25 @@ async function saveSparePartsSheetToDB() {
                     hasValue = true;
                 }
             });
-            if (hasValue) insertPayload.push(rowData);
+            // الصف الفاضي خالص مش بيتحفظ
+            if (!hasValue) return;
+
+            if (row.hasAttribute('data-insert-at')) {
+                positionalInserts.push({ position: Number(row.getAttribute('data-insert-at')), payload: rowData });
+            } else {
+                insertPayload.push(rowData);
+            }
         }
     });
 
-    if (updatePayload.length === 0 && insertPayload.length === 0) {
+    if (updatePayload.length === 0 && insertPayload.length === 0 && positionalInserts.length === 0) {
         alert("لا توجد بيانات للحفظ");
         return;
     }
 
     const messages = [];
+    let reloadNeeded = false;
+    const prefix = () => (messages.length ? messages.join('\n') + '\n\n' : '');
 
     try {
         if (updatePayload.length > 0) {
@@ -307,30 +322,56 @@ async function saveSparePartsSheetToDB() {
             messages.push(data.message || "تم حفظ التعديلات");
         }
 
+        // الإدراج في أماكن معينة: من الآخر للأول، عشان أرقام الصفوف اللي فوق ما تتغيرش وإحنا بندرج
+        let insertedAt = 0;
+        for (let i = positionalInserts.length - 1; i >= 0; i--) {
+            const item = positionalInserts[i];
+            const { data, error } = await supabaseClient.rpc('insert_spare_parts_at_position_for_data_center', {
+                p_user_id: currentUserId,
+                p_position: item.position,
+                p_payload: item.payload
+            });
+            const failMsg = error ? error.message : ((!data || !data.success) ? (data?.message || 'فشل الإدراج') : null);
+            if (failMsg) {
+                alert(prefix() + "حدث خطأ أثناء إدراج صف جديد: " + failMsg +
+                    (insertedAt ? `\n\nاتدرج ${insertedAt} صف قبل الخطأ، والشيت هيتحدّث.` : ''));
+                if (insertedAt) await renderSparePartsSheet();
+                return;
+            }
+            insertedAt++;
+        }
+        if (insertedAt > 0) {
+            messages.push(`تم إدراج ${insertedAt} صف في مكانه`);
+            reloadNeeded = true;
+        }
+
         if (insertPayload.length > 0) {
             const { data, error } = await supabaseClient.rpc('insert_spare_parts_for_data_center', {
                 p_user_id: currentUserId,
                 p_payload: insertPayload
             });
             if (error) {
-                alert((messages.length ? messages.join('\n') + '\n\n' : '') + "حدث خطأ أثناء إضافة الصفوف الجديدة: " + error.message);
+                alert(prefix() + "حدث خطأ أثناء إضافة الصفوف الجديدة: " + error.message);
+                if (reloadNeeded) await renderSparePartsSheet();
                 return;
             }
             if (!data || !data.success) {
-                alert((messages.length ? messages.join('\n') + '\n\n' : '') + (data?.message || "فشلت إضافة الصفوف الجديدة"));
+                alert(prefix() + (data?.message || "فشلت إضافة الصفوف الجديدة"));
+                if (reloadNeeded) await renderSparePartsSheet();
                 return;
             }
             messages.push(data.message || "تمت إضافة الصفوف الجديدة");
+            reloadNeeded = true;
         }
 
         alert(messages.join('\n'));
 
         // إعادة تحميل الشيت ليظهر الـ id للصفوف الجديدة
-        if (insertPayload.length > 0) {
+        if (reloadNeeded) {
             await renderSparePartsSheet();
         }
     } catch (err) {
-        console.error("Save spare_parts sheet error:", err);
+        console.error("Save sheet error:", err);
         alert("حدث خطأ غير متوقع أثناء الحفظ");
     }
 }
