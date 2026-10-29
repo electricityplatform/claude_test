@@ -232,7 +232,8 @@ async function saveCpSheetToDB() {
     const updatePayload = [];
 
     table.querySelectorAll('tbody tr[data-id]').forEach(row => {
-        const rowData = { id: row.getAttribute('data-id') };
+        // دالة الحفظ بتحدّث بالاسم (upsert على عمود اسم الموديل)، وخلية الاسم مش input فبنبعتها من data-name
+        const rowData = { id: row.getAttribute('data-id'), [cpNameCol()]: row.getAttribute('data-name') };
         row.querySelectorAll('[data-field]').forEach(input => {
             const rawVal = input.value.trim();
             rowData[input.getAttribute('data-field')] = rawVal !== '' ? rawVal : null;
