@@ -195,49 +195,14 @@ function brandsSheetApplyFilter(q) {
     }
 }
 
-// ---------- نافذة الإدراج (اسم العنصر الجديد - اختياري) ----------
-function closeBrandsDialog() {
-    const old = document.getElementById('brandsDialog');
-    if (old) old.remove();
-}
-
-function insertBrandsRowAt(position) {
-    closeBrandsDialog();
-
-    const overlay = document.createElement('div');
-    overlay.id = 'brandsDialog';
-    overlay.className = 'fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4';
-    overlay.innerHTML = `
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-3 border border-gray-200">
-            <h3 class="font-bold text-gray-800 text-sm">إدراج صف جديد في المكان رقم ${position}</h3>
-            <p class="text-xs text-gray-500 leading-relaxed">الصف الحالي رقم ${position} وما بعده هينزلوا خطوة. احفظ أي تعديلات أخرى الأول لأن الشيت هيتحدّث بعد الإدراج.</p>
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-600">اسم الماركة (اختياري - سيبه فاضي لو عايز صف فاضي)</label>
-                <input id="brandsInsertVal" type="text" dir="auto" onkeydown="if(event.key==='Enter'){event.preventDefault();submitBrandsInsert(${position});}" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex items-center gap-2 pt-1">
-                <button type="button" onclick="submitBrandsInsert(${position})" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer">إدراج</button>
-                <button type="button" onclick="closeBrandsDialog()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm cursor-pointer">إلغاء</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const input = document.getElementById('brandsInsertVal');
-    if (input) input.focus();
-}
-
-async function submitBrandsInsert(position) {
-    const val = (document.getElementById('brandsInsertVal')?.value || '').trim();
-
-    // الاسم اختياري: لو فاضي نبعت payload فاضي والداتابيز تعمل صف بـ id بس
-    const payload = val ? { [BRANDS_NAME_COL]: val } : {};
-
+// ---------- إدراج صف فاضي مباشرة في المكان المحدد (من غير أي نافذة) ----------
+// الصف الحالي رقم position وما بعده بينزلوا خطوة، والصف الجديد بيتعمل فاضي (id بس).
+async function insertBrandsRowAt(position) {
     try {
         const { data, error } = await supabaseClient.rpc('insert_brands_at_position_for_data_center', {
             p_user_id: currentUserId,
             p_position: position,
-            p_payload: payload
+            p_payload: {}
         });
         if (error) {
             alert('حدث خطأ أثناء الإدراج: ' + error.message);
@@ -247,10 +212,9 @@ async function submitBrandsInsert(position) {
             alert(data?.message || 'فشل الإدراج');
             return;
         }
-        closeBrandsDialog();
         await renderBrandsSheet();
     } catch (err) {
-        console.error('Insert brands at position error:', err);
+        console.error('Insert row at position error:', err);
         alert('حدث خطأ غير متوقع أثناء الإدراج');
     }
 }
