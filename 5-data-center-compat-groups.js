@@ -232,7 +232,7 @@ function cgSheetApplyFilter(q) {
     }
 }
 
-// ---------- نافذة الإدراج (اختيار العمود + اسم المجموعة) ----------
+// ---------- نافذة الإدراج (اختيار العمود + اسم المجموعة - اختياري) ----------
 function closeCgDialog() {
     const old = document.getElementById('cgDialog');
     if (old) old.remove();
@@ -261,7 +261,7 @@ function insertCgRowAt(position) {
                 </select>
             </div>
             <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-600">اسم المجموعة</label>
+                <label class="block text-xs font-semibold text-gray-600">اسم المجموعة (اختياري - سيبه فاضي لو عايز صف فاضي)</label>
                 <input id="cgInsertVal" type="text" dir="auto" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCgInsert(${position});}" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="flex items-center gap-2 pt-1">
@@ -280,18 +280,15 @@ async function submitCgInsert(position) {
     const col = document.getElementById('cgInsertCol')?.value;
     const val = (document.getElementById('cgInsertVal')?.value || '').trim();
 
-    if (!col) return;
-    if (!val) {
-        alert('اسم المجموعة مطلوب');
-        return;
-    }
+    // الاسم اختياري: لو فاضي نبعت payload فاضي والداتابيز تعمل صف بـ id بس
+    const payload = (col && val) ? { [col]: val } : {};
 
     try {
         const { data, error } = await supabaseClient.rpc('insert_model_spare_part_compatibility_group_at_position_for_data_center', {
             p_user_id: currentUserId,
             p_brand: currentCgBrand,
             p_position: position,
-            p_payload: { [col]: val }
+            p_payload: payload
         });
         if (error) {
             alert('حدث خطأ أثناء الإدراج: ' + error.message);
