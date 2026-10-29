@@ -195,7 +195,7 @@ function sparePartsSheetApplyFilter(q) {
     }
 }
 
-// ---------- نافذة الإدراج (اسم العنصر الجديد) ----------
+// ---------- نافذة الإدراج (اسم العنصر الجديد - اختياري) ----------
 function closeSparePartsDialog() {
     const old = document.getElementById('sparePartsDialog');
     if (old) old.remove();
@@ -212,7 +212,7 @@ function insertSparePartsRowAt(position) {
             <h3 class="font-bold text-gray-800 text-sm">إدراج صف جديد في المكان رقم ${position}</h3>
             <p class="text-xs text-gray-500 leading-relaxed">الصف الحالي رقم ${position} وما بعده هينزلوا خطوة. احفظ أي تعديلات أخرى الأول لأن الشيت هيتحدّث بعد الإدراج.</p>
             <div class="space-y-1">
-                <label class="block text-xs font-semibold text-gray-600">اسم قطعة الغيار</label>
+                <label class="block text-xs font-semibold text-gray-600">اسم قطعة الغيار (اختياري - سيبه فاضي لو عايز صف فاضي)</label>
                 <input id="sparePartsInsertVal" type="text" dir="auto" onkeydown="if(event.key==='Enter'){event.preventDefault();submitSparePartsInsert(${position});}" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="flex items-center gap-2 pt-1">
@@ -230,16 +230,14 @@ function insertSparePartsRowAt(position) {
 async function submitSparePartsInsert(position) {
     const val = (document.getElementById('sparePartsInsertVal')?.value || '').trim();
 
-    if (!val) {
-        alert('اسم قطعة الغيار مطلوب');
-        return;
-    }
+    // الاسم اختياري: لو فاضي نبعت payload فاضي والداتابيز تعمل صف بـ id بس
+    const payload = val ? { [SPARE_PARTS_NAME_COL]: val } : {};
 
     try {
         const { data, error } = await supabaseClient.rpc('insert_spare_parts_at_position_for_data_center', {
             p_user_id: currentUserId,
             p_position: position,
-            p_payload: { [SPARE_PARTS_NAME_COL]: val }
+            p_payload: payload
         });
         if (error) {
             alert('حدث خطأ أثناء الإدراج: ' + error.message);
