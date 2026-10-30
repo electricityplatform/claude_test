@@ -454,31 +454,38 @@ function mprBatteryCodeHtml() {
 function mprPriceTableHtml(prices) {
     const types = [];
     const map = {};
+    let hasWholesale = false;
     (prices || []).forEach(p => {
         const m = String(p.label).match(/^\s*سعر\s*(.*?)\s*"(جملة|قطاعى)"\s*$/);
         const type = m ? m[1].trim() : String(p.label);
         const kind = m ? m[2] : 'سعر';
+        if (kind === 'جملة') hasWholesale = true;
         if (!(type in map)) { map[type] = {}; types.push(type); }
         map[type][kind] = p.value;
     });
     const fmt = v => (v === undefined || v === null) ? '—' : Number(v).toLocaleString('en-US');
+    // الفنى بيشوف القطاعى بس (السيرفر مش بيبعت أسعار الجملة له)، فبنخفى عمود الجملة
+    const gridCols = hasWholesale ? 'grid-cols-[1.5fr_1fr_1fr]' : 'grid-cols-[1.5fr_1fr]';
+    const priceCell = (v, extra = '') => `<div class="${extra} text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(v))}</div>`;
 
     const rows = types.map(type => {
         const r = map[type];
-        const cells = r['سعر'] !== undefined
-            ? `<div class="col-span-2 text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['سعر']))}</div>`
-            : `<div class="text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['جملة']))}</div>
-               <div class="text-center font-mono font-bold text-gray-800" dir="ltr">${escapeHtmlValue(fmt(r['قطاعى']))}</div>`;
+        let cells;
+        if (r['سعر'] !== undefined) {
+            cells = priceCell(r['سعر'], hasWholesale ? 'col-span-2' : '');
+        } else {
+            cells = (hasWholesale ? priceCell(r['جملة']) : '') + priceCell(r['قطاعى']);
+        }
         return `
-            <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-2 items-center py-2 border-b border-gray-100 last:border-0 text-sm">
+            <div class="grid ${gridCols} gap-2 items-center py-2 border-b border-gray-100 last:border-0 text-sm">
                 <div class="font-semibold text-gray-800" dir="auto">${escapeHtmlValue(type || 'السعر')}</div>
                 ${cells}
             </div>`;
     }).join('');
 
     return `
-        <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-2 text-xs font-bold text-gray-500 pb-1 border-b border-gray-200">
-            <div>النوع</div><div class="text-center">جملة</div><div class="text-center">قطاعى</div>
+        <div class="grid ${gridCols} gap-2 text-xs font-bold text-gray-500 pb-1 border-b border-gray-200">
+            <div>النوع</div>${hasWholesale ? '<div class="text-center">جملة</div>' : ''}<div class="text-center">قطاعى</div>
         </div>
         ${rows}`;
 }
@@ -508,7 +515,8 @@ async function mprBuildPurchaseSection(partName) {
     const { data, error } = await supabaseClient.rpc('get_spare_part_prices_for_buyers', {
         p_brand: slug,
         p_part: partKey,
-        p_model_name: selectedModel
+        p_model_name: selectedModel,
+        p_user_id: currentUserId
     });
     if (error) throw new Error(error.message);
 
