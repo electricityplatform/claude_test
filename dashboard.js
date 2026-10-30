@@ -272,7 +272,8 @@ async function renderPartDetailsFinal(partName = '') {
 
 
 // ================= الشاشة النهائية: تنبيهات / توافقات (الموديل + قطعة الغيار) =================
-// بتجيب جدول الماركة من مركز البيانات، وتدوّر على صف الموديل (تطابق تام على الاسم)، وتعرض عمود القطعة المختارة.
+// التنبيهات: بتجيب جدول الماركة من مركز البيانات، وتدوّر على صف الموديل (تطابق تام على الاسم).
+// التوافقات: بتجيب صف الموديل مباشرة من الدالة get_compatibility.
 function mprNorm(v) {
     return String(v ?? '').toLowerCase().replace(/\s+/g, '');
 }
@@ -294,14 +295,8 @@ const MPR_CONFIG = {
     },
     compat: {
         title: 'التوافقات',
-        rpc: 'get_model_spare_part_compatibility_for_data_center',
         splitRe: /\r\n|\n|\r|,|،/,
-        empty: 'لا توجد توافقات لهذه القطعة',
-        keyOf: (col, slug) => {
-            if (!/_compatibility(_selected_groups)?$/.test(col)) return null;
-            return { groups: /_selected_groups$/.test(col), key: String(col).replace(`${slug}_model_`, '')
-                .replace(/^spare_part_/, '').replace(/_compatibility(_selected_groups)?$/, '') };
-        }
+        empty: 'لا توجد توافقات لهذه القطعة'
     }
 };
 
@@ -387,24 +382,46 @@ async function mprBuildSections(kind, partName) {
     if (!slug) throw new Error('الماركة غير معروفة: ' + selectedBrand);
     if (!partKey) throw new Error(`قطعة الغيار "${partName}" غير مربوطة بعمود في الجدول`);
 
-    const { data, error } = await supabaseClient.rpc(cfg.rpc, { p_user_id: currentUserId, p_brand: slug });
-    if (error) throw new Error(error.message);
+    let row = null, mainCol, groupsCol;
 
-    let payload = data;
-    if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
-    const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
-    const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
-    if (!columns.length) throw new Error('الجدول غير موجود لهذه الماركة');
+    if (kind === 'compat') {
+        // الدالة الجديدة: بترجّع صف الموديل بس (أو null)
+        const { data, error } = await supabaseClient.rpc('get_compatibility', {
+            p_brand: slug,
+            p_model_name: selectedModel
+        });
+        if (error) throw new Error(error.message);
 
-    const nameCol = `${slug}_model_names`;
-    const matched = columns.map(c => ({ col: c, info: cfg.keyOf(c, slug) }))
-        .filter(x => x.col !== nameCol && x.info && x.info.key === partKey);
-    const mainCol = (matched.find(x => !x.info.groups) || {}).col;
-    const groupsCol = (matched.find(x => x.info.groups) || {}).col;
-    if (!mainCol && !groupsCol) throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+        row = data;
+        if (typeof row === 'string') { try { row = JSON.parse(row); } catch (e) { row = null; } }
 
-    const target = mprNorm(selectedModel);
-    const row = rows.find(r => mprNorm(r[nameCol]) === target);
+        mainCol = `${slug}_model_${partKey}_compatibility`;
+        groupsCol = `${slug}_model_${partKey}_compatibility_selected_groups`;
+
+        if (row && !(mainCol in row) && !(groupsCol in row)) {
+            throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+        }
+    } else {
+        // التنبيهات (زي ما هي)
+        const { data, error } = await supabaseClient.rpc(cfg.rpc, { p_user_id: currentUserId, p_brand: slug });
+        if (error) throw new Error(error.message);
+
+        let payload = data;
+        if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
+        const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
+        const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
+        if (!columns.length) throw new Error('الجدول غير موجود لهذه الماركة');
+
+        const nameCol = `${slug}_model_names`;
+        const matched = columns.map(c => ({ col: c, info: cfg.keyOf(c, slug) }))
+            .filter(x => x.col !== nameCol && x.info && x.info.key === partKey);
+        mainCol = (matched.find(x => !x.info.groups) || {}).col;
+        groupsCol = (matched.find(x => x.info.groups) || {}).col;
+        if (!mainCol && !groupsCol) throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+
+        const target = mprNorm(selectedModel);
+        row = rows.find(r => mprNorm(r[nameCol]) === target) || null;
+    }
 
     const sections = [];
     if (mainCol) {
