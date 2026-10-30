@@ -140,7 +140,7 @@ async function renderBrandsScreen(partName = '') {
 async function renderModelsScreen(brand) {
     selectedBrand = brand;
 
-    // الموديلات بتتجاب من قاعدة البيانات بس (نفس دالة جداول الموديلات في مركز البيانات)
+    // الموديلات بتتجاب من الدالة العامة get_models (زي get_brands)
     const brandSlug = (typeof sdcBrandSlug === 'function') ? sdcBrandSlug(brand) : '';
     let models = [];
     let modelsError = '';
@@ -149,34 +149,20 @@ async function renderModelsScreen(brand) {
         modelsError = 'الماركة غير معروفة: ' + brand;
     } else {
         try {
-            const { data, error } = await supabaseClient.rpc('get_models_for_data_center', {
-                p_user_id: currentUserId,
+            const { data, error } = await supabaseClient.rpc('get_models', {
                 p_brand: brandSlug
             });
             if (error) {
                 modelsError = error.message;
             } else {
-                let payload = data;
-                if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
-                const rows = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.rows) ? payload.rows : []);
-                const cols = (payload && Array.isArray(payload.columns) && payload.columns.length)
-                    ? payload.columns
-                    : (rows[0] ? Object.keys(rows[0]) : []);
-                const nameCol = cols.find(c => /_model_names$/.test(c));
-                const codeCol = cols.find(c => /_model_codes$/.test(c));
-                const batCol = cols.find(c => /_battery_codes$/.test(c));
-                if (nameCol) {
-                    models = rows
-                        .filter(r => r[nameCol] !== null && r[nameCol] !== undefined && String(r[nameCol]).trim() !== '')
-                        .map(r => ({
-                            device_name: r[nameCol],
-                            model_code: codeCol ? r[codeCol] : null,
-                            screen_compatibility: null,
-                            battery_model: batCol ? r[batCol] : null
-                        }));
-                } else {
-                    modelsError = 'عمود اسم الموديل غير موجود في الرد';
-                }
+                let rows = data;
+                if (typeof rows === 'string') { try { rows = JSON.parse(rows); } catch (e) {} }
+                models = (Array.isArray(rows) ? rows : []).map(r => ({
+                    device_name: r.model_name,
+                    model_code: r.model_code,
+                    screen_compatibility: null,
+                    battery_model: r.battery_code
+                }));
             }
         } catch (err) {
             modelsError = err.message;
