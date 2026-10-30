@@ -61,9 +61,9 @@ async function fetchAndDisplayDataCenterMenu() {
                 const style = getRotatingCardStyle(index);
                 let clickAction = `alert('تم النقر على قسم: ${item}')`;
 
-                if (item === 'المستخدمين') {
+                if (item === 'المستخدمون') {
                     clickAction = "renderUsersDataCenterSheet()";
-                } else if (item === 'المستخدمين الجدد') {
+                } else if (item === 'المستخدمون الجدد') {
                     clickAction = "renderNewUsersScreen()";
                 } else if (item === 'المستخدمون النشطون') {
                     clickAction = "renderActiveUsersScreen()";
