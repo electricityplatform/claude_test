@@ -65,7 +65,7 @@ async function fetchAndDisplayDataCenterMenu() {
                     clickAction = "renderUsersDataCenterSheet()";
                 } else if (item === 'المستخدمين الجدد') {
                     clickAction = "renderNewUsersScreen()";
-                } else if (item === 'المستخدمين النشطين') {
+                } else if (item === 'المستخدمون النشطون') {
                     clickAction = "renderActiveUsersScreen()";
                 } else if (item === 'سجل دخول المستخدمين') {
                     clickAction = "renderLoginHistoryScreen()";
