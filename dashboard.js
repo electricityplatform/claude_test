@@ -281,17 +281,8 @@ function mprNorm(v) {
 const MPR_CONFIG = {
     alerts: {
         title: 'تنبيهات الصيانة',
-        rpc: 'get_brand_model_spare_part_maintenance_alerts_for_data_center',
         splitRe: /\r\n|\n|\r/,
-        empty: 'لا توجد تنبيهات صيانة لهذه القطعة',
-        // بيرجّع مفتاح القطعة من اسم العمود (أو null لو مش عمود تنبيهات)
-        keyOf: (col, slug) => {
-            if (!/_alerts$/.test(col)) return null;
-            // أعمدة جدول التنبيهات بالشكل: {brand}_{part}_maintenance_alerts (مثلاً samsung_screen_maintenance_alerts)
-            return { groups: false, key: String(col)
-                .replace(new RegExp('^' + slug + '_(model_)?'), '')
-                .replace(/_spare_part_maintenance_alerts$/, '').replace(/_maintenance_alerts$/, '').replace(/_alerts$/, '') };
-        }
+        empty: 'لا توجد تنبيهات صيانة لهذه القطعة'
     },
     compat: {
         title: 'التوافقات',
@@ -402,25 +393,23 @@ async function mprBuildSections(kind, partName) {
             throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
         }
     } else {
-        // التنبيهات (زي ما هي)
-        const { data, error } = await supabaseClient.rpc(cfg.rpc, { p_user_id: currentUserId, p_brand: slug });
+        // الدالة الجديدة: بترجّع صف الموديل بس (أو null)
+        const { data, error } = await supabaseClient.rpc('get_maintenance_alerts', {
+            p_brand: slug,
+            p_model_name: selectedModel
+        });
         if (error) throw new Error(error.message);
 
-        let payload = data;
-        if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) {} }
-        const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
-        const columns = payload && Array.isArray(payload.columns) ? payload.columns : [];
-        if (!columns.length) throw new Error('الجدول غير موجود لهذه الماركة');
+        row = data;
+        if (typeof row === 'string') { try { row = JSON.parse(row); } catch (e) { row = null; } }
 
-        const nameCol = `${slug}_model_names`;
-        const matched = columns.map(c => ({ col: c, info: cfg.keyOf(c, slug) }))
-            .filter(x => x.col !== nameCol && x.info && x.info.key === partKey);
-        mainCol = (matched.find(x => !x.info.groups) || {}).col;
-        groupsCol = (matched.find(x => x.info.groups) || {}).col;
-        if (!mainCol && !groupsCol) throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+        // أعمدة التنبيهات: {brand}_{part}_maintenance_alerts (من غير كلمة model)
+        mainCol = `${slug}_${partKey}_maintenance_alerts`;
+        groupsCol = null;
 
-        const target = mprNorm(selectedModel);
-        row = rows.find(r => mprNorm(r[nameCol]) === target) || null;
+        if (row && !(mainCol in row)) {
+            throw new Error(`لا يوجد عمود للقطعة "${partName}" في الجدول`);
+        }
     }
 
     const sections = [];
