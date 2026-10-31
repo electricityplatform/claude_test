@@ -19,8 +19,8 @@ function startCompatFlow() {
 // الترتيب مهم (نفس ترتيب الشروط القديم): "شراء قطع الغيار" لازم قبل "قطع الغيار".
 function partitionMeta(name) {
     const n = String(name);
-    if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات الصيانة لكل قطعة' };
-    if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'القطع المتوافقة مع كل موديل' };
+    if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار' };
+    if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار' };
     if (n.includes('شراء قطع الغيار')) return { action: 'renderBrandsScreen()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true };
     if (n.includes('قطع الغيار')) return { action: 'renderPartsScreen()', icon: 'cog', desc: '' };
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
@@ -127,7 +127,6 @@ async function renderBrandsScreen(partName = '') {
             const style = getRotatingCardStyle(index);
             return `
                 <div onclick="renderModelsScreen(${jsArg(brand)})" class="w-full ${style.bg} border ${style.border} p-3.5 rounded-2xl flex items-center gap-3 cursor-pointer transition-all text-sm sm:text-base group">
-                    <div class="avatar placeholder"><div class="bg-primary/10 text-primary w-10 rounded-xl"><span class="font-bold">${escapeHtmlValue(String(brand).trim().charAt(0).toUpperCase())}</span></div></div>
                     <span class="font-bold flex-1" dir="auto">${escapeHtmlValue(brand)}</span>
                     <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </div>
