@@ -37,9 +37,9 @@ function getHeaderTemplate(showSearch = false) {
 
             ${showSearch ? `
             <div class="flex items-center gap-2 mt-3">
-                <label class="input input-bordered flex items-center gap-2 flex-1 bg-base-200">
+                <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-200">
                     ${uiIcon('search', 'w-4 h-4 opacity-60')}
-                    <input type="text" class="grow" placeholder="ابحث" aria-label="ابحث">
+                    <input type="text" class="grow w-0 min-w-0" placeholder="ابحث" aria-label="ابحث">
                 </label>
                 <button type="button" onclick="alert('جارِ الاستماع للصوت...فعل ميكروفون المتصفح')" class="btn btn-outline btn-square" title="بحث صوتي" aria-label="بحث صوتي">
                     ${uiIcon('mic', 'w-5 h-5')}
