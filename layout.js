@@ -4,15 +4,15 @@ function getHeaderTemplate(showSearch = false) {
     const initial = currentUserName ? escapeHtmlValue(String(currentUserName).trim().charAt(0)) : '';
 
     const userInfoHtml = currentUserId && currentUserName ? `
-        <div class="flex items-center gap-2 min-w-0" title="${escapeHtmlValue(currentUserPhone || '')}">
-            <div class="avatar placeholder">
+        <div class="flex items-center gap-2 min-w-0 max-w-full" title="${escapeHtmlValue(currentUserPhone || '')}">
+            <div class="avatar placeholder flex-shrink-0">
                 <div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${initial}</span></div>
             </div>
-            <div class="min-w-0 leading-tight">
+            <div class="min-w-0 leading-tight flex-1">
                 <div class="text-sm font-bold truncate" dir="auto">${escapeHtmlValue(currentUserName)}</div>
-                <div class="flex gap-2 text-xs text-base-content/60">
+                <div class="flex gap-2 text-xs text-base-content/60 min-w-0 flex-wrap">
                     <span dir="auto">${escapeHtmlValue(currentUserRole || '')}</span>
-                    <span class="hidden sm:inline font-mono" dir="ltr">${escapeHtmlValue(currentUserPhone || '')}</span>
+                    <span class="font-mono" dir="ltr">${escapeHtmlValue(currentUserPhone || '')}</span>
                 </div>
             </div>
         </div>
@@ -26,13 +26,13 @@ function getHeaderTemplate(showSearch = false) {
                         ${uiIcon('menu', 'w-5 h-5')}
                     </button>
                 </div>
-                <div class="flex-1 gap-2 min-w-0">
+                <div class="flex-none gap-2">
                     <div class="avatar placeholder">
                         <div class="bg-primary text-secondary w-9 rounded-xl">${boltMarkSvg().replace('<svg', '<svg class="w-5 h-5"')}</div>
                     </div>
                     <span class="text-xl font-bold tracking-tight">Electricity</span>
                 </div>
-                <div class="flex-none min-w-0">${userInfoHtml}</div>
+                <div class="flex flex-1 min-w-0 justify-end">${userInfoHtml}</div>
             </div>
 
             ${showSearch ? `
