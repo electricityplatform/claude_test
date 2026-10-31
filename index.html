@@ -65,7 +65,7 @@
     <!-- SheetJS للتصدير إلى XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261031">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
@@ -102,27 +102,35 @@
     </main>
 
     <!-- ملفات الجافاسكريبت (الترتيب مهم) -->
-    <script src="config.js"></script>
-    <script src="utils.js"></script>
-    <script src="layout.js"></script>
-    <script src="auth.js"></script>
-    <script src="dashboard.js"></script>
-    <script src="welcome.js"></script>
+    <script src="config.js?v=20261031"></script>
+    <script src="utils.js?v=20261031"></script>
+    <script src="layout.js?v=20261031"></script>
+    <script src="auth.js?v=20261031"></script>
+    <script src="dashboard.js?v=20261031"></script>
+    <script src="welcome.js?v=20261031"></script>
     <!-- مركز البيانات (متقسم لـ 10 ملفات، الترتيب مهم: core الأول) -->
-    <script src="1-data-center-core.js"></script>
-    <script src="2-data-center-menu.js"></script>
-    <script src="3-data-center-users.js"></script>
-    <script src="4-data-center-models.js"></script>
-    <script src="5-data-center-compat-groups.js"></script>
-    <script src="6-data-center-compat.js"></script>
-    <script src="7-data-center-alerts.js"></script>
-    <script src="8-data-center-brands.js"></script>
-    <script src="9-data-center-spare-parts.js"></script>
-    <script src="10-data-center-partitions.js"></script>
-    <script src="general-settings.js"></script>
-    <script src="my-products.js"></script>
-    <script src="operation-center.js"></script>
-    <script src="profile.js"></script>
-    <script src="main.js"></script>
+    <script src="1-data-center-core.js?v=20261031"></script>
+    <script src="2-data-center-menu.js?v=20261031"></script>
+    <script src="3-data-center-users.js?v=20261031"></script>
+    <script src="4-data-center-models.js?v=20261031"></script>
+    <script src="5-data-center-compat-groups.js?v=20261031"></script>
+    <script src="6-data-center-compat.js?v=20261031"></script>
+    <script src="7-data-center-alerts.js?v=20261031"></script>
+    <script src="8-data-center-brands.js?v=20261031"></script>
+    <script src="9-data-center-spare-parts.js?v=20261031"></script>
+    <script src="10-data-center-partitions.js?v=20261031"></script>
+    <script src="general-settings.js?v=20261031"></script>
+    <script src="my-products.js?v=20261031"></script>
+    <script src="operation-center.js?v=20261031"></script>
+    <script src="profile.js?v=20261031"></script>
+    <script src="main.js?v=20261031"></script>
+    <script>
+        // تسجيل الـ service worker: بيخلي التطبيق يفتح ويتحدّث حتى لو مفيش نت (بعد أول زيارة بنت شغال)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>
