@@ -102,14 +102,18 @@ function renderWelcomeScreen() {
 }
 
 // ---------- ربط السلسلة بشاشة الدخول ----------
+// الـ Splash بيتعرض من main.js كل ما التطبيق يتفتح، فهنا بنكمل بعده: الشرائح التعريفية (أول مرة بس) ثم شاشة الترحيب.
 function runIntroFlow() {
-    renderSplashScreen(() => {
-        if (introStorageGet('onboarding_done') === '1') {
-            renderWelcomeScreen();
-        } else {
-            renderOnboardingScreen(renderWelcomeScreen);
-        }
-    });
+    if (introStorageGet('onboarding_done') === '1') {
+        renderWelcomeScreen();
+    } else {
+        renderOnboardingScreen(renderWelcomeScreen);
+    }
+}
+
+// main.js بينادي عليها لما المستخدم يدخل مباشرة (جلسة محفوظة)، عشان تسجيل الخروج بعد كده يفتح شاشة الدخول مباشرة
+function markIntroSeen() {
+    _introPlayed = true;
 }
 
 window.renderLoginScreen = function () {
@@ -135,3 +139,30 @@ function homeIntroHtml() {
         </div>
     `;
 }
+
+// ---------- Splash لما ترجع للتطبيق بعد ما كنت خارجه ----------
+// لو خرجت من التطبيق (أو بدّلت لتطبيق تاني) وفضلت بعيد المدة دي أو أكتر، أول ما ترجع بيظهر الـ Splash ثانية وشوية فوق الشاشة اللي كنت فيها.
+const SPLASH_RETURN_AFTER_MS = 15000;
+let _hiddenAt = null;
+
+function showSplashOverlay() {
+    if (document.getElementById('splashOverlay')) return;
+    const el = document.createElement('div');
+    el.id = 'splashOverlay';
+    el.className = 'splash-overlay';
+    el.innerHTML = `<div class="intro-center"><div class="splash-logo">${boltMarkSvg()}</div><div class="splash-brand">ELECTRICITY</div></div>`;
+    document.body.appendChild(el);
+    setTimeout(() => {
+        el.classList.add('splash-out');
+        setTimeout(() => el.remove(), 350);
+    }, 1200);
+}
+
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        _hiddenAt = Date.now();
+        return;
+    }
+    if (_hiddenAt && Date.now() - _hiddenAt >= SPLASH_RETURN_AFTER_MS) showSplashOverlay();
+    _hiddenAt = null;
+});
