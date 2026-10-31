@@ -207,8 +207,8 @@ function applyFloralBackgrounds() {}
 // ================= السحب للتحديث (Pull to refresh) =================
 // المتصفح مبقاش بيعمل ده لوحده لأن الصفحة نفسها مبقتش بتتمرر (التمرير جوه مناطق المحتوى بس)، فعملناه بإيدينا.
 (function setupPullToRefresh() {
-    const THRESHOLD = 50;
-    const MAX = 90;
+    const THRESHOLD = 70;
+    const MAX = 110;
     let startY = 0, startX = 0, pulling = false, dist = 0, ind = null;
 
     function getIndicator() {
@@ -256,7 +256,7 @@ function applyFloralBackgrounds() {}
         const dx = e.touches[0].clientX - startX;
         if (Math.abs(dx) > Math.abs(dy) || canScrollUp(e.target)) { pulling = false; hideIndicator(); return; }
         if (dy <= 0) { dist = 0; hideIndicator(); return; }
-        dist = Math.min(dy * 0.7, MAX);
+        dist = Math.min(dy * 0.5, MAX);
         const el = getIndicator();
         el.style.transition = 'none';
         el.style.opacity = String(Math.min(dist / THRESHOLD, 1));
