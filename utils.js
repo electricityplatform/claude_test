@@ -199,10 +199,84 @@ function floralBgSvg() {
         `</svg>`;
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
-let _floralCache = null;
-function applyFloralBackgrounds() {
-    const bg = _floralCache || (_floralCache = floralBgSvg());
-    document.querySelectorAll('.teal-floral, #sideMenu').forEach(el => { if (el.style.backgroundImage !== bg) el.style.backgroundImage = bg; });
-}
-document.addEventListener('DOMContentLoaded', applyFloralBackgrounds);
-new MutationObserver(() => applyFloralBackgrounds()).observe(document.documentElement, { childList: true, subtree: true });
+// الخلفية بتتولّد مرة واحدة وتتحط كمتغير CSS (--floral-bg)، والـ CSS بيطبّقها على .teal-floral و #sideMenu.
+document.documentElement.style.setProperty('--floral-bg', floralBgSvg());
+// محفوظة فاضية عشان أي ملف تاني لسه بيستدعيها ما يضربش خطأ
+function applyFloralBackgrounds() {}
+
+// ================= السحب للتحديث (Pull to refresh) =================
+// المتصفح مبقاش بيعمل ده لوحده لأن الصفحة نفسها مبقتش بتتمرر (التمرير جوه مناطق المحتوى بس)، فعملناه بإيدينا.
+(function setupPullToRefresh() {
+    const THRESHOLD = 70;
+    const MAX = 110;
+    let startY = 0, startX = 0, pulling = false, dist = 0, ind = null;
+
+    function getIndicator() {
+        if (!ind) {
+            ind = document.createElement('div');
+            ind.className = 'ptr-indicator';
+            ind.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>';
+            document.body.appendChild(ind);
+        }
+        return ind;
+    }
+
+    function hideIndicator() {
+        if (!ind) return;
+        ind.style.transition = 'opacity .2s, transform .2s';
+        ind.style.opacity = '0';
+        ind.style.transform = 'translateY(-3rem)';
+    }
+
+    // فيه عنصر قابل للتمرير فوق نقطة اللمس وهو مش في أول مكان؟
+    function canScrollUp(el) {
+        while (el && el !== document.body && el !== document.documentElement) {
+            const s = getComputedStyle(el);
+            if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) return true;
+            el = el.parentElement;
+        }
+        return false;
+    }
+
+    document.addEventListener('touchstart', function (e) {
+        pulling = false;
+        if (e.touches.length !== 1) return;
+        const t = e.target;
+        if (t.closest && t.closest('input, textarea, select, #sideMenu')) return;
+        if (canScrollUp(t)) return;
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        dist = 0;
+        pulling = true;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+        if (!pulling) return;
+        const dy = e.touches[0].clientY - startY;
+        const dx = e.touches[0].clientX - startX;
+        if (Math.abs(dx) > Math.abs(dy) || canScrollUp(e.target)) { pulling = false; hideIndicator(); return; }
+        if (dy <= 0) { dist = 0; hideIndicator(); return; }
+        dist = Math.min(dy * 0.5, MAX);
+        const el = getIndicator();
+        el.style.transition = 'none';
+        el.style.opacity = String(Math.min(dist / THRESHOLD, 1));
+        el.style.transform = 'translateY(' + (dist - 40) + 'px) rotate(' + (dist * 3) + 'deg)';
+    }, { passive: true });
+
+    document.addEventListener('touchend', function () {
+        if (!pulling) return;
+        pulling = false;
+        if (dist >= THRESHOLD) {
+            const el = getIndicator();
+            el.style.transition = 'transform .2s';
+            el.style.transform = 'translateY(30px)';
+            el.classList.add('ptr-loading');
+            setTimeout(function () { location.reload(); }, 250);
+        } else {
+            hideIndicator();
+        }
+        dist = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', function () { pulling = false; dist = 0; hideIndicator(); }, { passive: true });
+})();
