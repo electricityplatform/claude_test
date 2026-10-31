@@ -311,3 +311,120 @@ function applyFloralBackgrounds() {}
     });
     if (!navigator.onLine) show('offline');
 })();
+
+// ================= زر الرجوع في الموبايل =================
+// التطبيق صفحة واحدة بتبدّل الشاشات، فالمتصفح مكانش عارف إن فيه "شاشات" يرجع لها وكان بيطلّعك من الموقع.
+// هنا بنسجّل كل شاشة جديدة في history المتصفح، ولما تدوس رجوع بنشغّل زر "رجوع" بتاع الشاشة الحالية.
+(function setupBackNavigation() {
+    const container = document.getElementById('appContainer');
+    if (!container || !window.history || !history.pushState) return;
+
+    const SID = String(Date.now()) + Math.random().toString(36).slice(2);
+    let navDepth = 0;          // 0 = الرئيسية أو شاشات الدخول
+    let lastSignature = null;
+    let pendingBack = false;   // لسه راجعين بزر الموبايل ومستنيين الشاشة السابقة ترسم
+    let ignoreNextPop = false;
+    let guardAdded = false;
+    let timer = null;
+
+    try { history.replaceState({ d: 0, sid: SID }, ''); } catch (e) { return; }
+
+    function sidebarOpen() {
+        const sb = document.getElementById('sideMenu');
+        return !!sb && !sb.classList.contains('translate-x-full');
+    }
+
+    // أول ضغطة من المستخدم: نضيف خطوة "حارس" ورا الرئيسية، عشان زر الرجوع يوصل لينا حتى وإحنا في الرئيسية (مثلاً والقائمة مفتوحة)
+    // بنعملها وقت الضغطة (مش وقت تحميل الصفحة) لأن كروم بيتجاهل الخطوات اللي بتتضاف من غير تفاعل من المستخدم.
+    function addGuard() {
+        if (guardAdded) return;
+        guardAdded = true;
+        if (navDepth !== 0) return;
+        try {
+            history.replaceState({ d: -1, sid: SID, base: true }, '');
+            history.pushState({ d: 0, sid: SID }, '');
+        } catch (e) { /* مش مشكلة */ }
+    }
+    document.addEventListener('click', addGuard, true);
+
+    function isBackButton(btn) {
+        return /^(رجوع|عودة|السابق)$/.test((btn.textContent || '').replace(/\s+/g, ' ').trim());
+    }
+    function currentBackButton() {
+        return Array.prototype.find.call(container.querySelectorAll('button'), isBackButton) || null;
+    }
+    function isHomeScreen() {
+        return !!container.querySelector('.auth-screen, #partitionsContainer');
+    }
+    function signature() {
+        const back = currentBackButton();
+        const title = container.querySelector('h1, h2');
+        return (back ? (back.getAttribute('onclick') || '') : '') + '|' + (title ? title.textContent.trim() : '');
+    }
+
+    function onScreenChange() {
+        if (isHomeScreen()) {
+            lastSignature = null;
+            if (navDepth > 0 && !pendingBack) {
+                // وصلنا للرئيسية من غير رجوع (زر الرئيسية مثلاً): نشيل الشاشات اللي اتراكمت في history
+                ignoreNextPop = true;
+                const n = navDepth;
+                navDepth = 0;
+                history.go(-n);
+            }
+            pendingBack = false;
+            return;
+        }
+        if (pendingBack) { pendingBack = false; lastSignature = signature(); return; }
+        const sig = signature();
+        if (sig === lastSignature) return;   // نفس الشاشة اتعاد رسمها
+        lastSignature = sig;
+        navDepth += 1;
+        history.pushState({ d: navDepth, sid: SID }, '');
+    }
+
+    new MutationObserver(function () {
+        clearTimeout(timer);
+        timer = setTimeout(onScreenChange, 60);
+    }).observe(container, { childList: true });
+
+    // أي لمسة جديدة من المستخدم معناها إن الرجوع خلص
+    document.addEventListener('pointerdown', function () { pendingBack = false; }, true);
+
+    // زر "رجوع" اللي جوه التطبيق: نخليه يمشي عن طريق history عشان الاتنين يفضلوا متزامنين
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest && e.target.closest('#appContainer button');
+        if (!btn || btn.dataset.navSynthetic || !isBackButton(btn)) return;
+        if (navDepth > 0) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            history.back();
+        }
+    }, true);
+
+    window.addEventListener('popstate', function (e) {
+        if (ignoreNextPop) { ignoreNextPop = false; return; }
+        const st = e.state;
+        if (!st || st.sid !== SID) { history.back(); return; }   // خطوات قديمة من تحميل سابق للصفحة
+
+        // القائمة الجانبية مفتوحة: نقفلها بس ونفضل في نفس الشاشة، ونرجّع الخطوة اللي اتشالت
+        if (sidebarOpen()) {
+            toggleSidebar();
+            history.pushState({ d: navDepth, sid: SID }, '');
+            return;
+        }
+
+        if (st.base) { history.back(); return; }   // رجوع من الرئيسية: نخرج من الموقع
+        if (st.d >= navDepth) return;
+        navDepth = st.d;
+        pendingBack = true;
+        const btn = currentBackButton();
+        if (btn) {
+            btn.dataset.navSynthetic = '1';
+            btn.click();
+            delete btn.dataset.navSynthetic;
+        } else if (typeof renderMainDashboard === 'function') {
+            renderMainDashboard();
+        }
+    });
+})();
