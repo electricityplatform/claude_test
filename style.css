@@ -194,3 +194,22 @@ main:has(.auth-screen){ padding:0 !important; }
 .dash-card.feature { position:relative; overflow:hidden; background-color:#027f8a; background-size:cover; background-position:center; color:#fff; border:none; padding:1.4rem 1.2rem; box-shadow:0 10px 22px rgba(2,127,138,.3); }
 .dash-card.feature:hover { background-color:#027f8a; }
 .dash-card.feature .dash-ico { background:#fff; color:#027f8a; }
+
+/* =====================================================================
+   تخطيط الكمبيوتر (شاشات عريضة)
+   ===================================================================== */
+@media (min-width: 900px) {
+    /* شاشة الدخول: لوحة تيل كبيرة بجنب + نموذج في النص */
+    .auth-screen { flex-direction: row; }
+    .auth-hero { width: 55%; height: 100%; min-height: 0; flex-shrink: 0; }
+    .auth-hero .brand { font-size: 1.6rem; }
+    .auth-card { max-width: none; align-self: stretch; margin-top: 0; border-radius: 0 2.5rem 2.5rem 0; margin-inline-start: -2.5rem; padding: 0 3rem; justify-content: center; }
+    .auth-card > form, .auth-card > h1 { width: 100%; max-width: 26rem; align-self: center; }
+    .auth-avatar { margin: 0 auto 1rem; }
+    .auth-foot { position: absolute; bottom: 0; inset-inline: 0; margin: 0; }
+    .auth-card { padding-bottom: 4rem; }
+
+    /* الداشبورد: أقسام في شبكة بدل عمود واحد */
+    #partitionsContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; }
+    #partitionsContainer > * { margin: 0 !important; }
+}
