@@ -263,3 +263,6 @@ main:has(.auth-screen) .bottom-nav { display:none; }
 .app-topbar { margin:-1rem -1rem 1rem; padding:calc(.75rem + env(safe-area-inset-top)) 1rem .75rem; background:oklch(var(--b3)); border-radius:1.25rem 1.25rem 0 0; }
 @media (min-width: 640px) { .app-topbar { margin:-1.5rem -1.5rem 1.5rem; padding:calc(.9rem + env(safe-area-inset-top)) 1.5rem .9rem; } }
 main:has(.auth-screen) #appContainer { padding:0 !important; }
+
+/* منع تمرير الصفحة نفسها: التمرير بيحصل جوه مناطق المحتوى بس، فالشريطين يفضلوا ملزوقين فوق وتحت */
+html, body { height:100%; overflow:hidden; overscroll-behavior-y:contain; }
