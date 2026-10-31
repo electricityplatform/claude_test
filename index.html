@@ -1,136 +1,140 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#027f8a">
-    <title>Electricity</title>
-    <script>
-        (function () {
-            var t = 'system';
-            try { t = localStorage.getItem('theme') || 'system'; } catch (e) {}
-            var dark = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (dark) document.documentElement.classList.add('dark');
-        })();
-    </script>
-    <script>
-        // جسر بين نظام الثيم القديم (كلاس dark على html) وثيمات DaisyUI.
-        // أي كود بيضيف/يشيل كلاس dark (زي شاشة الإعدادات) هيبدّل ثيم المكتبة تلقائياً.
-        (function () {
-            var root = document.documentElement;
-            function sync() {
-                root.setAttribute('data-theme', root.classList.contains('dark') ? 'electricity-dark' : 'electricity-light');
-            }
-            sync();
-            new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['class'] });
-        })();
-    </script>
+// Edge Function: profile-photo
+// رفع / تغيير / حذف الصورة الشخصية. بتشتغل بـ service role، فبتعدّي سياسة الحظر على باكيت profile_photos.
+//
+// النشر:   supabase functions deploy profile-photo --no-verify-jwt
+//   (--no-verify-jwt لازم: التطبيق بيستخدم publishable key مش JWT، والتحقق بيتم جوه الدالة نفسها)
+//
+// الطلبات (POST, JSON):
+//   { action: 'upload', user_id, image_base64 }  → { ok: true, url }
+//   { action: 'delete', user_id }                → { ok: true }
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
-    <!-- الخطوط -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+const BUCKET = 'profile_photos';
+const MAX_BYTES = 1024 * 1024; // 1MB (العميل بيصغّر الصورة 512x512 قبل الرفع، فحجمها عادةً أقل من 100KB)
+const ALLOWED_ORIGINS = ['https://electricityplatform.github.io'];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-    <!-- DaisyUI: مكتبة المكوّنات (أزرار، كروت، قوائم، تابات، ثيمات) -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // ربط ألوان DaisyUI بـ Tailwind: تقدر تكتب bg-primary / text-base-content/60 ... في أي ملف.
-        // وكمان blue-* القديمة اتحوّلت للون العلامة، فالشاشات اللي مش مرفوعة هنا بتتوحّد معاها.
-        const dz = (v) => `oklch(var(${v}) / <alpha-value>)`;
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: dz('--p'), 'primary-content': dz('--pc'),
-                        secondary: dz('--s'), 'secondary-content': dz('--sc'),
-                        accent: dz('--a'), 'accent-content': dz('--ac'),
-                        neutral: dz('--n'), 'neutral-content': dz('--nc'),
-                        'base-100': dz('--b1'), 'base-200': dz('--b2'), 'base-300': dz('--b3'), 'base-content': dz('--bc'),
-                        info: dz('--in'), success: dz('--su'), warning: dz('--wa'), error: dz('--er'),
-                        'info-content': dz('--inc'), 'success-content': dz('--suc'), 'warning-content': dz('--wac'), 'error-content': dz('--erc'),
-                        blue: {
-                            50: '#E8F7F8', 100: '#CDEEF0', 200: '#A3E0E4', 300: '#6FCBD2', 400: '#3DB0B9',
-                            500: '#1A97A2', 600: '#027F8A', 700: '#05707A', 800: '#085C64', 900: '#0B4850'
-                        }
-                    },
-                    fontFamily: { sans: ['"IBM Plex Sans Arabic"', '"Segoe UI"', 'Tahoma', 'sans-serif'] }
-                }
-            }
-        };
-    </script>
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SheetJS للتصدير إلى XLSX -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- التنسيقات -->
-    <link rel="stylesheet" href="style.css?v=20261031-8">
-</head>
-<body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
+function corsHeaders(req: Request) {
+  const origin = req.headers.get('origin') ?? '';
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
 
-    <!-- القائمة الجانبية (Sidebar) المخفية افتراضياً -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-neutral/60 backdrop-blur-sm z-40 hidden transition-opacity opacity-0 duration-300"></div>
-    <div id="sideMenu" class="fixed top-0 right-0 h-full w-80 max-w-[86vw] shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="navbar text-white px-4 min-h-16">
-            <div class="flex-1 gap-3">
-                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                <h3 class="side-brand">ELECTRICITY</h3>
-            </div>
-            <button type="button" onclick="toggleSidebar()" class="btn btn-ghost btn-sm btn-circle text-white" aria-label="إغلاق القائمة">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <div id="sidebarContent" class="flex-1 overflow-y-auto pt-4"></div>
-        <label class="side-search">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-            <input type="text" placeholder="بحث" aria-label="بحث في القائمة" oninput="filterSideMenu(this.value)">
-        </label>
-    </div>
+function ascii(b: Uint8Array, from: number, to: number) {
+  return String.fromCharCode(...b.slice(from, to));
+}
 
-    <!-- الإطار الرئيسي -->
-    <main class="bg-base-100 w-full h-[100dvh] p-0 flex flex-col overflow-hidden">
-        <div id="appContainer" class="flex-1 flex flex-col overflow-hidden min-h-0 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6"></div>
+// بنحدد نوع الصورة من محتواها الفعلي (مش من اللي العميل بيقوله)
+function detectImage(b: Uint8Array): { type: string; ext: string } | null {
+  if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { type: 'image/jpeg', ext: 'jpg' };
+  if (b.length > 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { type: 'image/png', ext: 'png' };
+  if (b.length > 12 && ascii(b, 0, 4) === 'RIFF' && ascii(b, 8, 12) === 'WEBP') return { type: 'image/webp', ext: 'webp' };
+  return null;
+}
 
-        <!-- الشريط السفلي: بيظهر بعد الدخول (مخفي في شاشة تسجيل الدخول من الـ CSS) -->
-        <nav class="bottom-nav flex-shrink-0" aria-label="التنقل السفلي">
-            <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                <span>الرئيسية</span>
-            </button>
-        </nav>
-    </main>
+// مسار الملف جوه الباكيت من الرابط المحفوظ في users.profile_photo_url
+function pathFromUrl(url: string | null): string | null {
+  if (!url) return null;
+  const marker = `/${BUCKET}/`;
+  const i = url.indexOf(marker);
+  if (i === -1) return null;
+  try {
+    return decodeURIComponent(url.slice(i + marker.length).split('?')[0]);
+  } catch {
+    return null;
+  }
+}
 
-    <!-- ملفات الجافاسكريبت (الترتيب مهم) -->
-    <script src="config.js?v=20261031-8"></script>
-    <script src="utils.js?v=20261031-8"></script>
-    <script src="layout.js?v=20261031-8"></script>
-    <script src="auth.js?v=20261031-8"></script>
-    <script src="dashboard.js?v=20261031-8"></script>
-    <script src="welcome.js?v=20261031-8"></script>
-    <!-- مركز البيانات (متقسم لـ 10 ملفات، الترتيب مهم: core الأول) -->
-    <script src="1-data-center-core.js?v=20261031-8"></script>
-    <script src="2-data-center-menu.js?v=20261031-8"></script>
-    <script src="3-data-center-users.js?v=20261031-8"></script>
-    <script src="4-data-center-models.js?v=20261031-8"></script>
-    <script src="5-data-center-compat-groups.js?v=20261031-8"></script>
-    <script src="6-data-center-compat.js?v=20261031-8"></script>
-    <script src="7-data-center-alerts.js?v=20261031-8"></script>
-    <script src="8-data-center-brands.js?v=20261031-8"></script>
-    <script src="9-data-center-spare-parts.js?v=20261031-8"></script>
-    <script src="10-data-center-partitions.js?v=20261031-8"></script>
-    <script src="general-settings.js?v=20261031-8"></script>
-    <script src="my-products.js?v=20261031-8"></script>
-    <script src="operation-center.js?v=20261031-8"></script>
-    <script src="profile.js?v=20261031-8"></script>
-    <script src="main.js?v=20261031-8"></script>
-    <script>
-        // تسجيل الـ service worker: بيخلي التطبيق يفتح ويتحدّث حتى لو مفيش نت (بعد أول زيارة بنت شغال)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('sw.js').catch(function () {});
-            });
-        }
-    </script>
-</body>
-</html>
+Deno.serve(async (req: Request) => {
+  const cors = corsHeaders(req);
+  const reply = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method !== 'POST') return reply({ ok: false, error: 'طريقة الطلب غير مدعومة' }, 405);
+
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return reply({ ok: false, error: 'طلب غير صالح' }, 400);
+  }
+
+  const action = body?.action;
+  const userId = String(body?.user_id ?? '');
+  if (!UUID_RE.test(userId)) return reply({ ok: false, error: 'معرّف المستخدم غير صالح' }, 400);
+  if (action !== 'upload' && action !== 'delete') return reply({ ok: false, error: 'إجراء غير معروف' }, 400);
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+    auth: { persistSession: false },
+  });
+
+  const { data: user, error: userErr } = await supabase
+    .from('users')
+    .select('id, profile_photo_url')
+    .eq('id', userId)
+    .maybeSingle();
+  if (userErr) return reply({ ok: false, error: 'تعذّر قراءة بيانات المستخدم' }, 500);
+  if (!user) return reply({ ok: false, error: 'المستخدم غير موجود' }, 404);
+
+  const storage = supabase.storage.from(BUCKET);
+  const oldPath = pathFromUrl(user.profile_photo_url);
+
+  // يمسح كل ملفات المستخدم القديمة (ماعدا keepName لو اتحدد) + الملف المسجّل في الرابط القديم
+  async function removeOld(keepPath: string | null) {
+    const toRemove = new Set<string>();
+    const { data: files } = await storage.list(userId, { limit: 100 });
+    for (const f of files ?? []) {
+      const p = `${userId}/${f.name}`;
+      if (p !== keepPath) toRemove.add(p);
+    }
+    if (oldPath && oldPath !== keepPath) toRemove.add(oldPath);
+    if (toRemove.size) await storage.remove([...toRemove]);
+  }
+
+  if (action === 'delete') {
+    const { error } = await supabase.from('users').update({ profile_photo_url: null }).eq('id', userId);
+    if (error) return reply({ ok: false, error: 'تعذّر حذف الصورة' }, 500);
+    await removeOld(null);
+    return reply({ ok: true });
+  }
+
+  // ---- upload ----
+  const b64 = String(body?.image_base64 ?? '');
+  if (!b64 || b64.length > MAX_BYTES * 1.4) return reply({ ok: false, error: 'حجم الصورة غير مناسب' }, 413);
+
+  let bytes: Uint8Array;
+  try {
+    bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  } catch {
+    return reply({ ok: false, error: 'بيانات الصورة غير صالحة' }, 400);
+  }
+  if (!bytes.length || bytes.length > MAX_BYTES) return reply({ ok: false, error: 'حجم الصورة غير مناسب' }, 413);
+
+  const img = detectImage(bytes);
+  if (!img) return reply({ ok: false, error: 'نوع الصورة غير مدعوم (JPG / PNG / WebP)' }, 400);
+
+  const newPath = `${userId}/${Date.now()}.${img.ext}`;
+  const up = await storage.upload(newPath, bytes, { contentType: img.type, upsert: false, cacheControl: '31536000' });
+  if (up.error) return reply({ ok: false, error: 'تعذّر رفع الصورة' }, 500);
+
+  const { data: pub } = storage.getPublicUrl(newPath);
+  const { error: updErr } = await supabase.from('users').update({ profile_photo_url: pub.publicUrl }).eq('id', userId);
+  if (updErr) {
+    await storage.remove([newPath]);
+    return reply({ ok: false, error: 'تعذّر حفظ رابط الصورة' }, 500);
+  }
+
+  // الصورة الجديدة اتحفظت: نمسح القديمة
+  try {
+    await removeOld(newPath);
+  } catch (e) {
+    console.error('cleanup error', e);
+  }
+
+  return reply({ ok: true, url: pub.publicUrl });
+});
