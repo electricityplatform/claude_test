@@ -199,17 +199,29 @@ main:has(.auth-screen){ padding:0 !important; }
    تخطيط الكمبيوتر (شاشات عريضة)
    ===================================================================== */
 @media (min-width: 900px) {
-    /* شاشة الدخول: لوحة تيل كبيرة بجنب + نموذج في النص */
-    .auth-screen { flex-direction: row; }
-    .auth-hero { width: 55%; height: 100%; min-height: 0; flex-shrink: 0; }
-    .auth-hero .brand { font-size: 1.6rem; }
-    .auth-card { max-width: none; align-self: stretch; margin-top: 0; border-radius: 0 2.5rem 2.5rem 0; margin-inline-start: -2.5rem; padding: 0 3rem; justify-content: center; }
-    .auth-card > form, .auth-card > h1 { width: 100%; max-width: 26rem; align-self: center; }
-    .auth-avatar { margin: 0 auto 1rem; }
-    .auth-foot { position: absolute; bottom: 0; inset-inline: 0; margin: 0; }
-    .auth-card { padding-bottom: 4rem; }
+    /* شاشة الدخول: نفس الترتيب (هيرو فوق + بطاقة تحت) لكن بعرض الشاشة كلها وخانات كبيرة وقريبة */
+    .auth-hero { height: 26%; min-height: 160px; }
+    .auth-hero .brand { font-size: 1.8rem; }
+    .auth-card { max-width: none; width: 100%; padding: 1.5rem 6vw 0; }
+    .auth-card > h1 { font-size: 1.6rem; margin-bottom: 1.25rem; }
+    .auth-card > form { width: 100%; max-width: 60rem; align-self: center; gap: .5rem; }
+    .auth-card .line-field { padding: .95rem .5rem; gap: 1rem; }
+    .auth-card .line-field input { font-size: 1.25rem; }
+    .auth-card .line-field svg { width: 1.6rem; height: 1.6rem; }
+    .auth-card .label-text { font-size: 1rem; }
+    .auth-card .btn-primary { width: 16rem; height: 3.4rem; font-size: 1.15rem; }
+    .auth-foot { margin: auto -6vw 0; font-size: 1rem; padding: 1.1rem; }
 
     /* الداشبورد: أقسام في شبكة بدل عمود واحد */
-    #partitionsContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; }
-    #partitionsContainer > * { margin: 0 !important; }
+}
+
+/* شبكة الأقسام (موبايل + كمبيوتر): عمودين على الموبايل، وأكتر على الشاشات العريضة */
+#partitionsContainer { display: grid; grid-template-columns: repeat(2, 1fr); gap: .85rem; }
+#partitionsContainer > * { margin: 0 !important; }
+#partitionsContainer .dash-card { flex-direction: column; justify-content: center; text-align: center; gap: .6rem; padding: 1.1rem .8rem; min-height: 9.5rem; }
+#partitionsContainer .dash-card > svg { display: none; }
+#partitionsContainer .dash-card.feature { grid-column: 1 / -1; flex-direction: row; text-align: start; min-height: 0; gap: 1rem; padding: 1.3rem 1.2rem; }
+#partitionsContainer .dash-card.feature > svg { display: block; }
+@media (min-width: 900px) {
+    #partitionsContainer { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
 }
