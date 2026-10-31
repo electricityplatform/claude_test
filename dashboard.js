@@ -31,14 +31,9 @@ function partitionMeta(name) {
 // ================= الشاشة الرئيسية =================
 async function renderMainDashboard() {
     currentFlow = 'buy';
-    const firstName = currentUserName ? String(currentUserName).trim().split(/\s+/)[0] : '';
     const html = `
         ${getHeaderTemplate()}
-        <div class="flex-1 overflow-y-auto space-y-5 px-1">
-            <div>
-                <h2 class="text-2xl font-bold" dir="auto">${firstName ? 'أهلاً ' + escapeHtmlValue(firstName) : 'أهلاً بك'}</h2>
-                <p class="text-sm text-base-content/60 mt-1">اختر القسم للبدء</p>
-            </div>
+        <div class="flex-1 overflow-y-auto px-1">
             <div id="partitionsContainer" class="space-y-3 pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
