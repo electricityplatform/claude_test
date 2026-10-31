@@ -104,6 +104,8 @@ async function loadDynamicMenuIntoSidebar() {
                     clickAction = "renderGeneralSettingsScreen()";
                 } else if (item.includes('المنتجات المعروضة للبيع')) {
                     clickAction = "renderMyProductsScreen()";
+                } else if (item.includes('خروج')) {
+                    clickAction = "logoutUser()";
                 }
 
                 return `
