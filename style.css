@@ -265,4 +265,9 @@ main:has(.auth-screen) .bottom-nav { display:none; }
 main:has(.auth-screen) #appContainer { padding:0 !important; }
 
 /* منع تمرير الصفحة نفسها: التمرير بيحصل جوه مناطق المحتوى بس، فالشريطين يفضلوا ملزوقين فوق وتحت */
-html, body { height:100%; overflow:hidden; }
+html, body { height:100%; overflow:hidden; overscroll-behavior-y:none; }
+
+/* مؤشر السحب للتحديث */
+.ptr-indicator { position:fixed; top:0; left:50%; width:2.5rem; height:2.5rem; margin-left:-1.25rem; border-radius:9999px; background:oklch(var(--p)); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,.2); z-index:70; opacity:0; transform:translateY(-3rem); pointer-events:none; }
+.ptr-indicator.ptr-loading svg { animation:ptrSpin .8s linear infinite; }
+@keyframes ptrSpin { to { transform:rotate(360deg); } }
