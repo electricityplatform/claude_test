@@ -265,4 +265,4 @@ main:has(.auth-screen) .bottom-nav { display:none; }
 main:has(.auth-screen) #appContainer { padding:0 !important; }
 
 /* منع تمرير الصفحة نفسها: التمرير بيحصل جوه مناطق المحتوى بس، فالشريطين يفضلوا ملزوقين فوق وتحت */
-html, body { height:100%; overflow:hidden; overscroll-behavior-y:contain; }
+html, body { height:100%; overflow:hidden; }
