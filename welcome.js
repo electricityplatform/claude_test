@@ -121,14 +121,10 @@ window.renderLoginScreen = function () {
     _renderLoginScreenOriginal();
 };
 
-// ---------- بطاقة التعريف في الشاشة الرئيسية ----------
+// ---------- بطاقة التعريف في الشاشة الرئيسية (ثابتة دايماً) ----------
 function homeIntroHtml() {
-    if (introStorageGet('home_intro_hidden') === '1') return '';
     return `
         <div id="homeIntro" class="home-intro">
-            <button type="button" class="home-intro-close" onclick="dismissHomeIntro()" aria-label="إغلاق">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
             <h2 class="font-bold text-base text-primary">أهلاً بك في Electricity</h2>
             <p class="text-sm text-base-content/70 mt-1">منصتك لقطع غيار الهواتف: قارن أسعار التجار، وتعرّف على التوافقات، وراجع ملاحظات التركيب.</p>
             <div class="home-steps">
@@ -138,10 +134,4 @@ function homeIntroHtml() {
             </div>
         </div>
     `;
-}
-
-function dismissHomeIntro() {
-    introStorageSet('home_intro_hidden', '1');
-    const el = document.getElementById('homeIntro');
-    if (el) el.remove();
 }
