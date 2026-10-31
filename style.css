@@ -166,7 +166,7 @@ body { background-color: oklch(var(--b2)); }
 .auth-hero .brand { letter-spacing:.3em; font-weight:500; font-size:1rem; display:flex; align-items:center; gap:.6rem; }
 .auth-card { width:100%; max-width:34rem; align-self:center; flex:1; min-height:0; overflow-y:auto; margin-top:-2.5rem; border-radius:2.25rem 2.25rem 0 0; background:oklch(var(--b1)); padding:1.5rem 1.75rem 0; display:flex; flex-direction:column; position:relative; }
 .auth-avatar { width:4.5rem; height:4.5rem; border-radius:9999px; margin:-3.25rem auto .75rem; background:#f4a58a; color:#fff; display:flex; align-items:center; justify-content:center; border:4px solid oklch(var(--b1)); box-shadow:0 6px 14px rgba(2,127,138,.25); }
-.auth-foot { border-radius:1.25rem 1.25rem 0 0; margin:auto -1.75rem 0; padding:.9rem; text-align:center; background:oklch(var(--b3)); color:oklch(var(--p)); font-weight:700; font-size:.75rem; letter-spacing:.08em; cursor:pointer; flex-shrink:0; }
+.auth-foot { border-radius:0 0 1.25rem 1.25rem; margin:auto -1.75rem 0; padding:.9rem; text-align:center; background:oklch(var(--b3)); color:oklch(var(--p)); font-weight:700; font-size:.75rem; letter-spacing:.08em; cursor:pointer; flex-shrink:0; }
 .line-field { display:flex; align-items:center; gap:.75rem; border-bottom:1px solid oklch(var(--b3)); padding:.6rem .25rem; color:oklch(var(--p)); }
 .line-field:focus-within { border-bottom-color:oklch(var(--p)); }
 .line-field input { flex:1; min-width:0; background:transparent; border:none; outline:none; font-size:.85rem; color:oklch(var(--p)); }
