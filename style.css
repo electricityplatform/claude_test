@@ -159,7 +159,7 @@ html.dark .excel-input:focus { background-color: oklch(var(--p) / .2) !important
    الهوية الجديدة: Teal & Mint + رسومات نباتية (على طراز Narayan Tea)
    ===================================================================== */
 body { background-color: oklch(var(--b2)); }
-.teal-floral { background-color:#027f8a; background-repeat:no-repeat; background-size:cover; background-position:center; }
+.teal-floral { background-color:#027f8a; background-image:var(--floral-bg); background-repeat:no-repeat; background-size:cover; background-position:center; }
 
 .auth-screen { margin:0; position:relative; flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; border-radius:0; background:#027f8a; }
 .auth-hero { height:30%; min-height:150px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; }
@@ -172,7 +172,7 @@ body { background-color: oklch(var(--b2)); }
 .line-field input { flex:1; min-width:0; background:transparent; border:none; outline:none; font-size:.85rem; color:oklch(var(--p)); }
 .line-field input::placeholder { color:oklch(var(--p) / .55); }
 
-#sideMenu { background-color:#027f8a !important; background-repeat:no-repeat; background-size:cover; background-position:center; color:#fff; }
+#sideMenu { background-color:#027f8a !important; background-image:var(--floral-bg); background-repeat:no-repeat; background-size:cover; background-position:center; color:#fff; }
 #sideMenu .navbar { background:transparent !important; }
 .side-brand { letter-spacing:.28em; font-weight:500; font-size:.85rem; }
 .side-item { display:flex; align-items:center; gap:1rem; width:100%; padding:1rem 1.25rem; background:rgba(47,152,163,.92); border-bottom:1px solid rgba(255,255,255,.12); color:#fff; font-weight:700; font-size:.78rem; letter-spacing:.04em; cursor:pointer; transition:background .2s; text-align:start; }
@@ -225,3 +225,11 @@ main:has(.auth-screen){ padding:0 !important; }
 @media (min-width: 900px) {
     #partitionsContainer { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
 }
+
+/* =====================================================================
+   الشريط السفلي
+   ===================================================================== */
+.bottom-nav { display:flex; justify-content:space-around; align-items:center; padding:.4rem .5rem calc(.4rem + env(safe-area-inset-bottom)); }
+.bottom-nav-item { display:flex; flex-direction:column; align-items:center; gap:.15rem; min-width:4.5rem; padding:.35rem .9rem; border-radius:1rem; color:oklch(var(--bc) / .6); font-size:.7rem; font-weight:700; transition:color .2s, background .2s; }
+.bottom-nav-item:hover, .bottom-nav-item:active { color:oklch(var(--p)); background:oklch(var(--p) / .1); }
+main:has(.auth-screen) .bottom-nav { display:none; }
