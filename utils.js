@@ -207,8 +207,8 @@ function applyFloralBackgrounds() {}
 // ================= السحب للتحديث (Pull to refresh) =================
 // المتصفح مبقاش بيعمل ده لوحده لأن الصفحة نفسها مبقتش بتتمرر (التمرير جوه مناطق المحتوى بس)، فعملناه بإيدينا.
 (function setupPullToRefresh() {
-    const THRESHOLD = 70;
-    const MAX = 110;
+    const THRESHOLD = 50;
+    const MAX = 90;
     let startY = 0, startX = 0, pulling = false, dist = 0, ind = null;
 
     function getIndicator() {
@@ -256,7 +256,7 @@ function applyFloralBackgrounds() {}
         const dx = e.touches[0].clientX - startX;
         if (Math.abs(dx) > Math.abs(dy) || canScrollUp(e.target)) { pulling = false; hideIndicator(); return; }
         if (dy <= 0) { dist = 0; hideIndicator(); return; }
-        dist = Math.min(dy * 0.5, MAX);
+        dist = Math.min(dy * 0.7, MAX);
         const el = getIndicator();
         el.style.transition = 'none';
         el.style.opacity = String(Math.min(dist / THRESHOLD, 1));
@@ -279,4 +279,35 @@ function applyFloralBackgrounds() {}
     }, { passive: true });
 
     document.addEventListener('touchcancel', function () { pulling = false; dist = 0; hideIndicator(); }, { passive: true });
+})();
+
+// ================= شريط حالة الاتصال =================
+(function setupConnectionBanner() {
+    let banner = null;
+    let hideTimer = null;
+
+    function show(kind) {
+        if (!banner) {
+            banner = document.createElement('div');
+            document.body.appendChild(banner);
+        }
+        clearTimeout(hideTimer);
+        banner.className = 'conn-banner ' + kind;
+        banner.innerHTML = (kind === 'offline' ? 'لا يوجد اتصال بالإنترنت' : 'عاد الاتصال بالإنترنت') +
+            '<button type="button" onclick="location.reload()">تحديث</button>';
+        banner.style.display = 'flex';
+        if (kind === 'online') hideTimer = setTimeout(hide, 10000);
+    }
+
+    function hide() {
+        if (banner) banner.style.display = 'none';
+    }
+
+    window.addEventListener('offline', function () { show('offline'); });
+    window.addEventListener('online', function () {
+        // لو الصفحة اتفتحت من غير مكتبات الـ CDN (لأن النت كان واقع)، نعيد التحميل تلقائي أول ما النت يرجع
+        if (!window.supabase || !window.tailwind) { location.reload(); return; }
+        show('online');
+    });
+    if (!navigator.onLine) show('offline');
 })();
