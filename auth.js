@@ -89,6 +89,7 @@ async function handleLoginSubmit(e) {
         console.error("Instant heartbeat error:", err);
     }
 
+    saveSession(true);   // الدخول بيفضل محفوظ زي واتساب وفيسبوك لحد ما تسجّل خروج
     startHeartbeat();
     renderMainDashboard();
     loadDynamicMenuIntoSidebar();
@@ -100,6 +101,7 @@ function loginAsVisitor() {
     currentUserName = "";
     currentUserPhone = "";
     if (heartbeatInterval) clearInterval(heartbeatInterval);
+    saveSession(false);
     renderMainDashboard();
     loadDynamicMenuIntoSidebar();
 }
@@ -117,6 +119,86 @@ function logoutUser() {
     currentUserRole = "";
     currentUserName = "";
     currentUserPhone = "";
+    clearSession();
 
     renderLoginScreen();
+}
+
+// ================= حفظ الجلسة =================
+// - المستخدم المسجّل: الدخول بيتحفظ في localStorage ويفضل حتى بعد قفل المتصفح، لحد ما يسجّل خروج.
+//   والمدة بتتجدد كل ما يفتح التطبيق (لو ما فتحوش 30 يوم يطلب دخول من جديد).
+// - الزائر: sessionStorage بس (ريفرش بس).
+// مفيش باسورد بيتحفظ هنا، بس id والدور والاسم والتليفون.
+const APP_SESSION_KEY = 'app_session';
+const APP_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+function saveSession(persist) {
+    const data = currentUserId
+        ? { id: currentUserId, role: currentUserRole, name: currentUserName, phone: currentUserPhone, ts: Date.now() }
+        : { visitor: true, ts: Date.now() };
+    try {
+        localStorage.removeItem(APP_SESSION_KEY);
+        sessionStorage.removeItem(APP_SESSION_KEY);
+        (persist && currentUserId ? localStorage : sessionStorage).setItem(APP_SESSION_KEY, JSON.stringify(data));
+    } catch (e) { /* التخزين غير متاح */ }
+}
+
+function clearSession() {
+    try {
+        localStorage.removeItem(APP_SESSION_KEY);
+        sessionStorage.removeItem(APP_SESSION_KEY);
+    } catch (e) { /* مش مشكلة */ }
+}
+
+function readSession() {
+    for (const store of [localStorage, sessionStorage]) {
+        try {
+            const s = JSON.parse(store.getItem(APP_SESSION_KEY) || 'null');
+            if (s && (!s.ts || Date.now() - s.ts < APP_SESSION_MAX_AGE_MS)) return s;
+        } catch (e) { /* نكمل */ }
+    }
+    return null;
+}
+
+// بترجّع true لو لقت جلسة ورجّعت المستخدم للرئيسية
+function restoreSession() {
+    const s = readSession();
+    if (!s) return false;
+
+    if (s.visitor) {
+        loginAsVisitor();
+        return true;
+    }
+    if (!s.id) return false;
+
+    currentUserId = s.id;
+    currentUserRole = s.role || '';
+    currentUserName = s.name || '';
+    currentUserPhone = s.phone || '';
+    saveSession(true);          // تجديد المدة
+    startHeartbeat();
+    renderMainDashboard();
+    loadDynamicMenuIntoSidebar();
+    refreshSessionProfile();    // تحديث الاسم والدور في الخلفية
+    return true;
+}
+
+// بيجيب بيانات المستخدم من السيرفر بعد فتح التطبيق، عشان لو الاسم أو الدور اتغيّر يتحدّث من غير تسجيل دخول جديد
+async function refreshSessionProfile() {
+    if (!currentUserId) return;
+    try {
+        const res = await supabaseClient.rpc('get_personal_profile', { p_user_id: currentUserId });
+        if (!res.data || res.data.success === false) return;
+        const role = res.data.user_role || '';
+        const name = res.data.user_name || '';
+        const phone = res.data.phone_number || '';
+        if (role === currentUserRole && name === currentUserName && phone === currentUserPhone) return;
+        currentUserRole = role;
+        currentUserName = name;
+        currentUserPhone = phone;
+        saveSession(true);
+        if (document.getElementById('partitionsContainer')) renderMainDashboard();   // لسه على الرئيسية: نحدّث الهيدر
+    } catch (err) {
+        console.error('Session profile refresh error:', err);
+    }
 }
