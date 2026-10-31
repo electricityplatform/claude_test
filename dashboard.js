@@ -33,8 +33,8 @@ async function renderMainDashboard() {
     currentFlow = 'buy';
     const html = `
         ${getHeaderTemplate()}
+        ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
         <div class="flex-1 overflow-y-auto px-1">
-            ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
             <div id="partitionsContainer" class="space-y-3 pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
