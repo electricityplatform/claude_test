@@ -19,7 +19,7 @@ function getHeaderTemplate(showSearch = false) {
     ` : '';
 
     return `
-        <header class="flex-shrink-0 border-b border-base-300 pb-3 mb-4">
+        <header class="app-topbar flex-shrink-0">
             <div class="navbar min-h-0 p-0 gap-3">
                 <div class="flex-none">
                     <button type="button" onclick="toggleSidebar()" class="btn btn-primary btn-square" aria-label="فتح القائمة">
@@ -37,7 +37,7 @@ function getHeaderTemplate(showSearch = false) {
 
             ${showSearch ? `
             <div class="flex items-center gap-2 mt-3">
-                <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-200">
+                <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-100">
                     ${uiIcon('search', 'w-4 h-4 opacity-60')}
                     <input type="text" class="grow w-0 min-w-0" placeholder="ابحث" aria-label="ابحث">
                 </label>
