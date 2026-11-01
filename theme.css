@@ -11,9 +11,6 @@
    ===================================================================== */
 
 :root {
-    /* بنلغي الرسومات الزخرفية (اللمبة والتروس والفيشة) من أصلها */
-    --floral-bg: none !important;
-
     --ink: #1c2428;
     --graphite-1: #232c31;
     --graphite-2: #3c4a4f;
@@ -350,6 +347,8 @@ html.dark .excel-input:focus { box-shadow: inset 0 0 0 2px #8fa8a9 !important; }
 
 /* منطقة غامقة: الصفحة نفسها والشريطين */
 html:not(.dark) :is(#appContainer, .app-topbar, .bottom-nav) {
+    color-scheme: dark;
+    color: oklch(var(--bc));
     --p: 92% 0.012 90;    --pc: 24% 0.02 215;
     --s: 28% 0.02 215;    --sc: 92% 0.01 90;
     --n: 36% 0.02 215;    --nc: 96% 0.006 90;
@@ -369,7 +368,10 @@ html:not(.dark) .bottom-nav-item { color: rgba(238, 241, 242, .85); }
 
 /* أسطح فاتحة: الكروت والأقسام والنوافذ وشيت الإكسل وكارت الدخول */
 html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .auth-card, #editableUsersTable,
+                    #appContainer :is(.bg-white, .bg-gray-50, .bg-gray-100, .bg-gray-200, [class*="bg-blue-50"], [class*="bg-blue-100"], .bg-red-50, .bg-red-100),
                     #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    color-scheme: light;
+    color: oklch(var(--bc));
     --p: 33% 0.025 215;   --pc: 98% 0.008 90;
     --s: 84% 0.012 220;   --sc: 26% 0.02 215;
     --n: 31% 0.022 215;   --nc: 97% 0.006 90;
@@ -421,6 +423,7 @@ html:not(.dark) #appContainer .btn-primary:not(.btn-outline) {
     box-shadow: 0 8px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6);
 }
 html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .auth-card, #editableUsersTable,
+                    #appContainer :is(.bg-white, .bg-gray-50, .bg-gray-100, .bg-gray-200, [class*="bg-blue-50"], [class*="bg-blue-100"], .bg-red-50, .bg-red-100),
                     #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) .btn-primary:not(.btn-outline) {
     background-color: #2a3338;
     background-image: linear-gradient(180deg, #43545a, #27323a);
@@ -428,6 +431,21 @@ html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .aut
     color: #f7f3ec;
     box-shadow: 0 8px 18px rgba(30, 42, 48, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
 }
+
+/* الشاشات القديمة (text-gray-* / border-gray-* / text-blue-*): بنربطها بألوان المنطقة
+   فتطلع فاتحة على الخلفية الغامقة، وغامقة جوّه الأسطح الفاتحة (نفس فكرة الجسر في style.css) */
+html:not(.dark) #appContainer :is(.text-gray-900, .text-gray-800, .text-slate-800) { color: oklch(var(--bc)); }
+html:not(.dark) #appContainer .text-gray-700 { color: oklch(var(--bc) / .9); }
+html:not(.dark) #appContainer .text-gray-600 { color: oklch(var(--bc) / .75); }
+html:not(.dark) #appContainer :is(.text-gray-500, .text-slate-500) { color: oklch(var(--bc) / .6); }
+html:not(.dark) #appContainer :is(.text-gray-400, .text-slate-400) { color: oklch(var(--bc) / .5); }
+html:not(.dark) #appContainer :is(.text-blue-600, .text-blue-700) { color: oklch(var(--p)); }
+html:not(.dark) #appContainer :is(.border-gray-100, .border-gray-200) { border-color: oklch(var(--b3)); }
+html:not(.dark) #appContainer :is(.border-gray-300, .border-slate-300) { border-color: oklch(var(--bc) / .25); }
+
+/* مؤشر السحب للتحديث ولافتة الاتصال: بيظهروا فوق الخلفية الغامقة */
+html:not(.dark) .ptr-indicator { background: #e6e0d4; color: #1c2428; }
+html:not(.dark) .conn-banner.online { background: #5f7b7f; }
 
 /* =====================================================================
    احتياطي: لو المتصفح ما بيدعمش الـ blur، نزوّد كثافة الزجاج
