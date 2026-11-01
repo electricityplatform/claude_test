@@ -42,11 +42,11 @@ const HOME_GROUPS = [
 function partitionCardHtml(name) {
     const m = partitionMeta(name);
     return `
-        <button type="button" onclick="${m.action}" class="dash-card ${m.feature ? 'feature teal-floral' : ''}">
+        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral">
             <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
             <div class="flex-1 min-w-0 relative">
-                <h3 class="font-bold ${m.feature ? 'text-lg' : 'text-base'}" dir="auto">${escapeHtmlValue(name)}</h3>
-                ${m.desc ? `<p class="text-sm ${m.feature ? 'opacity-90' : 'text-base-content/60'}">${m.desc}</p>` : ''}
+                <h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(name)}</h3>
+                ${m.desc ? `<p class="text-sm opacity-90">${m.desc}</p>` : ''}
             </div>
             ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
         </button>`;
