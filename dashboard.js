@@ -25,7 +25,53 @@ function partitionMeta(name) {
     if (n.includes('قطع الغيار')) return { action: 'renderPartsScreen()', icon: 'cog', desc: '' };
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
     if (n.includes('الموديلات')) return { action: "renderModelsScreen('Samsung')", icon: 'device', desc: '' };
+    if (n.includes('محلات الصيانة')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'cog', desc: '' };
+    if (n.includes('منافذ البيع') || n.includes('متاجر البيع')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'store', desc: '' };
     return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'bolt', desc: '' };
+}
+
+// ================= أركان الشاشة الرئيسية =================
+// كل ركن: عنوان + الأقسام اللي تحته (بالترتيب). الاسم بيتطابق بـ includes زي partitionMeta.
+const HOME_GROUPS = [
+    { title: 'من أجلك', items: ['محلات الصيانة', 'منافذ البيع', 'متاجر البيع'] },
+    { title: 'التسوق',  items: ['شراء قطع الغيار'] },
+    { title: 'التقنية', items: ['التوافقات', 'تنبيهات الصيانة'] },
+    { title: 'خدمات',   items: ['جهز متجرك'] }
+];
+
+function partitionCardHtml(name) {
+    const m = partitionMeta(name);
+    return `
+        <button type="button" onclick="${m.action}" class="dash-card ${m.feature ? 'feature teal-floral' : ''}">
+            <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
+            <div class="flex-1 min-w-0 relative">
+                <h3 class="font-bold ${m.feature ? 'text-lg' : 'text-base'}" dir="auto">${escapeHtmlValue(name)}</h3>
+                ${m.desc ? `<p class="text-sm ${m.feature ? 'opacity-90' : 'text-base-content/60'}">${m.desc}</p>` : ''}
+            </div>
+            ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
+        </button>`;
+}
+
+// بيوزّع الأقسام على الأركان. أي قسم مش متسجّل في HOME_GROUPS بيظهر في ركن "أخرى" في الآخر.
+function groupedPartitionsHtml(list) {
+    const used = new Set();
+    const sections = HOME_GROUPS.map(g => {
+        const names = [];
+        g.items.forEach(key => {
+            list.forEach((name, i) => {
+                if (!used.has(i) && String(name).includes(key)) { used.add(i); names.push(name); }
+            });
+        });
+        return { title: g.title, names };
+    });
+    const rest = list.filter((_, i) => !used.has(i));
+    if (rest.length) sections.push({ title: 'أخرى', names: rest });
+
+    return sections.filter(s => s.names.length).map(s => `
+        <section class="dash-group">
+            <h2 class="dash-group-title">${escapeHtmlValue(s.title)}</h2>
+            <div class="dash-grid">${s.names.map(partitionCardHtml).join('')}</div>
+        </section>`).join('');
 }
 
 // ================= الشاشة الرئيسية =================
@@ -35,7 +81,7 @@ async function renderMainDashboard() {
         ${getHeaderTemplate()}
         ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
         <div class="flex-1 overflow-y-auto px-1">
-            <div id="partitionsContainer" class="space-y-3 pb-4">
+            <div id="partitionsContainer" class="pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
@@ -64,21 +110,7 @@ async function renderMainDashboard() {
 
         const container = document.getElementById('partitionsContainer');
         if (container && partitionsList && partitionsList.length > 0) {
-            let partitionsHtml = partitionsList.map(name => {
-                const m = partitionMeta(name);
-                return `
-                    <button type="button" onclick="${m.action}" class="dash-card ${m.feature ? 'feature teal-floral' : ''}">
-                        <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
-                        <div class="flex-1 min-w-0 relative">
-                            <h3 class="font-bold ${m.feature ? 'text-lg' : 'text-base'}" dir="auto">${escapeHtmlValue(name)}</h3>
-                            ${m.desc ? `<p class="text-sm ${m.feature ? 'opacity-90' : 'text-base-content/60'}">${m.desc}</p>` : ''}
-                        </div>
-                        ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
-                    </button>
-                `;
-            }).join('');
-
-            container.innerHTML = partitionsHtml;
+            container.innerHTML = groupedPartitionsHtml(partitionsList);
         } else {
             container.innerHTML = `<div class="text-center text-base-content/50 text-sm py-4">لا توجد أقسام متاحة</div>`;
         }
