@@ -221,12 +221,16 @@ main:has(.auth-screen){ padding:0 !important; }
 .dash-group-title { font-size: 1rem; font-weight: 800; color: oklch(var(--p)); margin: 0 .25rem .6rem; display: flex; align-items: center; gap: .6rem; }
 .dash-group-title::after { content: ''; flex: 1; height: 1px; background: oklch(var(--b3)); }
 /* كروت الأقسام بشكل بانر عريض بنسبة الصورة المرجعية (حوالي 3:1)، كارت في كل صف */
-.dash-grid { display: grid; grid-template-columns: 1fr; gap: .85rem; }
-.dash-grid .dash-card { flex-direction: row; justify-content: flex-start; text-align: start; gap: 1rem; padding: .9rem 1.25rem; aspect-ratio: 3 / 1; border-radius: 1.75rem; overflow: hidden; }
+/* كل ركن صف أفقي بيتسحب يمين/شمال (سحب جانبي) والكروت بتقف على الحافة (snap) */
+.dash-grid { display: flex; gap: .85rem; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none; padding: .25rem .25rem .6rem; }
+.dash-grid::-webkit-scrollbar { display: none; }
+.dash-grid .dash-card { flex: 0 0 82%; max-width: 26rem; scroll-snap-align: center; flex-direction: row; justify-content: flex-start; text-align: start; gap: 1rem; padding: .9rem 1.25rem; aspect-ratio: 3 / 1; border-radius: 1.75rem; overflow: hidden; }
 .dash-grid .dash-card > svg { display: block; }
 .dash-grid .dash-card.feature { padding: .9rem 1.25rem; }
+.dash-grid > .dash-card:only-child { flex-basis: 100%; max-width: none; }
 @media (min-width: 900px) {
-    .dash-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
+    .dash-grid .dash-card { flex-basis: 22rem; }
+    .dash-grid > .dash-card:only-child { flex-basis: 22rem; max-width: 22rem; }
 }
 
 /* =====================================================================
