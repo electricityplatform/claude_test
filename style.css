@@ -220,16 +220,13 @@ main:has(.auth-screen){ padding:0 !important; }
 .dash-group { margin-bottom: 1.25rem; }
 .dash-group-title { font-size: 1rem; font-weight: 800; color: oklch(var(--p)); margin: 0 .25rem .6rem; display: flex; align-items: center; gap: .6rem; }
 .dash-group-title::after { content: ''; flex: 1; height: 1px; background: oklch(var(--b3)); }
-.dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .85rem; }
-.dash-grid .dash-card { flex-direction: column; justify-content: center; text-align: center; gap: .6rem; padding: 1.1rem .8rem; min-height: 9.5rem; }
-.dash-grid .dash-card > svg { display: none; }
-.dash-grid .dash-card.feature { grid-column: 1 / -1; flex-direction: row; text-align: start; min-height: 0; gap: 1rem; padding: 1.3rem 1.2rem; }
-.dash-grid .dash-card.feature > svg { display: block; }
-/* ركن فيه كارت واحد غير مميّز (زي "جهز متجرك"): ياخد العرض كله بدل ما يفضل نص فاضي */
-.dash-grid > .dash-card:only-child:not(.feature) { grid-column: 1 / -1; min-height: 7rem; }
+/* كروت الأقسام بشكل بانر عريض بنسبة الصورة المرجعية (حوالي 3:1)، كارت في كل صف */
+.dash-grid { display: grid; grid-template-columns: 1fr; gap: .85rem; }
+.dash-grid .dash-card { flex-direction: row; justify-content: flex-start; text-align: start; gap: 1rem; padding: .9rem 1.25rem; aspect-ratio: 3 / 1; border-radius: 1.75rem; overflow: hidden; }
+.dash-grid .dash-card > svg { display: block; }
+.dash-grid .dash-card.feature { padding: .9rem 1.25rem; }
 @media (min-width: 900px) {
-    .dash-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
-    .dash-grid > .dash-card:only-child:not(.feature) { grid-column: auto; min-height: 9.5rem; }
+    .dash-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
 }
 
 /* =====================================================================
