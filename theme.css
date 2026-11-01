@@ -63,11 +63,13 @@ html.dark {
 /* =====================================================================
    الخلفية العامة: تدرج ناعم فضي ← كريمي مع لمعات ضبابية
    ===================================================================== */
-html body.bg-base-100 {
+/* الوضع الفاتح: الخلفية غامقة بلون الأقسام القديم (جرافيت/ساج) */
+html:not(.dark) body.bg-base-100 {
+    background-color: #36444a;
     background-image:
-        radial-gradient(900px 520px at 90% -8%, rgba(143, 168, 169, .38), transparent 62%),
-        radial-gradient(800px 520px at -10% 108%, rgba(216, 198, 161, .45), transparent 60%),
-        linear-gradient(180deg, #e8ecef 0%, #f2efea 100%);
+        radial-gradient(900px 520px at 90% -8%, rgba(143, 168, 169, .34), transparent 62%),
+        radial-gradient(800px 520px at -10% 108%, rgba(216, 198, 161, .12), transparent 60%),
+        linear-gradient(170deg, #4a5a60 0%, #3a484f 50%, #313e44 100%);
     background-attachment: fixed;
 }
 html.dark body.bg-base-100 {
@@ -337,6 +339,95 @@ html:not(.dark) .excel-input:focus {
 }
 html.dark .excel-input:focus { box-shadow: inset 0 0 0 2px #8fa8a9 !important; }
 .drag-handle { background-color: #5f7b7f; }
+
+/* =====================================================================
+   الوضع الفاتح — الشكل المعكوس:
+   الخلفية + الشريط العلوي + الشريط السفلي = غامقين (الشريطين أغمق من الخلفية)
+   الأقسام والكروت = فاتحة.
+   الفكرة: بنبدّل متغيّرات الألوان على مستوى المنطقة، فأي نص/حقل/زرار
+   بيستخدم ألوان الثيم بيتقلب لوحده (فاتح على الغامق، وغامق على الفاتح).
+   ===================================================================== */
+
+/* منطقة غامقة: الصفحة نفسها والشريطين */
+html:not(.dark) :is(#appContainer, .app-topbar, .bottom-nav) {
+    --p: 92% 0.012 90;    --pc: 24% 0.02 215;
+    --s: 28% 0.02 215;    --sc: 92% 0.01 90;
+    --n: 36% 0.02 215;    --nc: 96% 0.006 90;
+    --b1: 25% 0.016 220;  --b2: 21% 0.016 220;  --b3: 31% 0.02 220;   --bc: 93% 0.008 90;
+
+    --glass: rgba(22, 30, 34, .9);
+    --glass-strong: rgba(34, 44, 49, .94);
+    --glass-border: rgba(255, 255, 255, .1);
+    --glass-shadow: 0 10px 28px rgba(0, 0, 0, .32), 0 2px 6px rgba(0, 0, 0, .2);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, .08);
+    --field-bg: rgba(255, 255, 255, .08);
+    --field-border: rgba(255, 255, 255, .18);
+    --card-solid: rgba(32, 40, 45, .94);
+}
+html:not(.dark) .bottom-nav { box-shadow: 0 -8px 26px rgba(0, 0, 0, .3), var(--glass-inset); }
+html:not(.dark) .bottom-nav-item { color: rgba(238, 241, 242, .85); }
+
+/* أسطح فاتحة: الكروت والأقسام والنوافذ وشيت الإكسل وكارت الدخول */
+html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .auth-card, #editableUsersTable,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    --p: 33% 0.025 215;   --pc: 98% 0.008 90;
+    --s: 84% 0.012 220;   --sc: 26% 0.02 215;
+    --n: 31% 0.022 215;   --nc: 97% 0.006 90;
+    --b1: 99% 0.004 90;   --b2: 96% 0.007 95;   --b3: 91% 0.01 215;   --bc: 27% 0.022 220;
+
+    --glass: rgba(247, 246, 242, .94);
+    --glass-strong: rgba(255, 255, 255, .98);
+    --glass-border: rgba(255, 255, 255, .6);
+    --glass-shadow: 0 12px 28px rgba(0, 0, 0, .26), 0 2px 6px rgba(0, 0, 0, .12);
+    --glass-inset: inset 0 1px 0 #fff;
+    --field-bg: rgba(255, 255, 255, .78);
+    --field-border: rgba(60, 80, 88, .16);
+    --card-solid: rgba(248, 246, 241, .97);
+}
+html:not(.dark) #editableUsersTable { background: #f7f6f2; color: #1c2428; }
+
+/* بطاقات الرئيسية: كلها فاتحة (حتى المميزة، بلمسة شمبانيا خفيفة) */
+html:not(.dark) .dash-card,
+html:not(.dark) .dash-card.feature {
+    background-color: #f7f6f2 !important;
+    background-image: none !important;
+    border: 1px solid rgba(255, 255, 255, .6) !important;
+    box-shadow: var(--glass-shadow), var(--glass-inset) !important;
+    color: #1c2428 !important;
+}
+html:not(.dark) .dash-card.feature {
+    background-image: linear-gradient(145deg, #fcf8ee, #efe6d2) !important;
+}
+html:not(.dark) .dash-card:hover,
+html:not(.dark) .dash-card.feature:hover { background-color: #fff !important; }
+html:not(.dark) .dash-card::before,
+html:not(.dark) .dash-card.feature::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0) 45%);
+}
+html:not(.dark) .dash-card *:not(.dash-ico) { color: inherit !important; }
+html:not(.dark) .dash-card .dash-ico,
+html:not(.dark) .dash-card.feature .dash-ico {
+    background: linear-gradient(145deg, #f1e6cb, #d3bf94);
+    color: #263137;
+    box-shadow: 0 6px 14px rgba(36, 52, 58, .18), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+
+/* الأزرار: كريمي على المنطقة الغامقة، جرافيت جوّه الأسطح الفاتحة */
+html:not(.dark) #appContainer .btn-primary:not(.btn-outline) {
+    background-color: #e6e0d4;
+    background-image: linear-gradient(180deg, #f6f1e8, #cdd5d8);
+    border-color: rgba(255, 255, 255, .3);
+    color: #1c2428;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .auth-card, #editableUsersTable,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) .btn-primary:not(.btn-outline) {
+    background-color: #2a3338;
+    background-image: linear-gradient(180deg, #43545a, #27323a);
+    border-color: rgba(255, 255, 255, .08);
+    color: #f7f3ec;
+    box-shadow: 0 8px 18px rgba(30, 42, 48, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
+}
 
 /* =====================================================================
    احتياطي: لو المتصفح ما بيدعمش الـ blur، نزوّد كثافة الزجاج
