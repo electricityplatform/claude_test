@@ -227,10 +227,8 @@ main:has(.auth-screen){ padding:0 !important; }
 .dash-grid .dash-card { flex: 0 0 82%; max-width: 26rem; scroll-snap-align: center; flex-direction: row; justify-content: flex-start; text-align: start; gap: 1rem; padding: .9rem 1.25rem; aspect-ratio: 3 / 1; border-radius: 1.75rem; overflow: hidden; }
 .dash-grid .dash-card > svg { display: block; }
 .dash-grid .dash-card.feature { padding: .9rem 1.25rem; }
-.dash-grid > .dash-card:only-child { flex-basis: 100%; max-width: none; }
 @media (min-width: 900px) {
     .dash-grid .dash-card { flex-basis: 22rem; }
-    .dash-grid > .dash-card:only-child { flex-basis: 22rem; max-width: 22rem; }
 }
 
 /* =====================================================================
