@@ -30,7 +30,7 @@ function getHeaderTemplate(showSearch = false) {
                 </div>
                 <div class="flex-none gap-2">
                     <div class="avatar placeholder">
-                        <div class="bg-primary text-primary-content w-9 rounded-xl">${boltMarkSvg().replace('<svg', '<svg class="w-5 h-5"')}</div>
+                        <div class="bg-primary text-secondary w-9 rounded-xl">${boltMarkSvg().replace('<svg', '<svg class="w-5 h-5"')}</div>
                     </div>
                     <span class="text-xl font-bold tracking-tight">Electricity</span>
                 </div>
