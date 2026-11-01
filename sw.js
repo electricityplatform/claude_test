@@ -3,7 +3,7 @@
 // - ملفات الـ CDN (tailwind / daisyui / supabase / الخطوط): نعرض المخزن فوراً ونحدّثه في الخلفية.
 // - أي طلبات تانية (زي API بتاع Supabase) بنسيبها تعدّي من غير تدخل.
 
-const CACHE = 'electricity-shell-v1';
+const CACHE = 'electricity-shell-v2';
 const NETWORK_TIMEOUT_MS = 5000;
 const CDN_HOSTS = [
     'cdn.tailwindcss.com',
