@@ -448,7 +448,7 @@ async function sdcSavePriceSheet() {
     }
 }
 
-// ---------- تصدير شيت الأسعار إلى XLSX (بالقيم الحالية بعد التعديل، كل الصفوف) ----------
+// ---------- تصدير شيت الأسعار إلى XLSX (بالقيم الحالية بعد التعديل، والصفوف اللي ظاهرة بالبحث بس) ----------
 function sdcExportPriceSheet() {
     if (!sdcTableCols.length || !sdcWorkRows.length) {
         alert("لا توجد بيانات للتصدير حالياً");
@@ -456,7 +456,15 @@ function sdcExportPriceSheet() {
     }
     sdcSyncInputs();
 
-    const data = [sdcTableCols, ...sdcWorkRows.map(r => sdcTableCols.map(c => r[c] ?? ''))];
+    // نفس شرط البحث بتاع sdcApplyFilter بالظبط
+    const needle = String((document.getElementById('sdcFilter') || {}).value || '').trim().toLowerCase();
+    const exportRows = sdcWorkRows.filter(r => !needle || String(r[sdcSearchCol] ?? '').toLowerCase().includes(needle));
+    if (!exportRows.length) {
+        alert("لا توجد صفوف ظاهرة للتصدير (كل الصفوف مخفية بالبحث)");
+        return;
+    }
+
+    const data = [sdcTableCols, ...exportRows.map(r => sdcTableCols.map(c => r[c] ?? ''))];
     const worksheet = XLSX.utils.aoa_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     const sheetName = String(sdcPart || 'prices').replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31);
