@@ -315,3 +315,20 @@ html, body { height:100%; overflow:hidden; overscroll-behavior-y:none; }
 .home-steps { gap: .35rem; margin-top: .5rem; }
 .home-step { gap: .3rem; padding: .2rem .5rem .2rem .35rem; font-size: .65rem; }
 .home-step b { width: 1rem; height: 1rem; font-size: .6rem; }
+
+/* الشريط العلوي والسفلي: أصغر عشان يتماشوا مع حجم الأقسام */
+.app-topbar { padding-top: calc(.45rem + env(safe-area-inset-top)); padding-bottom: .45rem; margin-bottom: .75rem; }
+.app-topbar .navbar { gap: .6rem; }
+.app-topbar .btn.btn-square { width: 2.4rem; height: 2.4rem; min-height: 0; }
+.app-topbar .btn.btn-square svg { width: 1.1rem; height: 1.1rem; }
+.app-topbar .avatar .w-9 { width: 2rem; }
+.app-topbar .avatar .w-9 svg { width: 1rem; height: 1rem; }
+.app-topbar .user-avatar-btn .w-9 { width: 2rem !important; }
+.app-topbar .user-avatar-btn img { width: 2rem; height: 2rem; }
+.app-topbar .text-xl { font-size: 1rem; }
+.app-topbar .text-sm { font-size: .75rem; }
+.app-topbar .text-xs { font-size: .62rem; }
+.bottom-nav { padding: .2rem .5rem calc(.2rem + env(safe-area-inset-bottom)); }
+.bottom-nav-item { gap: .05rem; min-width: 4rem; padding: .2rem .8rem; font-size: .62rem; }
+.bottom-nav-item svg { width: 1.3rem; height: 1.3rem; }
+@media (min-width: 640px) { .app-topbar { padding-top: calc(.5rem + env(safe-area-inset-top)); padding-bottom: .5rem; margin-bottom: 1rem; } }
