@@ -585,83 +585,146 @@ html.dark .excel-input:focus { box-shadow: inset 0 0 0 2px #c9a962 !important; }
 html:not(.dark) .ptr-indicator, .ptr-indicator { background: var(--gold-grad); color: #1a150d; }
 html:not(.dark) .conn-banner.online { background: #8a6d38; }
 
-
 /* =====================================================================
-   الإصدار 2: أقسام ذهبية موحّدة (الكروت + عناصر القوائم + الشريطين + شريط التصفح)
+   الإصدار 3: تبديل الألوان
+   - الخلفية بقت بلون الأقسام القديم (ذهبي شمبانيا)
+   - الأقسام والكروت وعناصر القوائم والشريطين بقوا بلون الخلفية القديمة (أسود دافئ)
    ===================================================================== */
 :root {
-    --section-gold: linear-gradient(145deg, #f9efd2, #e6d2a0);
-    --bar-gold: linear-gradient(180deg, #f6e8c0, #e6d2a0);
-    --gold-edge: rgba(166, 130, 47, .55);
+    --page-gold: linear-gradient(170deg, #f6e8c0 0%, #ecd9a6 50%, #e0c88e 100%);
+    --dark-surface: linear-gradient(145deg, #231e16, #100d0a);
+    --dark-bar: linear-gradient(180deg, #1d1913, #100d0a);
+    --dark-edge: rgba(201, 169, 98, .38);
 }
 
-/* ألوان "السطح الذهبي": نص غامق وأزرار غامقة بدل الفاتح (بتتطبّق على الكروت والشريطين في الوضعين) */
-html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar),
-html.dark :is(.bottom-nav, #appContainer .app-topbar),
-html.dark .dash-card,
-html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
+/* الخلفية: ذهبي شمبانيا بلمعة فاتحة من فوق */
+html:not(.dark) body.bg-base-100,
+html.dark body.bg-base-100 {
+    background-color: #ecd9a6;
+    background-image:
+        radial-gradient(760px 460px at 88% -6%, rgba(255, 250, 232, .75), transparent 62%),
+        var(--page-gold);
+    background-attachment: fixed;
+}
+html * { scrollbar-color: rgba(26, 21, 13, .45) transparent; }
+html #appContainer :focus-visible { outline-color: #1a150d; }
+
+/* منطقة الصفحة نفسها: ألوان فاتحة (نص غامق) لأن الخلفية بقت ذهبي */
+html:not(.dark) #appContainer,
+html.dark #appContainer {
     color-scheme: light;
     color: oklch(var(--bc));
     --p: 27% 0.02 70;     --pc: 92% 0.06 85;
     --s: 84% 0.012 70;    --sc: 26% 0.02 70;
     --n: 31% 0.022 70;    --nc: 97% 0.006 85;
     --b1: 99% 0.004 85;   --b2: 96% 0.007 85;   --b3: 91% 0.01 70;   --bc: 24% 0.02 70;
+    --glass: rgba(255, 250, 236, .7);
+    --glass-strong: rgba(255, 252, 242, .92);
+    --glass-border: rgba(255, 255, 255, .7);
+    --glass-shadow: 0 10px 24px rgba(90, 66, 20, .2), 0 2px 6px rgba(90, 66, 20, .1);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, .8);
     --field-bg: rgba(255, 255, 255, .7);
     --field-border: rgba(90, 66, 20, .28);
+    --card-solid: rgba(250, 245, 230, .96);
 }
 
-/* الشريط العلوي والسفلي */
+/* الأسطح الغامقة: الشريطين وبطاقات الأقسام وعناصر القوائم (نص فاتح وأزرار ذهبية) */
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, .dash-card,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)),
+html.dark :is(.bottom-nav, #appContainer .app-topbar, .dash-card,
+              #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    color-scheme: dark;
+    color: oklch(var(--bc));
+    --p: 80% 0.1 85;      --pc: 20% 0.02 70;
+    --s: 28% 0.02 70;     --sc: 92% 0.01 85;
+    --n: 36% 0.02 70;     --nc: 96% 0.006 85;
+    --b1: 25% 0.016 70;   --b2: 21% 0.016 70;   --b3: 31% 0.02 70;   --bc: 93% 0.02 88;
+    --field-bg: rgba(255, 255, 255, .08);
+    --field-border: rgba(255, 255, 255, .2);
+}
+
+/* الشريط العلوي والسفلي: أسود دافئ بخط ذهبي رفيع */
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar),
 html.dark :is(.bottom-nav, #appContainer .app-topbar) {
-    background: var(--bar-gold);
-    border-color: var(--gold-edge);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6);
+    background: var(--dark-bar);
+    border-color: var(--dark-edge);
+    box-shadow: 0 10px 26px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
-html:not(.dark) .bottom-nav, html.dark .bottom-nav { box-shadow: 0 -8px 24px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6); }
-.bottom-nav .bottom-nav-item { color: #3a2f1c !important; }
-.bottom-nav .bottom-nav-item:hover, .bottom-nav .bottom-nav-item:active { color: #14110d !important; background: rgba(26, 21, 13, .08); }
-
-/* زرار القائمة وشعار الشرارة فوق الشريط الذهبي: غامقين بأيقونة ذهبية */
+html:not(.dark) .bottom-nav, html.dark .bottom-nav { box-shadow: 0 -8px 24px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08); }
+/* زرار القائمة فوق الشريط الغامق: ذهبي */
 html:not(.dark) #appContainer .app-topbar .btn-primary:not(.btn-outline),
-html.dark .app-topbar .btn-primary:not(.btn-outline) {
-    background-color: #1a1611;
-    background-image: linear-gradient(145deg, #3a342b, #17130e);
-    border-color: rgba(201, 169, 98, .4);
-    color: #ecd9a6;
-    box-shadow: 0 6px 14px rgba(20, 14, 6, .3), inset 0 1px 0 rgba(255, 255, 255, .12);
+html.dark #appContainer .app-topbar .btn-primary:not(.btn-outline) {
+    background-color: var(--gold-2);
+    background-image: var(--gold-grad);
+    border-color: rgba(255, 244, 214, .45);
+    color: #1a150d;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .55);
 }
-.app-topbar .bg-primary { background: linear-gradient(145deg, #3a342b, #17130e); }
-.app-topbar .text-secondary { color: #ecd9a6; }
+.app-topbar .bg-primary { background: var(--gold-grad); }
+.app-topbar .text-secondary { color: #1a150d; }
 
-/* بطاقات الأقسام (الرئيسية): ذهبي في الوضعين */
+/* بطاقات الأقسام (الرئيسية): أسود دافئ بلمعة ذهبية */
 html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature,
 html.dark .dash-card, html.dark .dash-card.feature {
-    background-color: #e6d2a0 !important;
-    background-image: var(--section-gold) !important;
-    border: 1px solid var(--gold-edge) !important;
-    box-shadow: 0 12px 26px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .55) !important;
-    color: #1a150d !important;
+    background-color: #17130e !important;
+    background-image:
+        radial-gradient(240px 140px at 100% 0%, rgba(201, 169, 98, .2), transparent 70%),
+        var(--dark-surface) !important;
+    border: 1px solid var(--dark-edge) !important;
+    box-shadow: 0 12px 26px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    color: #f3ead2 !important;
 }
-html.dark .dash-card *:not(.dash-ico) { color: inherit !important; }
+html:not(.dark) .dash-card:hover, html:not(.dark) .dash-card.feature:hover,
+html.dark .dash-card:hover, html.dark .dash-card.feature:hover { background-color: #1d1913 !important; }
+html:not(.dark) .dash-card::before, html:not(.dark) .dash-card.feature::before,
+html.dark .dash-card::before, html.dark .dash-card.feature::before {
+    background: linear-gradient(135deg, rgba(236, 217, 166, .12), rgba(236, 217, 166, 0) 45%);
+}
+html:not(.dark) .dash-card *:not(.dash-ico), html.dark .dash-card *:not(.dash-ico) { color: inherit !important; }
+/* أيقونة البطاقة: مربع ذهبي بأيقونة غامقة */
+.dash-ico,
+html:not(.dark) .dash-card .dash-ico, html:not(.dark) .dash-card.feature .dash-ico,
+html.dark .dash-ico, html.dark .dash-card .dash-ico, html.dark .dash-card.feature .dash-ico {
+    background: var(--gold-grad);
+    color: #1a150d;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
 
-/* عناصر القوائم (أبل، سامسونج، شاشة، خيارات الإعدادات...): نفس لون الأقسام */
+/* عناصر القوائم (أبل، سامسونج، شاشة، خيارات الإعدادات...): أسود دافئ */
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
-    background-color: #e6d2a0;
-    background-image: var(--section-gold);
-    border-color: var(--gold-edge);
+    background-color: #17130e;
+    background-image: var(--dark-surface);
+    border-color: var(--dark-edge);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    box-shadow: 0 10px 22px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .55);
+    box-shadow: 0 10px 22px rgba(90, 66, 20, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
-    background-color: #ecd9a6;
-    background-image: linear-gradient(145deg, #fbf3da, #ecd9a6);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .6);
+    background-color: #1d1913;
+    background-image: linear-gradient(145deg, #2c251a, #15110c);
+    box-shadow: 0 14px 28px rgba(90, 66, 20, .36), inset 0 1px 0 rgba(255, 255, 255, .1);
 }
-/* العنصر المختار (زي خيار المظهر الحالي): إطار غامق واضح */
+/* العنصر المختار (زي خيار المظهر الحالي): إطار ذهبي واضح */
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border.border-primary\/60:is(.bg-base-100, .bg-base-200) {
-    border-color: #1a150d;
-    box-shadow: 0 0 0 2px rgba(26, 21, 13, .6), 0 10px 22px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .55);
+    border-color: #ecd9a6;
+    box-shadow: 0 0 0 2px rgba(236, 217, 166, .55), 0 10px 22px rgba(90, 66, 20, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+/* الأزرار الرئيسية على الخلفية الذهبية: أسود بنص ذهبي، وجوّه الأسطح الغامقة تفضل ذهبية */
+html:not(.dark) #appContainer .btn-primary:not(.btn-outline),
+html.dark #appContainer .btn-primary:not(.btn-outline) {
+    background-color: #1a1611;
+    background-image: linear-gradient(180deg, #2b251c, #14110d);
+    border-color: rgba(201, 169, 98, .4);
+    color: #ecd9a6;
+    box-shadow: 0 8px 18px rgba(90, 66, 20, .35), inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) .btn-primary:not(.btn-outline) {
+    background-color: var(--gold-2);
+    background-image: var(--gold-grad);
+    border-color: rgba(255, 244, 214, .45);
+    color: #1a150d;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .55);
 }
 
 /* علامة الاختيار (الراديو): في الوضع الداكن كان style.css بيدّيها خلفية الحقل فتخفي النقطة */
@@ -678,5 +741,8 @@ html .radio:checked { background-color: oklch(var(--p)) !important; border-color
         linear-gradient(165deg, #0d0b08 0%, #1d1913 55%, #3a2f1c 100%);
 }
 
-/* شريط التصفح: المنطقة اللي تحت الصفحة (فوق شريط الجيستشر) بنفس لون الشريط السفلي */
-html:root[data-theme] { background-color: #e6d2a0; }
+/* سحب للتحديث: غامق فوق الخلفية الذهبية */
+html:not(.dark) .ptr-indicator, .ptr-indicator { background: #1a1611; color: #ecd9a6; }
+
+/* شريط التصفح: المنطقة تحت الصفحة بنفس لون الشريط السفلي */
+html:root[data-theme] { background-color: #100d0a; }
