@@ -145,9 +145,11 @@ function exportUsersSheetToExcel() {
 
     // 2. بيانات الصفوف من الـ Inputs الحالية
     const rowsData = [];
-    const rows = table.querySelectorAll('tbody tr');
+    let hiddenCount = 0;
+    const rows = table.querySelectorAll('tbody tr');   // ترتيبها في الصفحة هو ترتيب الفرز الحالي
 
     rows.forEach(row => {
+        if (sheetRowIsHidden(row)) { hiddenCount++; return; }   // الصفوف المخفية بالفلترة ما بتتصدّرش
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         const rowData = [];
         const cells = row.querySelectorAll('td:not(.sheet-num):not(.sheet-actions)');
@@ -160,6 +162,11 @@ function exportUsersSheetToExcel() {
 
         rowsData.push(rowData);
     });
+
+    if (!rowsData.length && hiddenCount > 0) {
+        alert("لا توجد صفوف ظاهرة للتصدير (كل الصفوف مخفية بالفلترة)");
+        return;
+    }
 
     // 3. تجميع البيانات
     const excelData = [headers, ...rowsData];
