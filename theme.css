@@ -1,0 +1,352 @@
+/* =====================================================================
+   theme.css — هوية "الزجاج الفضي" (Liquid Glass)
+   بيتحمّل بعد style.css وبيغطي ألوانه، من غير ما يمس أي ملف تاني.
+   لو عايز ترجع القديم: شيل سطر <link> بتاعه من index.html.
+
+   لوحة الألوان (من الصورة المرجعية):
+   - جرافيت داكن  : الأزرار والهيرو والبطاقة المميزة
+   - فضي / ضباب   : الخلفيات والزجاج
+   - ساج (رمادي مخضر) : التركيز واللمعة
+   - كريمي / شمبانيا : لمسات صغيرة
+   ===================================================================== */
+
+:root {
+    /* بنلغي الرسومات الزخرفية (اللمبة والتروس والفيشة) من أصلها */
+    --floral-bg: none !important;
+
+    --ink: #1c2428;
+    --graphite-1: #232c31;
+    --graphite-2: #3c4a4f;
+    --sage: #8fa8a9;
+    --sage-deep: #5f7b7f;
+    --cream: #f3eee6;
+    --champagne: #d8c6a1;
+
+    --glass: rgba(255, 255, 255, .58);
+    --glass-strong: rgba(255, 255, 255, .8);
+    --glass-border: rgba(255, 255, 255, .78);
+    --glass-shadow: 0 10px 30px rgba(36, 52, 58, .12), 0 2px 6px rgba(36, 52, 58, .06);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, .9);
+    --field-bg: rgba(255, 255, 255, .68);
+    --field-border: rgba(60, 80, 88, .16);
+    --card-solid: rgba(255, 255, 255, .9);
+}
+html.dark {
+    --glass: rgba(40, 50, 56, .58);
+    --glass-strong: rgba(50, 62, 69, .8);
+    --glass-border: rgba(255, 255, 255, .12);
+    --glass-shadow: 0 12px 34px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .2);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, .08);
+    --field-bg: rgba(255, 255, 255, .06);
+    --field-border: rgba(255, 255, 255, .14);
+    --card-solid: rgba(32, 40, 45, .92);
+}
+
+/* =====================================================================
+   ثيمات DaisyUI (فاتح / داكن)
+   ===================================================================== */
+[data-theme="electricity-light"] {
+    --p: 33% 0.025 215;   --pc: 98% 0.008 90;
+    --s: 84% 0.012 220;   --sc: 26% 0.02 215;
+    --a: 80% 0.055 85;    --ac: 28% 0.04 80;
+    --n: 31% 0.022 215;   --nc: 97% 0.006 90;
+    --b1: 99% 0.004 90;   --b2: 96% 0.007 95;   --b3: 91% 0.01 215;   --bc: 27% 0.022 220;
+}
+[data-theme="electricity-dark"] {
+    --p: 92% 0.012 90;    --pc: 24% 0.02 215;
+    --s: 28% 0.02 215;    --sc: 92% 0.01 90;
+    --a: 80% 0.055 85;    --ac: 28% 0.04 80;
+    --n: 36% 0.02 215;    --nc: 96% 0.006 90;
+    --b1: 25% 0.016 220;  --b2: 21% 0.016 220;  --b3: 31% 0.02 220;   --bc: 93% 0.008 90;
+}
+
+/* =====================================================================
+   الخلفية العامة: تدرج ناعم فضي ← كريمي مع لمعات ضبابية
+   ===================================================================== */
+html body.bg-base-100 {
+    background-image:
+        radial-gradient(900px 520px at 90% -8%, rgba(143, 168, 169, .38), transparent 62%),
+        radial-gradient(800px 520px at -10% 108%, rgba(216, 198, 161, .45), transparent 60%),
+        linear-gradient(180deg, #e8ecef 0%, #f2efea 100%);
+    background-attachment: fixed;
+}
+html.dark body.bg-base-100 {
+    background-image:
+        radial-gradient(900px 520px at 90% -8%, rgba(143, 168, 169, .22), transparent 62%),
+        radial-gradient(800px 520px at -10% 108%, rgba(216, 198, 161, .1), transparent 60%),
+        linear-gradient(180deg, #151a1d 0%, #222a2f 100%);
+}
+main.bg-base-100 { background: transparent !important; }
+
+::selection { background: rgba(143, 168, 169, .38); }
+* { scrollbar-width: thin; scrollbar-color: rgba(95, 123, 127, .4) transparent; }
+:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+
+/* =====================================================================
+   شاشات الدخول والافتتاح (الهيرو الداكن بتدرج ساج، زي أعلى الصورة المرجعية)
+   ===================================================================== */
+.teal-floral,
+.auth-screen,
+.auth-screen.intro-screen,
+.splash-overlay {
+    background-color: #263137;
+    background-image:
+        radial-gradient(520px 320px at 85% 0%, rgba(143, 168, 169, .55), transparent 65%),
+        radial-gradient(420px 300px at 5% 100%, rgba(216, 198, 161, .26), transparent 65%),
+        linear-gradient(160deg, #1f282d 0%, #33434a 55%, #5d767b 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+.auth-hero .brand {
+    padding: .6rem 1.2rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .22);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.auth-card {
+    background: var(--card-solid);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    backdrop-filter: blur(22px) saturate(160%);
+    border-top: 1px solid var(--glass-border);
+    box-shadow: 0 -12px 40px rgba(20, 30, 35, .25);
+}
+.auth-avatar {
+    background: linear-gradient(145deg, #f8f4ec, #cdd5d9);
+    color: var(--graphite-2);
+    border-color: var(--card-solid);
+    box-shadow: 0 8px 18px rgba(36, 52, 58, .25), inset 0 1px 0 #fff;
+}
+.auth-foot { background: oklch(var(--b3) / .8); color: oklch(var(--p)); }
+.line-field:focus-within { border-bottom-color: var(--sage-deep); }
+
+.splash-logo {
+    border-radius: 1.75rem;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .28);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+.intro-skip {
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .25);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+.onb-dot.active { background: var(--sage-deep); }
+
+/* =====================================================================
+   القائمة الجانبية: زجاج داكن
+   ===================================================================== */
+#sideMenu {
+    background-color: rgba(28, 37, 42, .8) !important;
+    background-image:
+        radial-gradient(360px 260px at 100% 0%, rgba(143, 168, 169, .4), transparent 65%),
+        radial-gradient(320px 260px at 0% 100%, rgba(216, 198, 161, .18), transparent 65%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+    border-radius: 1.75rem 0 0 1.75rem;
+    border-left: 1px solid rgba(255, 255, 255, .14);
+}
+.side-item {
+    width: calc(100% - 1.5rem);
+    margin: .3rem .75rem;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, .08);
+}
+.side-item:hover { background: rgba(255, 255, 255, .17); }
+.side-search {
+    margin: .75rem;
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+/* =====================================================================
+   الشريط العلوي والسفلي: زجاج
+   ===================================================================== */
+.app-topbar {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    border-bottom: 1px solid var(--glass-border);
+    border-radius: 0 0 1.75rem 1.75rem;
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+.bottom-nav {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    border-top: 1px solid var(--glass-border);
+    border-radius: 1.75rem 1.75rem 0 0;
+    box-shadow: 0 -8px 24px rgba(36, 52, 58, .08), var(--glass-inset);
+}
+.bottom-nav-item:hover, .bottom-nav-item:active { color: oklch(var(--p)); background: oklch(var(--p) / .08); }
+
+/* =====================================================================
+   بطاقات الرئيسية
+   ===================================================================== */
+.dash-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+    transition: transform .22s cubic-bezier(.2, .8, .2, 1), box-shadow .22s, background .22s;
+}
+.dash-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 45%);
+}
+.dash-card > * { position: relative; z-index: 1; }
+.dash-card:hover {
+    background: var(--glass-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 38px rgba(36, 52, 58, .16), var(--glass-inset);
+}
+.dash-card:active { transform: scale(.985); }
+html.dark .dash-card::before { background: linear-gradient(135deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0) 45%); }
+
+.dash-ico {
+    background: linear-gradient(145deg, #ffffff, #d3dadd);
+    color: var(--graphite-2);
+    box-shadow: 0 6px 14px rgba(36, 52, 58, .14), inset 0 1px 0 #fff;
+}
+html.dark .dash-ico { background: linear-gradient(145deg, #4a5a60, #2c373c); color: #eef1f2; box-shadow: 0 6px 14px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .12); }
+
+/* البطاقة المميزة (شراء قطع الغيار): جرافيت بلمعة ساج وشمبانيا */
+.dash-card.feature {
+    background-color: #263137;
+    background-image:
+        radial-gradient(260px 160px at 100% 0%, rgba(216, 198, 161, .42), transparent 70%),
+        radial-gradient(260px 200px at 0% 100%, rgba(143, 168, 169, .5), transparent 70%),
+        linear-gradient(145deg, #232c31, #425257);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 18px 38px rgba(30, 42, 48, .35), inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+.dash-card.feature::before { background: linear-gradient(135deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 50%); }
+.dash-card.feature:hover { background-color: #263137; }
+.dash-card.feature .dash-ico { background: linear-gradient(145deg, #f1e6cb, #d3bf94); color: #263137; }
+
+.home-intro {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.75rem;
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+}
+.home-step { background: var(--glass-strong); border-color: var(--glass-border); color: oklch(var(--p)); }
+.home-step b { background: linear-gradient(145deg, #f1e6cb, #d3bf94); color: #263137; }
+
+/* =====================================================================
+   القوائم والكروت العامة (ماركات / موديلات / قطع غيار / أقسام النتائج)
+   ===================================================================== */
+#appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
+    background: var(--glass);
+    border-color: var(--glass-border);
+    border-radius: 1.5rem;
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(12px) saturate(150%);
+    transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s, background .2s;
+}
+#appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
+    background: var(--glass-strong);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(36, 52, 58, .14), var(--glass-inset);
+}
+
+/* =====================================================================
+   الأزرار والحقول
+   ===================================================================== */
+html .btn-primary {
+    background-color: #2a3338;
+    background-image: linear-gradient(180deg, #43545a, #27323a);
+    border-color: rgba(255, 255, 255, .08);
+    color: #f7f3ec;
+    box-shadow: 0 8px 18px rgba(30, 42, 48, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+html .btn-primary:hover { background-image: linear-gradient(180deg, #4d6067, #2d3a42); }
+html.dark .btn-primary {
+    background-color: #e6e0d4;
+    background-image: linear-gradient(180deg, #f6f1e8, #cdd5d8);
+    color: #1c2428;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+html.dark .btn-primary:hover { background-image: linear-gradient(180deg, #fff9ef, #d9e0e3); }
+
+html .btn-outline.btn-primary {
+    background-color: transparent;
+    background-image: none;
+    color: oklch(var(--p));
+    border-color: oklch(var(--p) / .45);
+    box-shadow: none;
+}
+html .btn-outline.btn-primary:hover { background-color: oklch(var(--p)); color: oklch(var(--pc)); }
+
+html .btn-ghost.bg-base-200 {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-inset);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+html .btn-ghost.bg-base-200:hover { background: var(--glass-strong); }
+
+html .input, html .select, html .textarea {
+    background-color: var(--field-bg);
+    border-color: var(--field-border);
+    border-radius: 1rem;
+}
+html .input:focus, html .select:focus, html .textarea:focus, html .input:focus-within {
+    border-color: var(--sage-deep);
+    box-shadow: 0 0 0 4px rgba(143, 168, 169, .28);
+    outline: none;
+}
+
+.modal-box, .photo-sheet-card {
+    background: var(--card-solid);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    backdrop-filter: blur(22px) saturate(160%);
+}
+
+/* =====================================================================
+   شيت الإكسل: ألوان هادية (فضي / ساج)
+   ===================================================================== */
+html:not(.dark) #editableUsersTable th, html:not(.dark) #editableUsersTable td { border-color: #d6dce0; }
+html:not(.dark) #editableUsersTable th { background-color: #eef1f3; color: #2f3d42; }
+html:not(.dark) .excel-input { color: #1c2428; }
+html:not(.dark) .excel-input:focus {
+    background-color: #f1f5f6 !important;
+    box-shadow: inset 0 0 0 2px #5f7b7f !important;
+}
+html.dark .excel-input:focus { box-shadow: inset 0 0 0 2px #8fa8a9 !important; }
+.drag-handle { background-color: #5f7b7f; }
+
+/* =====================================================================
+   احتياطي: لو المتصفح ما بيدعمش الـ blur، نزوّد كثافة الزجاج
+   ===================================================================== */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root { --glass: rgba(255, 255, 255, .92); --glass-strong: rgba(255, 255, 255, .97); }
+    html.dark { --glass: rgba(40, 50, 56, .95); --glass-strong: rgba(50, 62, 69, .98); }
+    #sideMenu { background-color: rgba(28, 37, 42, .97) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dash-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border { transition: none; }
+    .dash-card:hover, #appContainer :is(.rounded-2xl, .rounded-3xl).border.cursor-pointer:hover { transform: none; }
+}
