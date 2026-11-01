@@ -591,18 +591,24 @@ html:not(.dark) .conn-banner.online { background: #8a6d38; }
    - الأقسام والكروت وعناصر القوائم والشريطين بقوا بلون الخلفية القديمة (أسود دافئ)
    ===================================================================== */
 :root {
-    --page-gold: linear-gradient(170deg, #f6e8c0 0%, #ecd9a6 50%, #e0c88e 100%);
-    --dark-surface: linear-gradient(145deg, #231e16, #100d0a);
-    --dark-bar: linear-gradient(180deg, #1d1913, #100d0a);
-    --dark-edge: rgba(201, 169, 98, .38);
+    --gold-1: #f1dfae;
+    --gold-2: #d9bb77;
+    --gold-3: #b8964f;
+    --gold-grad: linear-gradient(145deg, #f1dfae, #d9bb77);
+    --page-gold: linear-gradient(180deg, #f4efe6 0%, #efe8dc 55%, #e9e0d2 100%);
+    --dark-surface:
+        radial-gradient(260px 150px at 0% 0%, rgba(240, 222, 178, .34), transparent 70%),
+        linear-gradient(235deg, #2b2621 0%, #3d352c 55%, #615443 100%);
+    --dark-bar: linear-gradient(180deg, #3a332b, #26211c);
+    --dark-edge: rgba(214, 190, 140, .35);
 }
 
 /* الخلفية: ذهبي شمبانيا بلمعة فاتحة من فوق */
 html:not(.dark) body.bg-base-100,
 html.dark body.bg-base-100 {
-    background-color: #ecd9a6;
+    background-color: #efe8dc;
     background-image:
-        radial-gradient(760px 460px at 88% -6%, rgba(255, 250, 232, .75), transparent 62%),
+        radial-gradient(760px 460px at 88% -6%, rgba(255, 255, 255, .6), transparent 62%),
         var(--page-gold);
     background-attachment: fixed;
 }
@@ -621,10 +627,10 @@ html.dark #appContainer {
     --glass: rgba(255, 250, 236, .7);
     --glass-strong: rgba(255, 252, 242, .92);
     --glass-border: rgba(255, 255, 255, .7);
-    --glass-shadow: 0 10px 24px rgba(90, 66, 20, .2), 0 2px 6px rgba(90, 66, 20, .1);
+    --glass-shadow: 0 10px 24px rgba(60, 48, 30, .2), 0 2px 6px rgba(60, 48, 30, .1);
     --glass-inset: inset 0 1px 0 rgba(255, 255, 255, .8);
     --field-bg: rgba(255, 255, 255, .7);
-    --field-border: rgba(90, 66, 20, .28);
+    --field-border: rgba(60, 48, 30, .28);
     --card-solid: rgba(250, 245, 230, .96);
 }
 
@@ -648,9 +654,9 @@ html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar),
 html.dark :is(.bottom-nav, #appContainer .app-topbar) {
     background: var(--dark-bar);
     border-color: var(--dark-edge);
-    box-shadow: 0 10px 26px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08);
+    box-shadow: 0 10px 26px rgba(60, 48, 30, .32), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
-html:not(.dark) .bottom-nav, html.dark .bottom-nav { box-shadow: 0 -8px 24px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08); }
+html:not(.dark) .bottom-nav, html.dark .bottom-nav { box-shadow: 0 -8px 24px rgba(60, 48, 30, .32), inset 0 1px 0 rgba(255, 255, 255, .08); }
 /* زرار القائمة فوق الشريط الغامق: ذهبي */
 html:not(.dark) #appContainer .app-topbar .btn-primary:not(.btn-outline),
 html.dark #appContainer .app-topbar .btn-primary:not(.btn-outline) {
@@ -666,19 +672,17 @@ html.dark #appContainer .app-topbar .btn-primary:not(.btn-outline) {
 /* بطاقات الأقسام (الرئيسية): أسود دافئ بلمعة ذهبية */
 html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature,
 html.dark .dash-card, html.dark .dash-card.feature {
-    background-color: #17130e !important;
-    background-image:
-        radial-gradient(240px 140px at 100% 0%, rgba(201, 169, 98, .2), transparent 70%),
-        var(--dark-surface) !important;
+    background-color: #3d352c !important;
+    background-image: var(--dark-surface) !important;
     border: 1px solid var(--dark-edge) !important;
-    box-shadow: 0 12px 26px rgba(90, 66, 20, .32), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    box-shadow: 0 12px 26px rgba(60, 48, 30, .32), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
     color: #f3ead2 !important;
 }
 html:not(.dark) .dash-card:hover, html:not(.dark) .dash-card.feature:hover,
-html.dark .dash-card:hover, html.dark .dash-card.feature:hover { background-color: #1d1913 !important; }
+html.dark .dash-card:hover, html.dark .dash-card.feature:hover { background-color: #463d33 !important; }
 html:not(.dark) .dash-card::before, html:not(.dark) .dash-card.feature::before,
 html.dark .dash-card::before, html.dark .dash-card.feature::before {
-    background: linear-gradient(135deg, rgba(236, 217, 166, .12), rgba(236, 217, 166, 0) 45%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, 0) 45%);
 }
 html:not(.dark) .dash-card *:not(.dash-ico), html.dark .dash-card *:not(.dash-ico) { color: inherit !important; }
 /* أيقونة البطاقة: مربع ذهبي بأيقونة غامقة */
@@ -692,32 +696,34 @@ html.dark .dash-ico, html.dark .dash-card .dash-ico, html.dark .dash-card.featur
 
 /* عناصر القوائم (أبل، سامسونج، شاشة، خيارات الإعدادات...): أسود دافئ */
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
-    background-color: #17130e;
+    background-color: #3d352c;
     background-image: var(--dark-surface);
     border-color: var(--dark-edge);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    box-shadow: 0 10px 22px rgba(90, 66, 20, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
+    box-shadow: 0 10px 22px rgba(60, 48, 30, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
-    background-color: #1d1913;
-    background-image: linear-gradient(145deg, #2c251a, #15110c);
-    box-shadow: 0 14px 28px rgba(90, 66, 20, .36), inset 0 1px 0 rgba(255, 255, 255, .1);
+    background-color: #463d33;
+    background-image:
+        radial-gradient(260px 150px at 0% 0%, rgba(240, 222, 178, .42), transparent 70%),
+        linear-gradient(235deg, #332d26 0%, #4a4136 55%, #70624e 100%);
+    box-shadow: 0 14px 28px rgba(60, 48, 30, .36), inset 0 1px 0 rgba(255, 255, 255, .1);
 }
 /* العنصر المختار (زي خيار المظهر الحالي): إطار ذهبي واضح */
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border.border-primary\/60:is(.bg-base-100, .bg-base-200) {
     border-color: #ecd9a6;
-    box-shadow: 0 0 0 2px rgba(236, 217, 166, .55), 0 10px 22px rgba(90, 66, 20, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
+    box-shadow: 0 0 0 2px rgba(236, 217, 166, .55), 0 10px 22px rgba(60, 48, 30, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
 /* الأزرار الرئيسية على الخلفية الذهبية: أسود بنص ذهبي، وجوّه الأسطح الغامقة تفضل ذهبية */
 html:not(.dark) #appContainer .btn-primary:not(.btn-outline),
 html.dark #appContainer .btn-primary:not(.btn-outline) {
-    background-color: #1a1611;
-    background-image: linear-gradient(180deg, #2b251c, #14110d);
+    background-color: #2f2a24;
+    background-image: linear-gradient(180deg, #4a4136, #2b2621);
     border-color: rgba(201, 169, 98, .4);
     color: #ecd9a6;
-    box-shadow: 0 8px 18px rgba(90, 66, 20, .35), inset 0 1px 0 rgba(255, 255, 255, .1);
+    box-shadow: 0 8px 18px rgba(60, 48, 30, .35), inset 0 1px 0 rgba(255, 255, 255, .1);
 }
 html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) .btn-primary:not(.btn-outline) {
     background-color: var(--gold-2);
@@ -737,12 +743,20 @@ html .radio:checked { background-color: oklch(var(--p)) !important; border-color
 .auth-screen.intro-screen,
 .splash-overlay {
     background-image:
-        radial-gradient(520px 320px at 88% 0%, rgba(201, 169, 98, .3), transparent 65%),
-        linear-gradient(165deg, #0d0b08 0%, #1d1913 55%, #3a2f1c 100%);
+        radial-gradient(520px 320px at 88% 0%, rgba(240, 222, 178, .28), transparent 65%),
+        linear-gradient(165deg, #2b2621 0%, #3d352c 55%, #6a5d4b 100%);
 }
 
 /* سحب للتحديث: غامق فوق الخلفية الذهبية */
-html:not(.dark) .ptr-indicator, .ptr-indicator { background: #1a1611; color: #ecd9a6; }
+html:not(.dark) .ptr-indicator, .ptr-indicator { background: #2f2a24; color: #ecd9a6; }
 
 /* شريط التصفح: المنطقة تحت الصفحة بنفس لون الشريط السفلي */
-html:root[data-theme] { background-color: #100d0a; }
+html:root[data-theme] { background-color: #26211c; }
+
+/* القائمة الجانبية: بدرجة البانر بدل الأسود التقيل */
+#sideMenu {
+    background-color: rgba(48, 41, 34, .94) !important;
+    background-image:
+        radial-gradient(360px 260px at 100% 0%, rgba(240, 222, 178, .26), transparent 65%),
+        radial-gradient(320px 260px at 0% 100%, rgba(240, 222, 178, .1), transparent 65%);
+}
