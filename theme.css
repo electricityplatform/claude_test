@@ -377,31 +377,31 @@ html:not(.dark) :is(.dash-card, .home-intro, .modal-box, .photo-sheet-card, .aut
     --n: 31% 0.022 215;   --nc: 97% 0.006 90;
     --b1: 99% 0.004 90;   --b2: 96% 0.007 95;   --b3: 91% 0.01 215;   --bc: 27% 0.022 220;
 
-    --glass: rgba(247, 246, 242, .94);
-    --glass-strong: rgba(255, 255, 255, .98);
+    --glass: rgba(238, 242, 243, .95);
+    --glass-strong: rgba(247, 249, 250, .98);
     --glass-border: rgba(255, 255, 255, .6);
     --glass-shadow: 0 12px 28px rgba(0, 0, 0, .26), 0 2px 6px rgba(0, 0, 0, .12);
     --glass-inset: inset 0 1px 0 #fff;
     --field-bg: rgba(255, 255, 255, .78);
     --field-border: rgba(60, 80, 88, .16);
-    --card-solid: rgba(248, 246, 241, .97);
+    --card-solid: rgba(241, 244, 245, .97);
 }
-html:not(.dark) #editableUsersTable { background: #f7f6f2; color: #1c2428; }
+html:not(.dark) #editableUsersTable { background: #f1f4f5; color: #1c2428; }
 
 /* بطاقات الرئيسية: كلها فاتحة (حتى المميزة، بلمسة شمبانيا خفيفة) */
 html:not(.dark) .dash-card,
 html:not(.dark) .dash-card.feature {
-    background-color: #f7f6f2 !important;
-    background-image: none !important;
+    background-color: #eef2f3 !important;
+    background-image: linear-gradient(145deg, #f6f8f8, #dfe6e8) !important;
     border: 1px solid rgba(255, 255, 255, .6) !important;
     box-shadow: var(--glass-shadow), var(--glass-inset) !important;
     color: #1c2428 !important;
 }
 html:not(.dark) .dash-card.feature {
-    background-image: linear-gradient(145deg, #fcf8ee, #efe6d2) !important;
+    background-image: linear-gradient(145deg, #f3f6f6, #d3dcdf) !important;
 }
 html:not(.dark) .dash-card:hover,
-html:not(.dark) .dash-card.feature:hover { background-color: #fff !important; }
+html:not(.dark) .dash-card.feature:hover { background-color: #f6f9f9 !important; }
 html:not(.dark) .dash-card::before,
 html:not(.dark) .dash-card.feature::before {
     background: linear-gradient(135deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0) 45%);
@@ -409,10 +409,12 @@ html:not(.dark) .dash-card.feature::before {
 html:not(.dark) .dash-card *:not(.dash-ico) { color: inherit !important; }
 html:not(.dark) .dash-card .dash-ico,
 html:not(.dark) .dash-card.feature .dash-ico {
-    background: linear-gradient(145deg, #f1e6cb, #d3bf94);
+    background: linear-gradient(145deg, #f7fafa, #b4c4c7);
     color: #263137;
-    box-shadow: 0 6px 14px rgba(36, 52, 58, .18), inset 0 1px 0 rgba(255, 255, 255, .6);
+    box-shadow: 0 6px 14px rgba(36, 52, 58, .2), inset 0 1px 0 rgba(255, 255, 255, .8);
 }
+
+html:not(.dark) .home-step b { background: linear-gradient(145deg, #f7fafa, #b4c4c7); color: #263137; }
 
 /* الأزرار: كريمي على المنطقة الغامقة، جرافيت جوّه الأسطح الفاتحة */
 html:not(.dark) #appContainer .btn-primary:not(.btn-outline) {
