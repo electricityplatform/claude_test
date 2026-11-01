@@ -3,11 +3,13 @@
 function getHeaderTemplate(showSearch = false) {
     const initial = currentUserName ? escapeHtmlValue(String(currentUserName).trim().charAt(0)) : '';
 
+    const avatarHtml = typeof profileAvatarHtml === 'function'
+        ? profileAvatarHtml()
+        : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${initial}</span></div></div>`;
+
     const userInfoHtml = currentUserId && currentUserName ? `
         <div class="flex items-center gap-2 min-w-0 max-w-full" title="${escapeHtmlValue(currentUserPhone || '')}">
-            <div class="avatar placeholder flex-shrink-0">
-                <div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${initial}</span></div>
-            </div>
+            <button type="button" class="user-avatar-btn flex-shrink-0" onclick="openProfilePhotoSheet()" aria-label="الصورة الشخصية">${avatarHtml}</button>
             <div class="min-w-0 leading-tight flex-1">
                 <div class="text-sm font-bold truncate" dir="auto">${escapeHtmlValue(currentUserName)}</div>
                 <div class="flex gap-2 text-xs text-base-content/60 min-w-0 flex-wrap">
