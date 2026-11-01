@@ -93,6 +93,7 @@ async function handleLoginSubmit(e) {
     startHeartbeat();
     renderMainDashboard();
     loadDynamicMenuIntoSidebar();
+    if (typeof loadProfilePhoto === 'function') loadProfilePhoto();
 }
 
 function loginAsVisitor() {
@@ -120,6 +121,7 @@ function logoutUser() {
     currentUserName = "";
     currentUserPhone = "";
     clearSession();
+    if (typeof resetProfilePhoto === 'function') resetProfilePhoto();
 
     renderLoginScreen();
 }
@@ -180,6 +182,7 @@ function restoreSession() {
     renderMainDashboard();
     loadDynamicMenuIntoSidebar();
     refreshSessionProfile();    // تحديث الاسم والدور في الخلفية
+    if (typeof loadProfilePhoto === 'function') loadProfilePhoto();
     return true;
 }
 
