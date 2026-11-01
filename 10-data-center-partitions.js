@@ -387,13 +387,20 @@ function exportPartitionsSheetToExcel() {
     // عمود/خلايا الإجراءات مش بتتصدّر، والعناوين بأسماء الأعمدة الحقيقية
     const headers = Array.from(table.querySelectorAll('thead th[data-col]')).map(th => th.getAttribute('data-col'));
     const rowsData = [];
+    let hiddenCount = 0;
     table.querySelectorAll('tbody tr').forEach(row => {
+        if (sheetRowIsHidden(row)) { hiddenCount++; return; }
         if (!row.hasAttribute('data-id') && !Array.from(row.querySelectorAll('.excel-input')).some(i => i.value.trim() !== '')) return;
         rowsData.push(Array.from(row.querySelectorAll('td:not(.sheet-actions):not(.sheet-id-dup)')).map(td => {
             const input = td.querySelector('.excel-input');
             return input ? input.value : td.innerText.trim();
         }));
     });
+
+    if (!rowsData.length && hiddenCount > 0) {
+        alert("لا توجد صفوف ظاهرة للتصدير (كل الصفوف مخفية بالفلترة)");
+        return;
+    }
 
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rowsData]);
     const workbook = XLSX.utils.book_new();
