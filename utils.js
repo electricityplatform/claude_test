@@ -334,6 +334,19 @@ function applyFloralBackgrounds() {}
         return !!sb && !sb.classList.contains('translate-x-full');
     }
 
+    // بيقفل أعلى نافذة مفتوحة (نافذة الصورة الشخصية أو القائمة الجانبية). بيرجّع true لو قفل حاجة.
+    function closeTopOverlay() {
+        if (document.getElementById('photoSheet') && typeof closeProfilePhotoSheet === 'function') {
+            closeProfilePhotoSheet();
+            return true;
+        }
+        if (sidebarOpen()) {
+            toggleSidebar();
+            return true;
+        }
+        return false;
+    }
+
     // أول ضغطة من المستخدم: نضيف خطوة "حارس" ورا الرئيسية، عشان زر الرجوع يوصل لينا حتى وإحنا في الرئيسية (مثلاً والقائمة مفتوحة)
     // بنعملها وقت الضغطة (مش وقت تحميل الصفحة) لأن كروم بيتجاهل الخطوات اللي بتتضاف من غير تفاعل من المستخدم.
     function addGuard() {
@@ -408,8 +421,7 @@ function applyFloralBackgrounds() {}
         if (!st || st.sid !== SID) { history.back(); return; }   // خطوات قديمة من تحميل سابق للصفحة
 
         // القائمة الجانبية مفتوحة: نقفلها بس ونفضل في نفس الشاشة، ونرجّع الخطوة اللي اتشالت
-        if (sidebarOpen()) {
-            toggleSidebar();
+        if (closeTopOverlay()) {
             history.pushState({ d: navDepth, sid: SID }, '');
             return;
         }
