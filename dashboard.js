@@ -79,7 +79,7 @@ async function renderMainDashboard() {
     currentFlow = 'buy';
     const html = `
         ${getHeaderTemplate()}
-        <div class="flex-1 overflow-y-auto px-1">
+        <div class="flex-1 overflow-y-auto home-scroll">
             ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
             <div id="partitionsContainer" class="pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
