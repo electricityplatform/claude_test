@@ -23,6 +23,7 @@ const UI_ICON_PATHS = {
     cog: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
     tag: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
     device: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
+    store: 'M3 10h18M5 10v10h14V10M4 10l1-6h14l1 6',
     logout: 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
 };
 
@@ -179,17 +180,17 @@ function emptyTableRowHtml(colspan, message) {
 }
 
 
-// ================= خلفية كهربائية (صواعق وتروس ولمبات ودوائر على فضي) =================
+// ================= خلفية كهربائية (صواعق وتروس ولمبات ودوائر على تيل) =================
 // الاسم floralBgSvg محفوظ عشان باقي الملفات بتستدعيه.
 function floralBgSvg() {
-    const C = '#f2b705', L = '#ffd95a', W = '#ffffff';
+    const C = '#f4a58a', L = '#f7c0ab', W = '#ffffff';
     const bolt = (x, y, r, s, c) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="${c}"/></g>`;
-    const gear = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}" fill-opacity=".9">${[0,45,90,135].map(a => `<rect x="-5" y="-22" width="10" height="44" rx="3" transform="rotate(${a})"/>`).join('')}<circle r="15"/><circle r="6" fill="#b9bfc9"/></g>`;
+    const gear = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}" fill-opacity=".9">${[0,45,90,135].map(a => `<rect x="-5" y="-22" width="10" height="44" rx="3" transform="rotate(${a})"/>`).join('')}<circle r="15"/><circle r="6" fill="#027f8a"/></g>`;
     const bulb = (x, y, r, s, c) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M0-22a15 15 0 0 1 9 27v6h-18v-6a15 15 0 0 1 9-27z" fill="${c}"/><rect x="-7" y="13" width="14" height="5" rx="2" fill="#fff" fill-opacity=".85"/><rect x="-5" y="19" width="10" height="4" rx="2" fill="#fff" fill-opacity=".85"/></g>`;
     const plug = (x, y, r, s, c) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><rect x="-6" y="-26" width="4" height="14" rx="2" fill="${c}"/><rect x="2" y="-26" width="4" height="14" rx="2" fill="${c}"/><rect x="-12" y="-12" width="24" height="18" rx="6" fill="${c}"/><path d="M0 6v14c0 6 8 6 8 12" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round"/></g>`;
-    const circuit = (d) => `<path d="${d}" stroke="#fff" stroke-opacity=".55" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const node = (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="#fff" fill-opacity=".7"/>`;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4e7ec"/><stop offset=".5" stop-color="#b9bfc9"/><stop offset="1" stop-color="#98a0ac"/></linearGradient></defs><rect width="400" height="600" fill="url(#sg)"/>` +
+    const circuit = (d) => `<path d="${d}" stroke="#fff" stroke-opacity=".22" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const node = (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="#fff" fill-opacity=".35"/>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><rect width="400" height="600" fill="#027f8a"/>` +
         circuit('M0 90H70L100 60H190') + circuit('M400 140H330L300 170V230') + circuit('M0 420H60L90 450H150') + circuit('M400 480H320L290 510H230') +
         node(190, 60) + node(300, 230) + node(150, 450) + node(230, 510) +
         bolt(60, 130, -15, 2.2, C) + bolt(350, 70, 12, 1.5, L) + bolt(330, 340, 10, 2.4, C) + bolt(40, 330, -12, 1.3, L) +
