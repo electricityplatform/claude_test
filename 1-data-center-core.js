@@ -25,6 +25,11 @@ function isDataCenterRowManager() {
     return DATA_CENTER_ROW_MANAGER_ROLES.includes(String(currentUserRole || '').trim());
 }
 
+// الصف مخفي بالفلترة؟ (الفلترة بتخفي الصفوف بس، فالتصدير بيستخدم الدالة دي عشان يصدّر الظاهر بس)
+function sheetRowIsHidden(row) {
+    return row.style.display === 'none' || row.hidden === true || row.classList.contains('hidden');
+}
+
 function escapeHtmlValue(val) {
     return String(val === null || val === undefined ? '' : val)
         .replace(/&/g, '&amp;')
