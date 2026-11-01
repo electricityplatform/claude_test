@@ -19,7 +19,11 @@
         (function () {
             var root = document.documentElement;
             function sync() {
-                root.setAttribute('data-theme', root.classList.contains('dark') ? 'electricity-dark' : 'electricity-light');
+                var dark = root.classList.contains('dark');
+                root.setAttribute('data-theme', dark ? 'electricity-dark' : 'electricity-light');
+                // لون شريط المتصفح (بيتغيّر مع الوضع)
+                var m = document.querySelector('meta[name="theme-color"]');
+                if (m) m.setAttribute('content', dark ? '#1b1b1e' : '#3a332b');
             }
             sync();
             new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['class'] });
@@ -66,7 +70,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
     <link rel="stylesheet" href="style.css?v=20261101-2">
-    <link rel="stylesheet" href="theme.css?v=20261102-4">
+    <link rel="stylesheet" href="theme.css?v=20261102-5">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
