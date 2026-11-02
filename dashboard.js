@@ -19,6 +19,7 @@ function startCompatFlow() {
 // الترتيب مهم (نفس ترتيب الشروط القديم): "شراء قطع الغيار" لازم قبل "قطع الغيار".
 function partitionMeta(name) {
     const n = String(name);
+    if (n.includes('بحث بالكاميرا')) return { action: `alert(${jsArg('جارِ فتح الكاميرا للمسح الضوئي...')})`, icon: 'camera', desc: '' };
     if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار' };
     if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار' };
     if (n.includes('شراء قطع الغيار')) return { action: 'renderBrandsScreen()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true };
@@ -26,21 +27,29 @@ function partitionMeta(name) {
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
     if (n.includes('الموديلات')) return { action: "renderModelsScreen('Samsung')", icon: 'device', desc: '' };
     if (n.includes('محلات الصيانة')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'cog', desc: '' };
-    if (n.includes('منافذ البيع') || n.includes('متاجر البيع')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'store', desc: '' };
+    if (n.includes('منافذ البيع') || n.includes('متاجر')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'store', desc: '' };
     return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'bolt', desc: '' };
 }
 
-// ================= أركان الشاشة الرئيسية =================
-// كل ركن: عنوان + الأقسام اللي تحته (بالترتيب). الاسم بيتطابق بـ includes زي partitionMeta.
-const HOME_GROUPS = [
-    { title: 'من أجلك', items: ['محلات الصيانة', 'منافذ البيع', 'متاجر البيع'] },
-    { title: 'التسوق',  items: ['شراء قطع الغيار'] },
-    { title: 'التقنية', items: ['التوافقات', 'تنبيهات الصيانة'] },
-    { title: 'خدمات',   items: ['جهز متجرك'] }
+// ================= تقسيمة الشاشة الرئيسية =================
+// كل صف: الأقسام اللي فيه جنب بعض (الاسم بيتطابق بـ includes زي partitionMeta).
+// { static: 'اسم' } = كارت ثابت مش جاي من قاعدة البيانات.
+const HOME_ROWS = [
+    ['شراء قطع الغيار'],
+    ['التوافقات', { static: 'بحث بالكاميرا' }],
+    ['تنبيهات الصيانة', 'جهز متجرك'],
+    ['محلات الصيانة', 'متاجر']
 ];
 
-function partitionCardHtml(name) {
+function partitionCardHtml(name, compact) {
     const m = partitionMeta(name);
+    if (compact) {
+        return `
+        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral compact">
+            <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
+            <h3 class="font-bold" dir="auto">${escapeHtmlValue(name)}</h3>
+        </button>`;
+    }
     return `
         <button type="button" onclick="${m.action}" class="dash-card feature teal-floral">
             <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
@@ -52,26 +61,26 @@ function partitionCardHtml(name) {
         </button>`;
 }
 
-// بيوزّع الأقسام على الأركان. أي قسم مش متسجّل في HOME_GROUPS بيظهر في ركن "أخرى" في الآخر.
+// بيوزّع الأقسام على الصفوف. أي قسم مش متسجّل في HOME_ROWS بيظهر في صفوف إضافية في الآخر (اتنين جنب بعض).
 function groupedPartitionsHtml(list) {
     const used = new Set();
-    const sections = HOME_GROUPS.map(g => {
+    const rows = HOME_ROWS.map(row => {
         const names = [];
-        g.items.forEach(key => {
+        row.forEach(key => {
+            if (typeof key === 'object') { names.push(key.static); return; }
             list.forEach((name, i) => {
                 if (!used.has(i) && String(name).includes(key)) { used.add(i); names.push(name); }
             });
         });
-        return { title: g.title, names };
+        return names;
     });
     const rest = list.filter((_, i) => !used.has(i));
-    if (rest.length) sections.push({ title: 'أخرى', names: rest });
+    for (let i = 0; i < rest.length; i += 2) rows.push(rest.slice(i, i + 2));
 
-    return sections.filter(s => s.names.length).map(s => `
-        <section class="dash-group">
-            <h2 class="dash-group-title">${escapeHtmlValue(s.title)}</h2>
-            <div class="dash-grid">${s.names.map(partitionCardHtml).join('')}</div>
-        </section>`).join('');
+    return rows.filter(r => r.length).map(names => {
+        const compact = names.length > 1;
+        return `<div class="dash-row ${compact ? 'two' : 'one'}">${names.map(n => partitionCardHtml(n, compact)).join('')}</div>`;
+    }).join('');
 }
 
 // ================= الشاشة الرئيسية =================
