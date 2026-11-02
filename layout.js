@@ -7,18 +7,10 @@ function getHeaderTemplate(showSearch = false) {
         ? profileAvatarHtml()
         : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${initial}</span></div></div>`;
 
-    const userInfoHtml = currentUserId && currentUserName ? `
-        <div class="flex items-center gap-2 min-w-0 max-w-full" title="${escapeHtmlValue(currentUserPhone || '')}">
-            <button type="button" class="user-avatar-btn flex-shrink-0" onclick="openProfilePhotoSheet()" aria-label="الصورة الشخصية">${avatarHtml}</button>
-            <div class="min-w-0 leading-tight flex-1">
-                <div class="text-sm font-bold truncate" dir="auto">${escapeHtmlValue(currentUserName)}</div>
-                <div class="flex gap-2 text-xs text-base-content/60 min-w-0 flex-wrap">
-                    <span dir="auto">${escapeHtmlValue(currentUserRole || '')}</span>
-                    <span class="font-mono" dir="ltr">${escapeHtmlValue(currentUserPhone || '')}</span>
-                </div>
-            </div>
-        </div>
-    ` : '';
+    // الصورة الشخصية على الطرف الشمال بنفس حجم زر القائمة (لو مفيش مستخدم: مساحة فاضية عشان اللوجو يفضل في النص)
+    const userBtnHtml = currentUserId && currentUserName
+        ? `<button type="button" class="user-avatar-btn flex-shrink-0" onclick="openProfilePhotoSheet()" aria-label="الصورة الشخصية" title="${escapeHtmlValue(currentUserName)}${currentUserPhone ? ' - ' + escapeHtmlValue(currentUserPhone) : ''}">${avatarHtml}</button>`
+        : `<span class="topbar-user-spacer" aria-hidden="true"></span>`;
 
     return `
         <header class="app-topbar flex-shrink-0">
@@ -28,11 +20,11 @@ function getHeaderTemplate(showSearch = false) {
                         ${uiIcon('menu', 'w-5 h-5')}
                     </button>
                 </div>
-                <div class="flex-none gap-2">
+                <div class="flex flex-1 min-w-0 items-center justify-center gap-2.5 topbar-center">
+                    <span class="topbar-brand">ELECTRICITY</span>
                     <span class="brand-chip">${logoImg()}</span>
-                    <span class="text-xl font-bold tracking-tight">Electricity</span>
                 </div>
-                <div class="flex flex-1 min-w-0 justify-end">${userInfoHtml}</div>
+                <div class="flex-none">${userBtnHtml}</div>
             </div>
 
             ${showSearch ? `
