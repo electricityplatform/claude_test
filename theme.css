@@ -969,3 +969,93 @@ html.dark:root[data-theme] { background-color: #111113; }
 .app-topbar .user-avatar-btn img { width: 2.4rem !important; height: 2.4rem !important; }
 .app-topbar .user-avatar-btn img { object-fit: cover; border-radius: 9999px; }
 @media (min-width: 900px) { .topbar-brand { font-size: 1.25rem; } .app-topbar .topbar-center .logo-img { height: 1.9rem; } }
+
+/* =====================================================================
+   هيرو الشاشة الرئيسية (hero.js)
+   ===================================================================== */
+.hero { --h-gold:#e8c97a; --h-cream:#f6f1e7; position:relative; height:17.5rem; margin-bottom:1rem; border-radius:2rem; overflow:hidden; isolation:isolate; color:var(--h-cream); background:linear-gradient(145deg,#2a2318 0%,#3b3326 55%,#2a2318 100%); border:1px solid rgba(232,201,122,.35); box-shadow:0 .6rem 1.6rem rgba(0,0,0,.25); }
+.hero::before, .hero::after { content:""; position:absolute; border-radius:50%; filter:blur(30px); opacity:.35; z-index:-1; animation:heroOrb 14s ease-in-out infinite alternate; }
+.hero::before { width:12rem; height:12rem; background:#e8c97a; top:-4rem; right:-3rem; }
+.hero::after { width:10rem; height:10rem; background:#8a6d3b; bottom:-4rem; left:-2rem; animation-delay:-6s; }
+@keyframes heroOrb { to { transform:translate(2rem,1.5rem) scale(1.2); } }
+.hero-bg { position:absolute; inset:0; z-index:-1; opacity:.5; background-image:radial-gradient(rgba(232,201,122,.2) 1px,transparent 1px); background-size:1.4rem 1.4rem; -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); animation:heroGrid 9s linear infinite; }
+@keyframes heroGrid { to { background-position:1.4rem 1.4rem; } }
+
+.hero-slide { position:absolute; inset:0 0 1.9rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; padding:1rem 1rem 0; text-align:center; opacity:0; visibility:hidden; transform:translateY(.6rem); transition:opacity .6s, transform .6s, visibility .6s; }
+.hero-slide.active { opacity:1; visibility:visible; transform:none; }
+.hero-slide:not(.active) * { animation-play-state:paused !important; }
+.hero-kicker { font-size:.8rem; color:var(--h-gold); }
+.hero-cap { font-size:.9rem; color:var(--h-gold); font-weight:600; }
+.hero-brand { font-weight:500; letter-spacing:.3em; font-size:1.05rem; }
+.hero-tag { font-size:.85rem; opacity:.85; }
+
+/* 1) تركيب اللوجو */
+.hero-stage { background:var(--h-cream); border-radius:1.3rem; padding:.7rem .9rem; box-shadow:0 .5rem 1.2rem rgba(0,0,0,.3); animation:heroFloat 4s ease-in-out infinite; }
+@keyframes heroFloat { 50% { transform:translateY(-.25rem); } }
+.hero-assemble { position:relative; width:8.6rem; aspect-ratio:627/450; }
+.hp { position:absolute; display:block; height:auto; user-select:none; -webkit-user-drag:none; }
+.hp-line { left:0; top:91.78%; width:100%; }
+.hp-back { left:3.67%; top:.22%; width:32.54%; }
+.hp-screen { left:24.4%; top:28.44%; width:38.92%; }
+.hp-board { left:46.41%; top:64.67%; width:50.08%; }
+.hero-slide.active .hp-line { animation:hpLine .8s .1s both cubic-bezier(.2,.8,.2,1); }
+.hero-slide.active .hp-back { animation:hpDrop .8s .35s both cubic-bezier(.2,.8,.2,1); }
+.hero-slide.active .hp-screen { animation:hpRight .8s .75s both cubic-bezier(.2,.8,.2,1); }
+.hero-slide.active .hp-board { animation:hpLeft .8s 1.15s both cubic-bezier(.2,.8,.2,1); }
+@keyframes hpLine { from { transform:scaleX(0); opacity:0; } }
+@keyframes hpDrop { from { transform:translateY(-70%); opacity:0; } }
+@keyframes hpRight { from { transform:translateX(90%); opacity:0; } }
+@keyframes hpLeft { from { transform:translateX(-90%); opacity:0; } }
+
+/* 2) معرض شاشات بيلف */
+.hero-stage3d { position:relative; width:100%; height:10.4em; font-size:1rem; display:flex; align-items:center; justify-content:center; perspective:55em; perspective-origin:50% 30%; }
+.hero-stage3d::after { content:""; position:absolute; bottom:.1em; left:50%; width:12em; height:1.6em; margin-left:-6em; border-radius:50%; background:radial-gradient(rgba(232,201,122,.32),transparent 70%); }
+.hero-ring { position:relative; width:4.4em; height:7.4em; margin-bottom:1em; transform-style:preserve-3d; animation:heroSpin 22s linear infinite; }
+@keyframes heroSpin { from { transform:rotateX(-5deg) rotateY(0deg); } to { transform:rotateX(-5deg) rotateY(-360deg); } }
+.hero-panel { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5em; border-radius:.9em; border:.12em solid rgba(232,201,122,.7); background:linear-gradient(160deg,#4a3f2c,#1f1a12); box-shadow:inset 0 0 1.2em rgba(232,201,122,.15), 0 0 1.4em rgba(232,201,122,.12); transform:rotateY(calc(var(--i) * 45deg)) translateZ(5.6em); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.hero-panel::before { content:""; position:absolute; bottom:-1.35em; left:50%; width:2.2em; height:.3em; margin-left:-1.1em; border-radius:1em; background:#c9a24d; }
+.hero-panel::after { content:""; position:absolute; bottom:-1.1em; left:50%; width:.3em; height:1.1em; margin-left:-.15em; background:linear-gradient(#c9a24d,#6d5a30); z-index:-1; }
+.hp-notch { position:absolute; top:.45em; width:1.2em; height:.2em; border-radius:1em; background:rgba(246,241,231,.5); }
+.hp-ico { width:2.4em; height:2.4em; border-radius:50%; display:grid; place-items:center; background:linear-gradient(135deg,#f3dc9b,#c9a24d); color:#1a150d; flex-shrink:0; }
+.hero-panel .hp-ico svg { width:1.2em; height:1.2em; }
+.hp-label { font-size:.68em; line-height:1.25; padding:0 .3em; font-weight:600; }
+
+/* 3) الأرقام */
+.hero-stats { display:flex; gap:1.2rem; justify-content:center; }
+.hero-stat { display:flex; flex-direction:column; align-items:center; min-width:4.2rem; }
+.hero-stat b { font-size:2.3rem; font-weight:800; line-height:1.15; background:linear-gradient(180deg,#fff2c4,#d9b45a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero-stat span { font-size:.85rem; opacity:.85; }
+.hero-slide.active .hero-stat { animation:heroPop .6s both; animation-delay:calc(var(--d) * 140ms); }
+@keyframes heroPop { from { transform:translateY(.8rem) scale(.85); opacity:0; } }
+
+/* 4) الخدمات */
+.hero-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; width:100%; max-width:30rem; }
+.hero-tile { display:flex; flex-direction:column; align-items:center; gap:.4rem; padding:.7rem .3rem; border-radius:1.1rem; background:rgba(246,241,231,.07); border:1px solid rgba(232,201,122,.3); font-size:.7rem; line-height:1.25; }
+.hero-tile .hp-ico { width:2.4rem; height:2.4rem; }
+.hero-slide.active .hero-tile { animation:heroPop .55s both; animation-delay:calc(var(--d) * 150ms); }
+
+/* النقط */
+.hero-dots { position:absolute; bottom:.65rem; left:0; right:0; display:flex; justify-content:center; gap:.4rem; }
+.hero-dot { position:relative; width:.45rem; height:.45rem; padding:0; border:0; border-radius:1rem; background:rgba(246,241,231,.35); transition:width .3s, background .3s; }
+.hero-dot::before { content:""; position:absolute; inset:-.6rem -.25rem; }
+.hero-dot.active { width:1.3rem; background:var(--h-gold); }
+
+@media (min-width: 900px) {
+    .hero { height:22rem; border-radius:2.2rem; }
+    .hero-slide { inset:0 0 2.2rem; gap:.8rem; }
+    .hero-kicker { font-size:1rem; }
+    .hero-cap { font-size:1.15rem; }
+    .hero-brand { font-size:1.5rem; }
+    .hero-tag { font-size:1.05rem; }
+    .hero-assemble { width:11rem; }
+    .hero-stage3d { font-size:1.45rem; }
+    .hero-stats { gap:3rem; }
+    .hero-stat b { font-size:3.4rem; }
+    .hero-stat span { font-size:1.05rem; }
+    .hero-tiles { max-width:46rem; gap:1rem; }
+    .hero-tile { font-size:.95rem; padding:1.1rem .5rem; }
+    .hero-tile .hp-ico { width:3.2rem; height:3.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero *, .hero::before, .hero::after { animation:none !important; }
+}
