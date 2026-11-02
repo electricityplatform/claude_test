@@ -935,6 +935,12 @@ html.dark:root[data-theme] { background-color: #111113; }
 #partitionsContainer .dash-row.two { grid-template-columns: 1fr 1fr; }
 #partitionsContainer .dash-row .dash-card { min-width: 0; }
 #partitionsContainer .dash-row.one .dash-card { padding: 1.1rem 1.2rem; }
-#partitionsContainer .dash-card.compact { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: .55rem; padding: .9rem .6rem; min-height: 6.6rem; }
-#partitionsContainer .dash-card.compact h3 { font-size: .95rem; line-height: 1.3; }
+#appContainer .dash-card.compact { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: .55rem; padding: .9rem .6rem; min-height: 6.6rem; }
+#appContainer .dash-card.compact h3 { font-size: .95rem; line-height: 1.3; }
 @media (min-width: 900px) { #partitionsContainer .dash-row { max-width: 60rem; } }
+
+/* الماركات وقطع الغيار: نفس تقسيمة الأقسام (اتنين جنب بعض) */
+.dash-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding-bottom: .75rem; }
+.dash-grid2 > .dash-card { min-width: 0; }
+.dash-grid2 > .dash-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (min-width: 900px) { .dash-grid2 { grid-template-columns: repeat(4, 1fr); max-width: 60rem; } }
