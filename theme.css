@@ -1072,3 +1072,35 @@ html:has(#appContainer .app-topbar) #appContainer > .overflow-y-auto,
 html:has(#appContainer .app-topbar) #appContainer > .home-scroll { flex:none !important; overflow:visible !important; }
 html:has(#appContainer .app-topbar) .app-topbar { position:sticky; top:0; z-index:40; }
 html:has(#appContainer .app-topbar) .bottom-nav { position:sticky; bottom:0; z-index:40; }
+
+
+/* =====================================================================
+   كروت الأقسام اللي ليها صورة خلفية (partitionMeta → img)
+   الصورة جاية من المتغير --card-img على الكارت، وفوقها تظليل غامق عشان النص يبان.
+   ===================================================================== */
+html:not(.dark) #appContainer .dash-card.has-img,
+html.dark #appContainer .dash-card.has-img {
+    background-color: #26211c !important;
+    background-image:
+        linear-gradient(to top, rgba(14, 11, 8, .9) 0%, rgba(14, 11, 8, .5) 50%, rgba(14, 11, 8, .18) 100%),
+        var(--card-img) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, .14) !important;
+}
+html:not(.dark) #appContainer .dash-card.has-img:hover,
+html.dark #appContainer .dash-card.has-img:hover { background-color: #26211c !important; }
+html:not(.dark) #appContainer .dash-card.has-img::before,
+html.dark #appContainer .dash-card.has-img::before { background: none; }
+#appContainer .dash-card.has-img h3,
+#appContainer .dash-card.has-img p { text-shadow: 0 1px 6px rgba(0, 0, 0, .65); }
+
+/* الكارت الكبير (شراء قطع الغيار): أطول، والنص تحت */
+#partitionsContainer .dash-row.one .dash-card.has-img { min-height: 9.5rem; align-items: flex-end; }
+/* الكروت الصغيرة اللي جنب بعض: أطول، والأيقونة فوق والاسم تحت */
+#appContainer .dash-card.compact.has-img { min-height: 8.5rem; justify-content: flex-end; }
+@media (min-width: 900px) {
+    #partitionsContainer .dash-row.one .dash-card.has-img { min-height: 14rem; }
+    #appContainer .dash-card.compact.has-img { min-height: 13rem; }
+}
