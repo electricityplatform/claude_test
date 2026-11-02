@@ -33,10 +33,9 @@ function partitionMeta(name) {
 
 // ================= تقسيمة الشاشة الرئيسية =================
 // كل صف: الأقسام اللي فيه جنب بعض (الاسم بيتطابق بـ includes زي partitionMeta).
-// { static: 'اسم' } = كارت ثابت مش جاي من قاعدة البيانات.
 const HOME_ROWS = [
     ['شراء قطع الغيار'],
-    ['التوافقات', { static: 'بحث بالكاميرا' }],
+    ['التوافقات', 'بحث بالكاميرا'],
     ['تنبيهات الصيانة', 'جهز متجرك'],
     ['محلات الصيانة', 'متاجر']
 ];
@@ -67,7 +66,6 @@ function groupedPartitionsHtml(list) {
     const rows = HOME_ROWS.map(row => {
         const names = [];
         row.forEach(key => {
-            if (typeof key === 'object') { names.push(key.static); return; }
             list.forEach((name, i) => {
                 if (!used.has(i) && String(name).includes(key)) { used.add(i); names.push(name); }
             });
@@ -141,7 +139,7 @@ async function renderBrandsScreen(partName = '') {
             </button>
             <h2 class="text-sm sm:text-base font-bold text-base-content">اختر الماركة (${escapeHtmlValue(selectedPart || 'شراء قطع الغيار')})</h2>
         </div>
-        <div id="brandsListContainer" class="flex-1 overflow-y-auto space-y-3 p-1">
+        <div id="brandsListContainer" class="flex-1 overflow-y-auto p-1">
             <div class="text-center text-base-content/50 text-sm py-8">جاري جلب الماركات...</div>
         </div>
     `;
@@ -165,15 +163,11 @@ async function renderBrandsScreen(partName = '') {
     if (!container) return;
 
     if (brands.length > 0) {
-        container.innerHTML = brands.map((brand, index) => {
-            const style = getRotatingCardStyle(index);
-            return `
-                <div onclick="renderModelsScreen(${jsArg(brand)})" class="w-full ${style.bg} border ${style.border} p-3.5 rounded-2xl flex items-center gap-3 cursor-pointer transition-all text-sm sm:text-base group">
-                    <span class="font-bold flex-1" dir="auto">${escapeHtmlValue(brand)}</span>
-                    <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                </div>
-            `;
-        }).join('');
+        container.innerHTML = '<div class="dash-grid2">' + brands.map(brand => `
+            <button type="button" onclick="renderModelsScreen(${jsArg(brand)})" class="dash-card feature teal-floral compact">
+                <div class="dash-ico">${uiIcon('device', 'w-6 h-6')}</div>
+                <h3 class="font-bold" dir="auto">${escapeHtmlValue(brand)}</h3>
+            </button>`).join('') + '</div>';
     } else {
         container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد ماركات متاحة حالياً</div>`;
     }
@@ -266,7 +260,7 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
             </button>
             <h2 class="text-sm sm:text-base font-bold text-base-content">اختر قطعة الغيار (${escapeHtmlValue(selectedModel)})</h2>
         </div>
-        <div id="partsListContainerAfter" class="flex-1 overflow-y-auto space-y-3 p-1">
+        <div id="partsListContainerAfter" class="flex-1 overflow-y-auto p-1">
             <div class="text-center text-base-content/50 text-sm py-8">جاري جلب قطع الغيار...</div>
         </div>
     `;
@@ -290,15 +284,11 @@ async function renderPartsScreenAfterModel(modelName = '', modelCode = '', scree
     if (!container) return;
 
     if (sparePartsList.length > 0) {
-        container.innerHTML = sparePartsList.map((part, index) => {
-            const style = getRotatingCardStyle(index);
-            return `
-                <div onclick="renderPartDetailsFinal(${jsArg(part)})" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
-                    <span class="font-bold text-base-content text-right flex-1 ml-3" dir="auto">${escapeHtmlValue(part)}</span>
-                    <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                </div>
-            `;
-        }).join('');
+        container.innerHTML = '<div class="dash-grid2">' + sparePartsList.map(part => `
+            <button type="button" onclick="renderPartDetailsFinal(${jsArg(part)})" class="dash-card feature teal-floral compact">
+                <div class="dash-ico">${uiIcon('cog', 'w-6 h-6')}</div>
+                <h3 class="font-bold" dir="auto">${escapeHtmlValue(part)}</h3>
+            </button>`).join('') + '</div>';
     } else {
         container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد قطع غيار متاحة حالياً</div>`;
     }
