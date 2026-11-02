@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#3a332b">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
     <title>Electricity</title>
     <script>
         (function () {
@@ -70,7 +72,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
     <link rel="stylesheet" href="style.css?v=20261101-2">
-    <link rel="stylesheet" href="theme.css?v=20261102-5">
+    <link rel="stylesheet" href="theme.css?v=20261102-6">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
@@ -79,7 +81,7 @@
     <div id="sideMenu" class="fixed top-0 right-0 h-full w-80 max-w-[86vw] shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
         <div class="navbar text-white px-4 min-h-16">
             <div class="flex-1 gap-3">
-                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <span class="brand-chip"><img src="logo.png" alt="Electricity" class="logo-img" draggable="false"></span>
                 <h3 class="side-brand">ELECTRICITY</h3>
             </div>
             <button type="button" onclick="toggleSidebar()" class="btn btn-ghost btn-sm btn-circle text-white" aria-label="إغلاق القائمة">
@@ -108,11 +110,11 @@
 
     <!-- ملفات الجافاسكريبت (الترتيب مهم) -->
     <script src="config.js?v=20261101-1"></script>
-    <script src="utils.js?v=20261101-3"></script>
-    <script src="layout.js?v=20261101-1"></script>
-    <script src="auth.js?v=20261101-1"></script>
+    <script src="utils.js?v=20261102-1"></script>
+    <script src="layout.js?v=20261102-1"></script>
+    <script src="auth.js?v=20261102-1"></script>
     <script src="dashboard.js?v=20261101-1"></script>
-    <script src="welcome.js?v=20261101-1"></script>
+    <script src="welcome.js?v=20261102-1"></script>
     <script src="profile-photo.js?v=20261101-1"></script>
     <!-- مركز البيانات (متقسم لـ 10 ملفات، الترتيب مهم: core الأول) -->
     <script src="1-data-center-core.js?v=20261101-1"></script>
