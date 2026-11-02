@@ -188,8 +188,9 @@ function emptyTableRowHtml(colspan, message) {
 // ================= السحب للتحديث (Pull to refresh) =================
 // المتصفح مبقاش بيعمل ده لوحده لأن الصفحة نفسها مبقتش بتتمرر (التمرير جوه مناطق المحتوى بس)، فعملناه بإيدينا.
 (function setupPullToRefresh() {
-    const THRESHOLD = 70;
-    const MAX = 110;
+    const THRESHOLD = 75;
+    const MAX = 115;
+    const DEAD = 14; // أول حركة صغيرة لتحت مبتتحسبش، عشان اللمس العادي والتمرير مايفعّلوش التحديث
     let startY = 0, startX = 0, pulling = false, dist = 0, ind = null;
 
     function getIndicator() {
@@ -210,7 +211,12 @@ function emptyTableRowHtml(colspan, message) {
     }
 
     // فيه عنصر قابل للتمرير فوق نقطة اللمس وهو مش في أول مكان؟
+    function pageScrolled() {
+        const se = document.scrollingElement || document.documentElement;
+        return (window.scrollY || se.scrollTop || 0) > 0;
+    }
     function canScrollUp(el) {
+        if (pageScrolled()) return true; // الصفحة نفسها مش في أولها (وضع المتصفح)
         while (el && el !== document.body && el !== document.documentElement) {
             const s = getComputedStyle(el);
             if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) return true;
@@ -235,9 +241,12 @@ function emptyTableRowHtml(colspan, message) {
         if (!pulling) return;
         const dy = e.touches[0].clientY - startY;
         const dx = e.touches[0].clientX - startX;
+        // الإصبع اتحرك لفوق = تمرير عادي للمحتوى، يبقى مش سحب للتحديث لحد ما يرفع إيده
+        if (dy < -6) { pulling = false; dist = 0; hideIndicator(); return; }
         if (Math.abs(dx) > Math.abs(dy) || canScrollUp(e.target)) { pulling = false; hideIndicator(); return; }
-        if (dy <= 0) { dist = 0; hideIndicator(); return; }
-        dist = Math.min(dy * 0.5, MAX);
+        const pull = dy - DEAD;
+        if (pull <= 0) { dist = 0; hideIndicator(); return; }
+        dist = Math.min(pull * 0.5, MAX);
         const el = getIndicator();
         el.style.transition = 'none';
         el.style.opacity = String(Math.min(dist / THRESHOLD, 1));
@@ -260,6 +269,12 @@ function emptyTableRowHtml(colspan, message) {
     }, { passive: true });
 
     document.addEventListener('touchcancel', function () { pulling = false; dist = 0; hideIndicator(); }, { passive: true });
+
+    // لو أي حاجة اتمررت أثناء اللمس يبقى مش على الحافة، فنلغي السحب للتحديث
+    document.addEventListener('scroll', function () {
+        if (!pulling) return;
+        pulling = false; dist = 0; hideIndicator();
+    }, { passive: true, capture: true });
 })();
 
 // ================= شريط حالة الاتصال =================
