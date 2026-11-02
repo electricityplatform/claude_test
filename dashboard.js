@@ -20,13 +20,13 @@ function startCompatFlow() {
 function partitionMeta(name) {
     const n = String(name);
     if (n.includes('بحث بالكاميرا')) return { action: `alert(${jsArg('جارِ فتح الكاميرا للمسح الضوئي...')})`, icon: 'camera', desc: '' };
-    if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار' };
-    if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار' };
-    if (n.includes('شراء قطع الغيار')) return { action: 'renderBrandsScreen()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true };
+    if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار', img: 'maintenance-alerts.jpg' };
+    if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار', img: 'compat.jpg' };
+    if (n.includes('شراء قطع الغيار')) return { action: 'renderBrandsScreen()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true, img: 'buy-parts.jpg' };
     if (n.includes('قطع الغيار')) return { action: 'renderPartsScreen()', icon: 'cog', desc: '' };
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
     if (n.includes('الموديلات')) return { action: "renderModelsScreen('Samsung')", icon: 'device', desc: '' };
-    if (n.includes('محلات الصيانة')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'cog', desc: '' };
+    if (n.includes('محلات الصيانة')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'cog', desc: '', img: 'repair-shops.jpg' };
     if (n.includes('منافذ البيع') || n.includes('متاجر')) return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'store', desc: '' };
     return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'bolt', desc: '' };
 }
@@ -42,15 +42,18 @@ const HOME_ROWS = [
 
 function partitionCardHtml(name, compact) {
     const m = partitionMeta(name);
+    // لو القسم له صورة (img في partitionMeta): بتبقى خلفية الكارت من المتغير --card-img (الستايل في theme.css)
+    const imgCls = m.img ? ' has-img' : '';
+    const imgStyle = m.img ? ` style="--card-img:url('${m.img}')"` : '';
     if (compact) {
         return `
-        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral compact">
+        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral compact${imgCls}"${imgStyle}>
             <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
             <h3 class="font-bold" dir="auto">${escapeHtmlValue(name)}</h3>
         </button>`;
     }
     return `
-        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral">
+        <button type="button" onclick="${m.action}" class="dash-card feature teal-floral${imgCls}"${imgStyle}>
             <div class="dash-ico">${uiIcon(m.icon, 'w-6 h-6')}</div>
             <div class="flex-1 min-w-0 relative">
                 <h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(name)}</h3>
