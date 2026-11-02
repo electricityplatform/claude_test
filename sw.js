@@ -5,6 +5,9 @@
 
 const CACHE = 'electricity-shell-v1';
 const NETWORK_TIMEOUT_MS = 5000;
+
+// صور كروت الأقسام في الشاشة الرئيسية (في نفس فولدر index.html): بتتحمّل مع التثبيت عشان تظهر حتى لو مفيش نت.
+const CARD_IMAGES = ['buy-parts.jpg', 'compat.jpg', 'maintenance-alerts.jpg', 'repair-shops.jpg'];
 const CDN_HOSTS = [
     'cdn.tailwindcss.com',
     'cdn.jsdelivr.net',
@@ -35,6 +38,8 @@ async function precache() {
         const h = tag.match(/href="([^"]+)"/);
         if (h) urls.add(h[1]);
     }
+
+    CARD_IMAGES.forEach((u) => urls.add(u));
 
     await Promise.allSettled([...urls].map(async (u) => {
         const abs = new URL(u, base);
