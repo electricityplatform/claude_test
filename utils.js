@@ -225,8 +225,12 @@ function emptyTableRowHtml(colspan, message) {
         return false;
     }
 
+    // في المتصفح العادي التحديث بالسحب بيعمله المتصفح نفسه (الصفحة بتتمرر طبيعي)، ده بس للتطبيق المثبّت
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
     document.addEventListener('touchstart', function (e) {
         pulling = false;
+        if (!isStandalone) return;
         if (e.touches.length !== 1) return;
         const t = e.target;
         if (t.closest && t.closest('input, textarea, select, #sideMenu')) return;
