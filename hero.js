@@ -104,15 +104,18 @@ function initHomeHero() {
     root.addEventListener('mouseenter', () => { paused = true; });
     root.addEventListener('mouseleave', () => { paused = false; });
 
-    let startX = null;
-    root.addEventListener('touchstart', e => { startX = e.touches[0].clientX; paused = true; }, { passive: true });
+    let startX = null, startY = null;
+    root.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; paused = true; }, { passive: true });
     root.addEventListener('touchend', e => {
         paused = false;
         if (startX === null) return;
         const dx = e.changedTouches[0].clientX - startX;
-        startX = null;
-        if (Math.abs(dx) > 40) show(dx < 0 ? idx + 1 : idx - 1);
+        const dy = e.changedTouches[0].clientY - startY;
+        startX = startY = null;
+        // تبديل الشريحة بس لو الحركة أفقية بوضوح، عشان التمرير لفوق وتحت ميبدلهاش
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) show(dx < 0 ? idx + 1 : idx - 1);
     }, { passive: true });
+    root.addEventListener('touchcancel', () => { paused = false; startX = startY = null; }, { passive: true });
 
     show(0);
     heroLoadStats(root);
