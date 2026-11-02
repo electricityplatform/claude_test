@@ -87,7 +87,7 @@ async function renderMainDashboard() {
     const html = `
         ${getHeaderTemplate(true)}
         <div class="flex-1 overflow-y-auto home-scroll">
-            ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
+            ${typeof homeHeroHtml === 'function' ? homeHeroHtml() : ''}
             <div id="partitionsContainer" class="pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
@@ -97,6 +97,7 @@ async function renderMainDashboard() {
         </div>
     `;
     document.getElementById('appContainer').innerHTML = html;
+    if (typeof initHomeHero === 'function') initHomeHero();
     loadDynamicMenuIntoSidebar();
 
     try {
