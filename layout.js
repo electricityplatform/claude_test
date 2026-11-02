@@ -29,9 +29,7 @@ function getHeaderTemplate(showSearch = false) {
                     </button>
                 </div>
                 <div class="flex-none gap-2">
-                    <div class="avatar placeholder">
-                        <div class="bg-primary text-secondary w-9 rounded-xl">${boltMarkSvg().replace('<svg', '<svg class="w-5 h-5"')}</div>
-                    </div>
+                    <span class="brand-chip">${logoImg()}</span>
                     <span class="text-xl font-bold tracking-tight">Electricity</span>
                 </div>
                 <div class="flex flex-1 min-w-0 justify-end">${userInfoHtml}</div>
