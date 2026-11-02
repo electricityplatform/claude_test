@@ -973,13 +973,12 @@ html.dark:root[data-theme] { background-color: #111113; }
 /* =====================================================================
    هيرو الشاشة الرئيسية (hero.js)
    ===================================================================== */
-.hero { --h-gold:#e8c97a; --h-cream:#f6f1e7; position:relative; height:17.5rem; margin-bottom:1rem; border-radius:2rem; overflow:hidden; isolation:isolate; color:var(--h-cream); background:linear-gradient(145deg,#2a2318 0%,#3b3326 55%,#2a2318 100%); border:1px solid rgba(232,201,122,.35); box-shadow:0 .6rem 1.6rem rgba(0,0,0,.25); }
-.hero::before, .hero::after { content:""; position:absolute; border-radius:50%; filter:blur(30px); opacity:.35; z-index:-1; animation:heroOrb 14s ease-in-out infinite alternate; }
-.hero::before { width:12rem; height:12rem; background:#e8c97a; top:-4rem; right:-3rem; }
-.hero::after { width:10rem; height:10rem; background:#8a6d3b; bottom:-4rem; left:-2rem; animation-delay:-6s; }
+.hero { touch-action:pan-y; --h-gold:#e8c97a; --h-cream:#f6f1e7; position:relative; height:17.5rem; margin-bottom:1rem; border-radius:2rem; overflow:hidden; isolation:isolate; color:var(--h-cream); background:linear-gradient(145deg,#2a2318 0%,#3b3326 55%,#2a2318 100%); border:1px solid rgba(232,201,122,.35); box-shadow:0 .6rem 1.6rem rgba(0,0,0,.25); }
+.hero::before, .hero::after { content:""; position:absolute; border-radius:50%; z-index:-1; will-change:transform; animation:heroOrb 14s ease-in-out infinite alternate; }
+.hero::before { width:15rem; height:15rem; background:radial-gradient(circle, rgba(232,201,122,.38), transparent 68%); top:-5rem; right:-4rem; }
+.hero::after { width:13rem; height:13rem; background:radial-gradient(circle, rgba(138,109,59,.5), transparent 68%); bottom:-5rem; left:-3rem; animation-delay:-6s; }
 @keyframes heroOrb { to { transform:translate(2rem,1.5rem) scale(1.2); } }
-.hero-bg { position:absolute; inset:0; z-index:-1; opacity:.5; background-image:radial-gradient(rgba(232,201,122,.2) 1px,transparent 1px); background-size:1.4rem 1.4rem; -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); animation:heroGrid 9s linear infinite; }
-@keyframes heroGrid { to { background-position:1.4rem 1.4rem; } }
+.hero-bg { position:absolute; inset:0; z-index:-1; opacity:.5; background-image:radial-gradient(rgba(232,201,122,.2) 1px,transparent 1px); background-size:1.4rem 1.4rem; -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); }
 
 .hero-slide { position:absolute; inset:0 0 1.9rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; padding:1rem 1rem 0; text-align:center; opacity:0; visibility:hidden; transform:translateY(.6rem); transition:opacity .6s, transform .6s, visibility .6s; }
 .hero-slide.active { opacity:1; visibility:visible; transform:none; }
