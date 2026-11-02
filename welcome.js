@@ -18,7 +18,7 @@ function renderSplashScreen(done) {
     document.getElementById('appContainer').innerHTML = `
         <div class="auth-screen intro-screen">
             <div class="intro-center">
-                <div class="splash-logo">${boltMarkSvg()}</div>
+                <div class="splash-logo logo-tile">${logoImg()}</div>
                 <div class="splash-brand">ELECTRICITY</div>
             </div>
         </div>
@@ -50,7 +50,7 @@ function renderOnboardingScreen(done, index = 0) {
         <div class="auth-screen">
             <button type="button" class="intro-skip" onclick="finishOnboarding()">تخطي</button>
             <div class="auth-hero teal-floral">
-                <div class="brand">${uiIcon('bolt', 'w-6 h-6')}<span>ELECTRICITY</span></div>
+                <div class="brand"><span class="brand-chip">${logoImg()}</span><span>ELECTRICITY</span></div>
             </div>
             <div class="auth-card">
                 <div class="auth-avatar">${uiIcon(s.icon, 'w-9 h-9')}</div>
@@ -85,7 +85,7 @@ function renderWelcomeScreen() {
     document.getElementById('appContainer').innerHTML = `
         <div class="auth-screen">
             <div class="auth-hero teal-floral">
-                <div class="brand">${uiIcon('bolt', 'w-6 h-6')}<span>ELECTRICITY</span></div>
+                <div class="brand"><span class="brand-chip">${logoImg()}</span><span>ELECTRICITY</span></div>
             </div>
             <div class="auth-card">
                 <div class="auth-avatar">${uiIcon('bolt', 'w-9 h-9')}</div>
@@ -150,7 +150,7 @@ function showSplashOverlay() {
     const el = document.createElement('div');
     el.id = 'splashOverlay';
     el.className = 'splash-overlay';
-    el.innerHTML = `<div class="intro-center"><div class="splash-logo">${boltMarkSvg()}</div><div class="splash-brand">ELECTRICITY</div></div>`;
+    el.innerHTML = `<div class="intro-center"><div class="splash-logo logo-tile">${logoImg()}</div><div class="splash-brand">ELECTRICITY</div></div>`;
     document.body.appendChild(el);
     setTimeout(() => {
         el.classList.add('splash-out');
