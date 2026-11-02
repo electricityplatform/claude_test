@@ -958,3 +958,14 @@ html.dark:root[data-theme] { background-color: #111113; }
     .dash-grid2 { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1.1rem; padding-bottom: 1.1rem; }
     .dash-grid2 > .dash-card:last-child:nth-child(odd) { grid-column: auto; }
 }
+
+/* الهيدر: القائمة يمين، اللوجو + اسم الشركة في النص، الصورة الشخصية شمال بنفس حجم زر القائمة */
+.topbar-brand { letter-spacing: .3em; font-weight: 500; font-size: .95rem; white-space: nowrap; }
+.app-topbar .topbar-center .logo-img { height: 1.6rem; }
+.app-topbar .user-avatar-btn, .topbar-user-spacer { display: block; width: 2.4rem; height: 2.4rem; }
+.app-topbar .user-avatar-btn .avatar,
+.app-topbar .user-avatar-btn .avatar > *,
+.app-topbar .user-avatar-btn .w-9,
+.app-topbar .user-avatar-btn img { width: 2.4rem !important; height: 2.4rem !important; }
+.app-topbar .user-avatar-btn img { object-fit: cover; border-radius: 9999px; }
+@media (min-width: 900px) { .topbar-brand { font-size: 1.25rem; } .app-topbar .topbar-center .logo-img { height: 1.9rem; } }
