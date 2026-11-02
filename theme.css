@@ -1058,3 +1058,17 @@ html.dark:root[data-theme] { background-color: #111113; }
 @media (prefers-reduced-motion: reduce) {
     .hero *, .hero::before, .hero::after { animation:none !important; }
 }
+
+
+/* =====================================================================
+   تمرير عادي للصفحة كلها (زي المواقع العادية): الهيدر والشريط السفلي لازقين (sticky)،
+   والتحديث بالسحب من فوق بيتعمل بالمتصفح نفسه. بيشتغل بس على الشاشات اللي فيها هيدر.
+   ===================================================================== */
+html:has(#appContainer .app-topbar) { height:auto !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior-y:auto !important; }
+html:has(#appContainer .app-topbar) body { height:auto !important; min-height:100%; overflow:visible !important; overscroll-behavior-y:auto !important; }
+html:has(#appContainer .app-topbar) main { height:auto !important; min-height:100dvh; overflow-x:clip !important; overflow-y:visible !important; }
+html:has(#appContainer .app-topbar) #appContainer { flex:1 0 auto !important; min-height:0; overflow-x:clip !important; overflow-y:visible !important; }
+html:has(#appContainer .app-topbar) #appContainer > .overflow-y-auto,
+html:has(#appContainer .app-topbar) #appContainer > .home-scroll { flex:none !important; overflow:visible !important; }
+html:has(#appContainer .app-topbar) .app-topbar { position:sticky; top:0; z-index:40; }
+html:has(#appContainer .app-topbar) .bottom-nav { position:sticky; bottom:0; z-index:40; }
