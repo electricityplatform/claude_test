@@ -85,7 +85,7 @@ function groupedPartitionsHtml(list) {
 async function renderMainDashboard() {
     currentFlow = 'buy';
     const html = `
-        ${getHeaderTemplate()}
+        ${getHeaderTemplate(true)}
         <div class="flex-1 overflow-y-auto home-scroll">
             ${typeof homeIntroHtml === 'function' ? homeIntroHtml() : ''}
             <div id="partitionsContainer" class="pb-4">
