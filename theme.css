@@ -914,3 +914,15 @@ html.dark .side-item { border-color: rgba(255, 255, 255, .08); background: rgba(
 html.dark .side-item:hover { background: rgba(226, 169, 59, .12); }
 html.dark .ptr-indicator { background: var(--gold-grad); color: #1a1305; }
 html.dark:root[data-theme] { background-color: #111113; }
+
+
+/* =====================================================================
+   لوجو الموقع (logo.png): بيتحط على شريحة فاتحة عشان يبان في كل الثيمات
+   ===================================================================== */
+.brand-chip { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; background:#f6f1e7; border-radius:.65rem; padding:.22rem .4rem; }
+.logo-img { display:block; height:1.45rem; width:auto; object-fit:contain; user-select:none; -webkit-user-drag:none; }
+.auth-hero .brand .brand-chip { padding:.3rem .5rem; border-radius:.8rem; }
+.auth-hero .brand .logo-img { height:2rem; }
+.splash-logo.logo-tile { width:auto; height:auto; padding:1rem 1.3rem; background:#f6f1e7; border-radius:1.6rem; }
+.splash-logo.logo-tile .logo-img { height:3.6rem; }
+@media (min-width: 900px) { .auth-hero .brand .logo-img { height:2.6rem; } }
