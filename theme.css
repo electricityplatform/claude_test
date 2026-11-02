@@ -1104,3 +1104,9 @@ html.dark #appContainer .dash-card.has-img::before { background: none; }
     #partitionsContainer .dash-row.one .dash-card.has-img { min-height: 14rem; }
     #appContainer .dash-card.compact.has-img { min-height: 13rem; }
 }
+
+
+/* =====================================================================
+   الشاشة الرئيسية: من غير الدايرة الصفراء (أيقونة القسم) على الكروت
+   ===================================================================== */
+#partitionsContainer .dash-card .dash-ico { display: none; }
