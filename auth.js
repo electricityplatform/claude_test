@@ -4,7 +4,7 @@ function renderLoginScreen() {
     const html = `
         <div class="auth-screen">
             <div class="auth-hero teal-floral">
-                <div class="brand">${uiIcon('bolt', 'w-6 h-6')}<span>ELECTRICITY</span></div>
+                <div class="brand"><span class="brand-chip">${logoImg()}</span><span>ELECTRICITY</span></div>
             </div>
             <div class="auth-card">
                 <div class="auth-avatar">${uiIcon('user', 'w-9 h-9')}</div>
