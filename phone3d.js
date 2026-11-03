@@ -13,6 +13,8 @@ const PHONE_PARTS = [
 ];
 const PHONE_CAP_IDLE = 'المس التليفون لتفكيكه';
 const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية لفتح أسعارها';
+// لون زجاج الظهر (غيّره براحتك، مثلاً 0x1c2230 أزرق ليلي أو 0x2a2a2e أسود أو 0x5a1426 عنابي)
+const PHONE_BACK_COLOR = 0x5a1426;
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 let _p3 = null;          // حالة النموذج الحالي
@@ -72,12 +74,10 @@ function phone3dMount() {
 }
 
 // ---------- مجسّمات ----------
-// لوح بحواف دايرية وسُمك (z). الحجم الكلي w × h × d.
-function p3Slab(w, h, d, r, mat) {
-    const T = THREE;
+// بيرسم مستطيل بحواف دايرية على Shape أو Path
+function p3RRPath(s, w, h, r) {
     r = Math.min(r, w / 2 - 0.001, h / 2 - 0.001);
     const x = -w / 2, y = -h / 2;
-    const s = new T.Shape();
     s.moveTo(x + r, y);
     s.lineTo(x + w - r, y);
     s.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
@@ -87,13 +87,29 @@ function p3Slab(w, h, d, r, mat) {
     s.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
     s.lineTo(x, y + r);
     s.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
-    const bev = Math.min(d * 0.22, 0.007);
+    return s;
+}
+
+function p3Extrude(shape, d, bev, mat) {
+    bev = Math.min(bev, d * 0.45);
     const depth = Math.max(d - bev * 2, 0.002);
-    const g = new T.ExtrudeGeometry(s, {
-        depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.8, bevelSegments: 2, curveSegments: 10
+    const g = new THREE.ExtrudeGeometry(shape, {
+        depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.8, bevelSegments: 4, curveSegments: 14
     });
     g.translate(0, 0, -depth / 2);
-    return new T.Mesh(g, mat);
+    return new THREE.Mesh(g, mat);
+}
+
+// لوح بحواف دايرية وسُمك (z). الحجم الكلي w × h × d. bev = نعومة الحواف (اختياري).
+function p3Slab(w, h, d, r, mat, bev) {
+    return p3Extrude(p3RRPath(new THREE.Shape(), w, h, r), d, bev === undefined ? Math.min(d * 0.22, 0.007) : bev, mat);
+}
+
+// حلقة (الإطار المعدني): مستطيل دايري بفتحة في النص
+function p3Ring(wo, ho, ro, wi, hi, ri, d, mat, bev) {
+    const shape = p3RRPath(new THREE.Shape(), wo, ho, ro);
+    shape.holes.push(p3RRPath(new THREE.Path(), wi, hi, ri));
+    return p3Extrude(shape, d, bev, mat);
 }
 
 function p3Box(w, h, d, mat) {
@@ -142,6 +158,41 @@ function p3ScreenTexture() {
     return t;
 }
 
+// خريطة انعكاسات بسيطة (سقف فاتح وسوفت بوكسات)، من غيرها المعدن بيطلع أسود ومطفي
+function p3Environment(renderer) {
+    const T = THREE;
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 256;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, '#f4efe4'); g.addColorStop(0.45, '#8a8070'); g.addColorStop(0.55, '#2b261e'); g.addColorStop(1, '#0b0906');
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    x.fillStyle = 'rgba(255,255,255,.95)';
+    [[60, 40, 110, 34], [250, 28, 140, 26], [400, 70, 90, 40]].forEach(([a, b, w, h]) => { p3RoundRect(x, a, b, w, h, 6); x.fill(); });
+    x.fillStyle = 'rgba(232,201,122,.85)'; p3RoundRect(x, 170, 118, 160, 10, 4); x.fill();
+    const tex = new T.CanvasTexture(c);
+    tex.mapping = T.EquirectangularReflectionMapping;
+    tex.colorSpace = T.SRGBColorSpace;
+    const pm = new T.PMREMGenerator(renderer);
+    const env = pm.fromEquirectangular(tex).texture;
+    tex.dispose(); pm.dispose();
+    return env;
+}
+
+// لمعة زجاج الشاشة (مائلة وشفافة)
+function p3SheenTexture() {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 270;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 128, 270);
+    g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(0.28, 'rgba(255,255,255,.06)');
+    g.addColorStop(0.3, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 128, 270);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+}
+
 // ---------- بناء المشهد ----------
 function p3Build(host) {
     const T = THREE;
@@ -153,13 +204,41 @@ function p3Build(host) {
     host.appendChild(renderer.domElement);
 
     const scene = new T.Scene();
-    const camera = new T.PerspectiveCamera(32, 1, 0.1, 50);
-    camera.position.set(0, 0, 4.3);
+    const camera = new T.PerspectiveCamera(34, 1, 0.1, 60);
+    camera.position.set(0, 0.55, 4.7);
+    camera.lookAt(0, -0.12, 0);
 
-    scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 1.1));
-    const key = new T.DirectionalLight(0xffffff, 2.4); key.position.set(2.5, 3, 4); scene.add(key);
-    const rim = new T.DirectionalLight(0xe8c97a, 1.6); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
-    const fill = new T.DirectionalLight(0xffffff, 0.8); fill.position.set(-2, -2, 3); scene.add(fill);
+    scene.environment = p3Environment(renderer);
+    scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 0.5));
+    const key = new T.DirectionalLight(0xffffff, 1.8); key.position.set(2.5, 3, 4); scene.add(key);
+    const rim = new T.DirectionalLight(0xe8c97a, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
+
+    // ---------- المسرح: منصة زجاج + معدن مصقول تحت التليفون ----------
+    {
+        const stageGlass = new T.MeshPhysicalMaterial({ color: PHONE_BACK_COLOR, metalness: 0.35, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04 });
+        const stageMetal = new T.MeshStandardMaterial({ color: 0xd9d3c7, metalness: 1, roughness: 0.22 });
+        const stage = new T.Group();
+
+        const top = p3Slab(16, 3.4, 0.1, 0.3, stageGlass, 0.02);        // سطح زجاجي
+        top.rotation.x = -Math.PI / 2;
+        top.position.set(0, -1.03, 0);
+        stage.add(top);
+
+        const lip = p3Ring(16.12, 3.52, 0.32, 15.96, 3.36, 0.3, 0.115, stageMetal, 0.008);   // حافة معدن حوالين السطح
+        lip.rotation.x = -Math.PI / 2;
+        lip.position.set(0, -1.03, 0);
+        stage.add(lip);
+
+        const plate = new T.Mesh(new T.CylinderGeometry(0.82, 0.82, 0.02, 64), stageMetal);  // قاعدة التليفون اللي بيلف عليها
+        plate.position.set(0, -0.97, 0);
+        stage.add(plate);
+        const goldRing = new T.Mesh(new T.RingGeometry(0.86, 0.885, 64), new T.MeshBasicMaterial({ color: 0xe8c97a }));
+        goldRing.rotation.x = -Math.PI / 2;
+        goldRing.position.set(0, -0.958, 0);
+        stage.add(goldRing);
+
+        scene.add(stage);
+    }
 
     const group = new T.Group();
     scene.add(group);
@@ -185,13 +264,19 @@ function p3Build(host) {
     // الشاشة (قدّام)
     {
         const g = new T.Group();
-        g.add(p3Slab(0.70, 1.46, 0.035, 0.09, M(0x0b0b0d, 0.5, 0.35)));
+        g.add(p3Slab(0.70, 1.46, 0.035, 0.09, new T.MeshPhysicalMaterial({ color: 0x0b0b0d, metalness: 0.4, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05 })));
         const plane = new T.Mesh(
             new T.PlaneGeometry(0.64, 1.38),
             new T.MeshBasicMaterial({ map: p3ScreenTexture() })
         );
         plane.position.z = 0.0185;
         g.add(plane);
+        const sheen = new T.Mesh(
+            new T.PlaneGeometry(0.64, 1.38),
+            new T.MeshBasicMaterial({ map: p3SheenTexture(), transparent: true, depthWrite: false })
+        );
+        sheen.position.z = 0.0192;
+        g.add(sheen);
         addPart('screen', g, new T.Vector3(0, 0, 0.0525), new T.Vector3(0, 0, 0.62), 0.0);
     }
 
@@ -234,28 +319,44 @@ function p3Build(host) {
         addPart('port', g, new T.Vector3(0, -0.66, 0.02), new T.Vector3(0, -0.84, 0.06), 0.18);
     }
 
-    // الغطاء الخلفي
+    // الغطاء الخلفي: زجاج لامع + إطار معدني مصقول + أزرار جانبية
     {
         const g = new T.Group();
-        g.add(p3Slab(0.72, 1.48, 0.03, 0.1, M(0x2c2822, 0.75, 0.3)));
-        const logo = new T.Mesh(new T.CircleGeometry(0.06, 32), M(0xe8c97a, 0.9, 0.25));
-        logo.position.z = -0.0165; logo.rotation.y = Math.PI;
-        g.add(logo);
+        const glass = new T.MeshPhysicalMaterial({ color: PHONE_BACK_COLOR, metalness: 0.35, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05 });
+        g.add(p3Slab(0.715, 1.475, 0.03, 0.1, glass, 0.012));
+
+        const metal = new T.MeshStandardMaterial({ color: 0xd9d3c7, metalness: 1, roughness: 0.2 });
+        const frame = p3Ring(0.74, 1.5, 0.115, 0.7, 1.46, 0.095, 0.12, metal, 0.006);
+        frame.position.z = 0.035;
+        g.add(frame);
+        const power = p3Box(0.014, 0.14, 0.03, metal); power.position.set(0.372, 0.25, 0.035); g.add(power);
+        const vol = p3Box(0.014, 0.24, 0.03, metal); vol.position.set(0.372, 0.52, 0.035); g.add(vol);
+
         addPart('back', g, new T.Vector3(0, 0, -0.02), new T.Vector3(0, 0, -0.42), 0.24);
     }
 
-    // الكاميرا (ورا الغطاء)
+    // الكاميرا (ورا الغطاء): كتلة بيضاوية رأسية بعدستين كبار وعدسة صغيرة وفلاش
     {
         const g = new T.Group();
-        g.add(p3Slab(0.28, 0.28, 0.03, 0.07, M(0x1a1712, 0.8, 0.25)));
-        const ringMat = M(0xc9a962, 0.9, 0.25), glass = M(0x07070f, 1.0, 0.08);
-        [[-0.06, 0.06], [0.06, 0.06], [0, -0.06]].forEach(([px, py]) => {
-            const ring = new T.Mesh(new T.CylinderGeometry(0.052, 0.052, 0.02, 28), ringMat);
-            ring.rotation.x = Math.PI / 2; ring.position.set(px, py, -0.018); g.add(ring);
-            const lens = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.024, 28), glass);
-            lens.rotation.x = Math.PI / 2; lens.position.set(px, py, -0.022); g.add(lens);
-        });
-        addPart('camera', g, new T.Vector3(-0.2, 0.55, -0.05), new T.Vector3(-0.3, 0.68, -0.8), 0.3);
+        const island = new T.MeshPhysicalMaterial({ color: 0x120c0e, metalness: 0.5, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 });
+        g.add(p3Slab(0.21, 0.46, 0.028, 0.1, island, 0.008));
+        const ringMat = new T.MeshStandardMaterial({ color: 0xcfc8ba, metalness: 1, roughness: 0.2 });
+        const barrel = new T.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.9, roughness: 0.3 });
+        const lensGlass = new T.MeshPhysicalMaterial({ color: 0x06060d, metalness: 1, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0 });
+        const lens = (px, py, r) => {
+            const ring = new T.Mesh(new T.CylinderGeometry(r, r, 0.022, 36), ringMat);
+            ring.rotation.x = Math.PI / 2; ring.position.set(px, py, -0.02); g.add(ring);
+            const bar = new T.Mesh(new T.CylinderGeometry(r * 0.82, r * 0.82, 0.026, 36), barrel);
+            bar.rotation.x = Math.PI / 2; bar.position.set(px, py, -0.022); g.add(bar);
+            const gl = new T.Mesh(new T.CylinderGeometry(r * 0.62, r * 0.62, 0.03, 36), lensGlass);
+            gl.rotation.x = Math.PI / 2; gl.position.set(px, py, -0.024); g.add(gl);
+        };
+        lens(0, 0.12, 0.062);
+        lens(0, -0.035, 0.062);
+        lens(0, -0.16, 0.028);
+        const flash = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.01, 20), new T.MeshStandardMaterial({ color: 0xf6efd8, metalness: 0.3, roughness: 0.4 }));
+        flash.rotation.x = Math.PI / 2; flash.position.set(0.062, -0.17, -0.018); g.add(flash);
+        addPart('camera', g, new T.Vector3(-0.2, 0.5, -0.05), new T.Vector3(-0.3, 0.68, -0.8), 0.3);
     }
 
     // ---------- طبقة الأسماء والخطوط ----------
