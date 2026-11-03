@@ -1131,3 +1131,12 @@ html:not(.dark) body.bg-base-100 {
     box-shadow: none !important;
     text-shadow: none !important;
 }
+
+
+/* =====================================================================
+   من غير شريط التمرير (اللي بيظهر وانت بتتحرك لفوق وتحت) في كل الصفحات والقائمة الجانبية.
+   التمرير نفسه شغال عادي. الاستثناء: الجداول العريضة (.overflow-auto / .overflow-x-auto) عشان شريطها الأفقي يفضل ظاهر.
+   ===================================================================== */
+html, html :not(.overflow-auto):not(.overflow-x-auto) { scrollbar-width: none !important; }
+html :not(.overflow-auto):not(.overflow-x-auto)::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+html::-webkit-scrollbar { display: none !important; }
