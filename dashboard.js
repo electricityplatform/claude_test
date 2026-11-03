@@ -91,6 +91,7 @@ async function renderMainDashboard() {
         ${getHeaderTemplate(true)}
         <div class="flex-1 overflow-y-auto home-scroll">
             ${typeof homeHeroHtml === 'function' ? homeHeroHtml() : ''}
+            ${typeof phone3dSectionHtml === 'function' ? phone3dSectionHtml() : ''}
             <div id="partitionsContainer" class="pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
@@ -101,6 +102,7 @@ async function renderMainDashboard() {
     `;
     document.getElementById('appContainer').innerHTML = html;
     if (typeof initHomeHero === 'function') initHomeHero();
+    if (typeof phone3dMount === 'function') phone3dMount();
     loadDynamicMenuIntoSidebar();
 
     try {
