@@ -1082,7 +1082,7 @@ html:not(.dark) #appContainer .dash-card.has-img,
 html.dark #appContainer .dash-card.has-img {
     background-color: #26211c !important;
     background-image:
-        linear-gradient(to top, rgba(14, 11, 8, .9) 0%, rgba(14, 11, 8, .5) 50%, rgba(14, 11, 8, .18) 100%),
+        linear-gradient(to top, rgba(14, 11, 8, .8) 0%, rgba(14, 11, 8, .45) 26%, rgba(14, 11, 8, 0) 52%),
         var(--card-img) !important;
     background-size: cover !important;
     background-position: center !important;
@@ -1239,4 +1239,32 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
     .phone-stage-cap { font-size: 1.1rem; }
     .hero-phone { height: 26rem; }
     .hp3-chip, .hp3-collapse { font-size: .85rem; padding: .3rem .8rem; }
+}
+
+
+/* =====================================================================
+   الصورة الشخصية: مربعة بحواف دايرية خفيفة (زي باقي التصاميم) بدل الدايرة
+   ===================================================================== */
+.user-avatar-btn,
+.user-avatar-btn .avatar,
+.user-avatar-btn .avatar > *,
+.user-avatar-btn img,
+.user-avatar-btn [class*="rounded"],
+.app-topbar .user-avatar-btn img { border-radius: .5rem !important; }
+.photo-preview,
+.photo-preview img,
+.photo-sheet .avatar,
+.photo-sheet .avatar > *,
+.photo-sheet [class*="rounded-full"] { border-radius: .75rem !important; }
+
+/* =====================================================================
+   خانة البحث: من غير المستطيل الأسود اللي بيظهر جواها لما تدوس عليها
+   (كان إطار التركيز بتاع الصفحة بيترسم حوالين خانة الكتابة الداخلية)
+   ===================================================================== */
+#appContainer .input > input,
+#appContainer .input > input:focus,
+#appContainer .input > input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
 }
