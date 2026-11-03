@@ -13,8 +13,12 @@ const PHONE_PARTS = [
 ];
 const PHONE_CAP_IDLE = 'المس التليفون لتفكيكه';
 const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية لفتح أسعارها';
-// لون زجاج الظهر (غيّره براحتك، مثلاً 0x1c2230 أزرق ليلي أو 0x2a2a2e أسود أو 0x5a1426 عنابي)
-const PHONE_BACK_COLOR = 0x5a1426;
+// لون ظهر التليفون (رمادي جرافيت زي الصورة). غيّره براحتك، مثلاً 0x1c2230 أزرق ليلي أو 0x2a2a2e أسود
+const PHONE_BACK_COLOR = 0x55575b;
+// لون الإطار الجانبي (ألومنيوم داكن)
+const PHONE_FRAME_COLOR = 0x2b2c2f;
+// لون الإضاءة حوالين المسرح (أحمر زي الصورة). للدهبي استخدم 0xe8c97a
+const PHONE_STAGE_GLOW = 0xff2a2a;
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 let _p3 = null;          // حالة النموذج الحالي
@@ -131,10 +135,10 @@ function p3ScreenTexture() {
     c.width = 256; c.height = 540;
     const x = c.getContext('2d');
     const g = x.createLinearGradient(0, 0, 256, 540);
-    g.addColorStop(0, '#3a2f1a'); g.addColorStop(0.5, '#15110b'); g.addColorStop(1, '#2a2010');
+    g.addColorStop(0, '#2c3340'); g.addColorStop(0.5, '#0f1218'); g.addColorStop(1, '#1d222c');
     x.fillStyle = g; x.fillRect(0, 0, 256, 540);
     const r = x.createRadialGradient(205, 50, 5, 205, 50, 230);
-    r.addColorStop(0, 'rgba(232,201,122,.55)'); r.addColorStop(1, 'rgba(232,201,122,0)');
+    r.addColorStop(0, 'rgba(140,170,220,.5)'); r.addColorStop(1, 'rgba(140,170,220,0)');
     x.fillStyle = r; x.fillRect(0, 0, 256, 540);
     // الجزيرة العلوية
     x.fillStyle = '#050505'; p3RoundRect(x, 98, 14, 60, 18, 9); x.fill();
@@ -145,7 +149,7 @@ function p3ScreenTexture() {
     for (let row = 0; row < 4; row++) {
         for (let col = 0; col < 4; col++) {
             const a = 0.28 + ((row * 4 + col) % 3) * 0.18;
-            x.fillStyle = 'rgba(232,201,122,' + a.toFixed(2) + ')';
+            x.fillStyle = 'rgba(170,190,230,' + a.toFixed(2) + ')';
             p3RoundRect(x, 24 + col * 54, 190 + row * 66, 44, 44, 11);
             x.fill();
         }
@@ -200,42 +204,76 @@ function p3Build(host) {
 
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.domElement.style.touchAction = 'pan-y';
+    renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
     host.appendChild(renderer.domElement);
 
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(34, 1, 0.1, 60);
-    camera.position.set(0, 0.55, 4.7);
-    camera.lookAt(0, -0.12, 0);
+    camera.position.set(0, 0.5, 3.75);
+    camera.lookAt(0, -0.3, 0);
 
     scene.environment = p3Environment(renderer);
     scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 0.5));
     const key = new T.DirectionalLight(0xffffff, 1.8); key.position.set(2.5, 3, 4); scene.add(key);
-    const rim = new T.DirectionalLight(0xe8c97a, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
+    const rim = new T.DirectionalLight(0xdfe6ff, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
 
-    // ---------- المسرح: منصة زجاج + معدن مصقول تحت التليفون ----------
+    // ---------- المسرح: منصة دايرية داكنة بحلقة مضيئة على الحافة (زي صورة المرجع) ----------
     {
-        const stageGlass = new T.MeshPhysicalMaterial({ color: PHONE_BACK_COLOR, metalness: 0.35, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04 });
-        const stageMetal = new T.MeshStandardMaterial({ color: 0xd9d3c7, metalness: 1, roughness: 0.22 });
+        const topY = -0.93;
         const stage = new T.Group();
+        const glow = new T.Color(PHONE_STAGE_GLOW);
 
-        const top = p3Slab(16, 3.4, 0.1, 0.3, stageGlass, 0.02);        // سطح زجاجي
-        top.rotation.x = -Math.PI / 2;
-        top.position.set(0, -1.03, 0);
-        stage.add(top);
+        // القاعدة السفلية (أكبر شوية)
+        const baseDisc = new T.Mesh(
+            new T.CylinderGeometry(1.32, 1.34, 0.07, 96),
+            new T.MeshPhysicalMaterial({ color: 0x0c0c0e, metalness: 0.5, roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.3 })
+        );
+        baseDisc.position.set(0, topY - 0.035, 0);
+        stage.add(baseDisc);
 
-        const lip = p3Ring(16.12, 3.52, 0.32, 15.96, 3.36, 0.3, 0.115, stageMetal, 0.008);   // حافة معدن حوالين السطح
-        lip.rotation.x = -Math.PI / 2;
-        lip.position.set(0, -1.03, 0);
-        stage.add(lip);
+        // السطح العلوي الداكن (فيه خطوط خفيفة زي الخشب الأسود)
+        const c = document.createElement('canvas');
+        c.width = 512; c.height = 512;
+        const x = c.getContext('2d');
+        x.fillStyle = '#16161a'; x.fillRect(0, 0, 512, 512);
+        for (let i = 0; i < 90; i++) {
+            const a = 0.03 + Math.random() * 0.05;
+            x.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
+            x.fillRect(0, Math.random() * 512, 512, 1 + Math.random() * 2);
+        }
+        const topTex = new T.CanvasTexture(c);
+        topTex.colorSpace = T.SRGBColorSpace;
+        const topDisc = new T.Mesh(
+            new T.CylinderGeometry(1.22, 1.22, 0.025, 96),
+            new T.MeshPhysicalMaterial({ map: topTex, color: 0xffffff, metalness: 0.3, roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.2 })
+        );
+        topDisc.position.set(0, topY - 0.0125, 0);
+        stage.add(topDisc);
 
-        const plate = new T.Mesh(new T.CylinderGeometry(0.82, 0.82, 0.02, 64), stageMetal);  // قاعدة التليفون اللي بيلف عليها
-        plate.position.set(0, -0.97, 0);
-        stage.add(plate);
-        const goldRing = new T.Mesh(new T.RingGeometry(0.86, 0.885, 64), new T.MeshBasicMaterial({ color: 0xe8c97a }));
-        goldRing.rotation.x = -Math.PI / 2;
-        goldRing.position.set(0, -0.958, 0);
-        stage.add(goldRing);
+        // الحلقة المضيئة على الحافة + هالة ناعمة حواليها
+        const ring = new T.Mesh(new T.TorusGeometry(1.29, 0.014, 12, 128), new T.MeshBasicMaterial({ color: glow }));
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(0, topY - 0.012, 0);
+        stage.add(ring);
+        const halo = new T.Mesh(new T.TorusGeometry(1.29, 0.05, 12, 128), new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: 0.22, depthWrite: false }));
+        halo.rotation.x = Math.PI / 2;
+        halo.position.copy(ring.position);
+        stage.add(halo);
+
+        // لمعة على الأرض تحت المنصة
+        const gc = document.createElement('canvas');
+        gc.width = gc.height = 256;
+        const gx = gc.getContext('2d');
+        const rgb = Math.round(glow.r * 255) + ',' + Math.round(glow.g * 255) + ',' + Math.round(glow.b * 255);
+        const gg = gx.createRadialGradient(128, 128, 60, 128, 128, 128);
+        gg.addColorStop(0, 'rgba(' + rgb + ',0.38)'); gg.addColorStop(0.55, 'rgba(' + rgb + ',0.14)'); gg.addColorStop(1, 'rgba(' + rgb + ',0)');
+        gx.fillStyle = gg; gx.fillRect(0, 0, 256, 256);
+        const gt = new T.CanvasTexture(gc);
+        gt.colorSpace = T.SRGBColorSpace;
+        const floor = new T.Mesh(new T.PlaneGeometry(3.6, 3.6), new T.MeshBasicMaterial({ map: gt, transparent: true, depthWrite: false }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(0, topY - 0.075, 0);
+        stage.add(floor);
 
         scene.add(stage);
     }
@@ -319,44 +357,46 @@ function p3Build(host) {
         addPart('port', g, new T.Vector3(0, -0.66, 0.02), new T.Vector3(0, -0.84, 0.06), 0.18);
     }
 
-    // الغطاء الخلفي: زجاج لامع + إطار معدني مصقول + أزرار جانبية
+    // الغطاء الخلفي: زجاج رمادي لامع + إطار ألومنيوم داكن + زرّين جانبيين زي الصورة
     {
         const g = new T.Group();
-        const glass = new T.MeshPhysicalMaterial({ color: PHONE_BACK_COLOR, metalness: 0.35, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05 });
+        const glass = new T.MeshPhysicalMaterial({ color: PHONE_BACK_COLOR, metalness: 0.2, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08 });
         g.add(p3Slab(0.715, 1.475, 0.03, 0.1, glass, 0.012));
 
-        const metal = new T.MeshStandardMaterial({ color: 0xd9d3c7, metalness: 1, roughness: 0.2 });
+        const metal = new T.MeshStandardMaterial({ color: PHONE_FRAME_COLOR, metalness: 1, roughness: 0.3 });
         const frame = p3Ring(0.74, 1.5, 0.115, 0.7, 1.46, 0.095, 0.12, metal, 0.006);
         frame.position.z = 0.035;
         g.add(frame);
-        const power = p3Box(0.014, 0.14, 0.03, metal); power.position.set(0.372, 0.25, 0.035); g.add(power);
-        const vol = p3Box(0.014, 0.24, 0.03, metal); vol.position.set(0.372, 0.52, 0.035); g.add(vol);
+        const vol1 = p3Box(0.016, 0.18, 0.03, metal); vol1.position.set(0.376, 0.235, 0.035); g.add(vol1);
+        const vol2 = p3Box(0.016, 0.18, 0.03, metal); vol2.position.set(0.376, -0.2, 0.035); g.add(vol2);
 
         addPart('back', g, new T.Vector3(0, 0, -0.02), new T.Vector3(0, 0, -0.42), 0.24);
     }
 
-    // الكاميرا (ورا الغطاء): كتلة بيضاوية رأسية بعدستين كبار وعدسة صغيرة وفلاش
+    // الكاميرا (ورا الغطاء): مربع بحواف دايرية في الركن العلوي، عدستين قطريتين + فلاش + مايك صغير (زي الصورة)
     {
         const g = new T.Group();
-        const island = new T.MeshPhysicalMaterial({ color: 0x120c0e, metalness: 0.5, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 });
-        g.add(p3Slab(0.21, 0.46, 0.028, 0.1, island, 0.008));
-        const ringMat = new T.MeshStandardMaterial({ color: 0xcfc8ba, metalness: 1, roughness: 0.2 });
+        const island = new T.MeshPhysicalMaterial({ color: 0x3b3d41, metalness: 0.35, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06 });
+        g.add(p3Slab(0.34, 0.34, 0.028, 0.095, island, 0.01));
+        const ringMat = new T.MeshStandardMaterial({ color: 0xb9bbc0, metalness: 1, roughness: 0.22 });
         const barrel = new T.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.9, roughness: 0.3 });
-        const lensGlass = new T.MeshPhysicalMaterial({ color: 0x06060d, metalness: 1, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0 });
+        const lensGlass = new T.MeshPhysicalMaterial({ color: 0x0a0d2a, metalness: 1, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0 });
         const lens = (px, py, r) => {
-            const ring = new T.Mesh(new T.CylinderGeometry(r, r, 0.022, 36), ringMat);
+            const ring = new T.Mesh(new T.CylinderGeometry(r, r, 0.022, 40), ringMat);
             ring.rotation.x = Math.PI / 2; ring.position.set(px, py, -0.02); g.add(ring);
-            const bar = new T.Mesh(new T.CylinderGeometry(r * 0.82, r * 0.82, 0.026, 36), barrel);
+            const bar = new T.Mesh(new T.CylinderGeometry(r * 0.84, r * 0.84, 0.026, 40), barrel);
             bar.rotation.x = Math.PI / 2; bar.position.set(px, py, -0.022); g.add(bar);
-            const gl = new T.Mesh(new T.CylinderGeometry(r * 0.62, r * 0.62, 0.03, 36), lensGlass);
+            const gl = new T.Mesh(new T.CylinderGeometry(r * 0.62, r * 0.62, 0.03, 40), lensGlass);
             gl.rotation.x = Math.PI / 2; gl.position.set(px, py, -0.024); g.add(gl);
         };
-        lens(0, 0.12, 0.062);
-        lens(0, -0.035, 0.062);
-        lens(0, -0.16, 0.028);
-        const flash = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.01, 20), new T.MeshStandardMaterial({ color: 0xf6efd8, metalness: 0.3, roughness: 0.4 }));
-        flash.rotation.x = Math.PI / 2; flash.position.set(0.062, -0.17, -0.018); g.add(flash);
-        addPart('camera', g, new T.Vector3(-0.2, 0.5, -0.05), new T.Vector3(-0.3, 0.68, -0.8), 0.3);
+        // (الظهر بيتشاف من ناحية -z فالمحور x معكوس: +x = شمال الشاشة)
+        lens(0.078, 0.078, 0.064);      // عدسة فوق شمال
+        lens(-0.078, -0.078, 0.064);    // عدسة تحت يمين
+        const flash = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.01, 24), new T.MeshStandardMaterial({ color: 0xf1ead2, metalness: 0.3, roughness: 0.4 }));
+        flash.rotation.x = Math.PI / 2; flash.position.set(-0.085, 0.09, -0.018); g.add(flash);
+        const mic = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.008, 12), new T.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.5, roughness: 0.5 }));
+        mic.rotation.x = Math.PI / 2; mic.position.set(0.09, -0.095, -0.016); g.add(mic);
+        addPart('camera', g, new T.Vector3(0.15, 0.525, -0.05), new T.Vector3(0.3, 0.7, -0.8), 0.3);
     }
 
     // ---------- طبقة الأسماء والخطوط ----------
