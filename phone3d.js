@@ -1,6 +1,6 @@
 // ================= تليفون ثلاثي الأبعاد في الهيرو: بيلف لوحده، واللمس بيفككه لقطع الغيار =================
-// بيتحمّل بعد hero.js. المكتبة (Three.js) بتتحمّل أول ما الشريحة تظهر بس.
-// hero.js بينادي phone3dSetActive(true/false) كل ما الشريحة تظهر أو تختفي.
+// قسم مستقل في الشاشة الرئيسية (بين لوحة العرض وكارت شراء قطع الغيار).
+// dashboard.js بينادي phone3dSectionHtml() ثم phone3dMount(). المكتبة (Three.js) بتتحمّل أول ما القسم يظهر.
 //
 // أسماء القطع اللي بتظهر على الشاشة (غيّرها لو أسماء قطع الغيار عندك في قاعدة البيانات مختلفة):
 const PHONE_PARTS = [
@@ -32,26 +32,39 @@ function phone3dLoadThree() {
     return _threePromise;
 }
 
-// ---------- نقطة الدخول (من hero.js) ----------
-function phone3dSetActive(active) {
-    if (!active) {
-        window.heroHold = false;
-        if (_p3) { _p3.active = false; p3Collapse(true); }
-        return;
-    }
+// ---------- نقطة الدخول (من dashboard.js) ----------
+function phone3dSectionHtml() {
+    return `
+        <section class="phone-stage" aria-label="تليفون ثلاثي الأبعاد">
+            <div class="phone-stage-cap" id="heroPhoneCap">${PHONE_CAP_IDLE}</div>
+            <div class="hero-phone" id="heroPhone"></div>
+        </section>`;
+}
+
+let _p3Io = null;   // بيراقب ظهور القسم على الشاشة (بنوقف الرسم لما يبعد عن النظر)
+
+function phone3dMount() {
     const host = document.getElementById('heroPhone');
     if (!host) return;
-    if (_p3 && _p3.host === host) { _p3.active = true; p3Start(); return; }
+    if (_p3 && _p3.host === host) return;
     if (_p3Pending === host) return;
     if (_p3) p3Dispose();
+    if (_p3Io) { _p3Io.disconnect(); _p3Io = null; }
     _p3Pending = host;
     phone3dLoadThree().then(() => {
         _p3Pending = null;
         if (!document.body.contains(host)) return;   // الشاشة اتعاد رسمها وإحنا بنحمّل
         _p3 = p3Build(host);
-        const slide = host.closest('.hero-slide');
-        _p3.active = !!(slide && slide.classList.contains('active'));
-        if (_p3.active) p3Start();
+        _p3.active = true;
+        p3Start();
+        if ('IntersectionObserver' in window) {
+            _p3Io = new IntersectionObserver(entries => {
+                if (!_p3) return;
+                _p3.active = entries[entries.length - 1].isIntersecting;
+                if (_p3.active) p3Start();
+            }, { threshold: 0.05 });
+            _p3Io.observe(host);
+        }
     }).catch(() => {
         _p3Pending = null;
         host.innerHTML = '<div class="hp3-fail">تعذّر تشغيل العرض ثلاثي الأبعاد على هذا الجهاز</div>';
@@ -141,7 +154,7 @@ function p3Build(host) {
 
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(32, 1, 0.1, 50);
-    camera.position.set(0, 0, 4.7);
+    camera.position.set(0, 0, 4.3);
 
     scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 1.1));
     const key = new T.DirectionalLight(0xffffff, 2.4); key.position.set(2.5, 3, 4); scene.add(key);
@@ -340,7 +353,6 @@ function p3SetCaption(text) {
 function p3Explode() {
     const s = _p3; if (!s) return;
     s.target = 1;
-    window.heroHold = true;      // نوقف تبديل الشرايح التلقائي
     p3SetCaption(PHONE_CAP_OPEN);
 }
 
@@ -348,7 +360,6 @@ function p3Collapse(instant) {
     const s = _p3; if (!s) return;
     p3Select(null);
     s.target = 0;
-    window.heroHold = false;
     p3SetCaption(PHONE_CAP_IDLE);
     if (instant) { s.ex = 0; p3Apply(s, 0); }
 }
@@ -368,7 +379,6 @@ function p3Select(key) {
 
 function p3Open(key) {
     const item = PHONE_PARTS.find(p => p[0] === key);
-    window.heroHold = false;
     if (_p3) p3Collapse(true);
     if (item && typeof renderBrandsScreen === 'function') renderBrandsScreen(item[1]);
 }
@@ -474,5 +484,4 @@ function p3Dispose() {
     if (s.ro) s.ro.disconnect();
     try { s.renderer.dispose(); s.renderer.forceContextLoss(); } catch (e) { /* مش مشكلة */ }
     _p3 = null;
-    window.heroHold = false;
 }
