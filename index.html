@@ -72,7 +72,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
     <link rel="stylesheet" href="style.css?v=20261101-2">
-    <link rel="stylesheet" href="theme.css?v=20261104-3">
+    <link rel="stylesheet" href="theme.css?v=20261104-4">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
@@ -137,8 +137,26 @@
     <script>
         // تسجيل الـ service worker: بيخلي التطبيق يفتح ويتحدّث حتى لو مفيش نت (بعد أول زيارة بنت شغال)
         if ('serviceWorker' in navigator) {
+            var hadController = !!navigator.serviceWorker.controller;
+
+            // لما نسخة جديدة تاخد مكان القديمة: نظهر شريط "فيه تحديث جديد" (مش في أول تثبيت)
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (!hadController) { hadController = true; return; }
+                if (document.getElementById('updateBanner')) return;
+                var b = document.createElement('div');
+                b.id = 'updateBanner';
+                b.className = 'conn-banner online';
+                b.innerHTML = 'فيه تحديث جديد<button type="button" onclick="location.reload()">تحديث</button>';
+                document.body.appendChild(b);
+            });
+
             window.addEventListener('load', function () {
-                navigator.serviceWorker.register('sw.js').catch(function () {});
+                navigator.serviceWorker.register('sw.js').then(function (reg) {
+                    // نفحص عن تحديث كل ما ترجع للتطبيق
+                    document.addEventListener('visibilitychange', function () {
+                        if (!document.hidden) reg.update().catch(function () {});
+                    });
+                }).catch(function () {});
             });
         }
     </script>
