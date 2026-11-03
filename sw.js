@@ -1,10 +1,14 @@
 // ================= Service Worker: تشغيل التطبيق وتحديثه حتى من غير إنترنت =================
-// - ملفات الموقع نفسه: الشبكة أولاً (عشان التعديلات الجديدة تظهر فوراً)، ولو النت مقطوع أو بطيء أكتر من 5 ثواني نستخدم النسخة المخزنة.
+// - ملفات الموقع نفسه: الشبكة أولاً (عشان التعديلات الجديدة تظهر فوراً) ومن غير كاش المتصفح (cache: 'no-cache')،
+//   ولو النت مقطوع أو بطيء أكتر من 8 ثواني نستخدم النسخة المخزنة.
+// - مهم: مع كل رفع جديد غيّر VERSION تحت. المتصفح بيحدّث الـ service worker بس لو الملف ده اتغيّر،
+//   وتغيير الاسم بيمسح الكاش القديم كله فمفيش حاجة قديمة تفضل عالقة.
 // - ملفات الـ CDN (tailwind / daisyui / supabase / الخطوط): نعرض المخزن فوراً ونحدّثه في الخلفية.
 // - أي طلبات تانية (زي API بتاع Supabase) بنسيبها تعدّي من غير تدخل.
 
-const CACHE = 'electricity-shell-v1';
-const NETWORK_TIMEOUT_MS = 5000;
+const VERSION = '20261104-1';
+const CACHE = 'electricity-shell-' + VERSION;
+const NETWORK_TIMEOUT_MS = 8000;
 
 // صور كروت الأقسام في الشاشة الرئيسية (في نفس فولدر index.html): بتتحمّل مع التثبيت عشان تظهر حتى لو مفيش نت.
 const CARD_IMAGES = ['buy-parts.jpg', 'compat.jpg', 'maintenance-alerts.jpg', 'repair-shops.jpg'];
@@ -66,7 +70,8 @@ self.addEventListener('activate', (event) => {
 function fetchWithTimeout(req, ms) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), ms);
-    return fetch(req, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    // بنطلب من السيرفر مباشرة (يتأكد من الجديد) بدل كاش المتصفح
+    return fetch(req.url, { cache: 'no-cache', signal: ctrl.signal }).finally(() => clearTimeout(t));
 }
 
 async function networkFirst(req) {
@@ -76,7 +81,7 @@ async function networkFirst(req) {
         if (res && res.ok) cache.put(req, res.clone());
         return res;
     } catch (err) {
-        const cached = await cache.match(req, { ignoreSearch: true });
+        const cached = (await cache.match(req)) || (await cache.match(req, { ignoreSearch: true }));
         if (cached) return cached;
         if (req.mode === 'navigate') {
             const shell = (await cache.match('./index.html')) || (await cache.match('./'));
