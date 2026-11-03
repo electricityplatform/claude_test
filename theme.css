@@ -1119,3 +1119,15 @@ html:not(.dark) body.bg-base-100 {
     background-color: #ffffff;
     background-image: none;
 }
+
+
+/* =====================================================================
+   من غير ظلال خالص: لا على الكروت ولا الهيرو ولا الشريطين ولا الأزرار ولا النصوص.
+   الاستثناء الوحيد: حلقة التركيز على الحقول وخلايا الشيت (عشان تعرف انت واقف فين وانت بتكتب).
+   ===================================================================== */
+*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
+*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
+*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
