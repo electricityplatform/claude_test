@@ -1,6 +1,6 @@
 // ================= هيرو الشاشة الرئيسية (بيحل محل لوحة الترحيب) =================
-// 4 شرائح بتتبدل لوحدها: تركيب اللوجو، معرض شاشات بيلف، أرقام المنصة، الخدمات.
-const HERO_SLIDE_MS = [6500, 8500, 5500, 6000];
+// 5 شرائح بتتبدل لوحدها: تركيب اللوجو، تليفون ثلاثي الأبعاد (phone3d.js)، معرض شاشات بيلف، أرقام المنصة، الخدمات.
+const HERO_SLIDE_MS = [6500, 12000, 8500, 5500, 6000];
 const heroStats = { brands: null, parts: null, services: null, loaded: false };
 let heroTimer = null;
 
@@ -47,6 +47,11 @@ function homeHeroHtml() {
             <div class="hero-tag">منصتك لقطع غيار الهواتف</div>
         </div>
 
+        <div class="hero-slide" data-slide="phone">
+            <div class="hero-cap" id="heroPhoneCap">المس التليفون لتفكيكه</div>
+            <div class="hero-phone" id="heroPhone"></div>
+        </div>
+
         <div class="hero-slide" data-slide="gallery">
             <div class="hero-cap">كل ما يحتاجه محلك في مكان واحد</div>
             <div class="hero-stage3d" aria-hidden="true"><div class="hero-ring">${panels}</div></div>
@@ -67,6 +72,7 @@ function homeHeroHtml() {
             <button type="button" class="hero-dot" aria-label="الشريحة 2"></button>
             <button type="button" class="hero-dot" aria-label="الشريحة 3"></button>
             <button type="button" class="hero-dot" aria-label="الشريحة 4"></button>
+            <button type="button" class="hero-dot" aria-label="الشريحة 5"></button>
         </div>
     </section>`;
 }
@@ -84,7 +90,7 @@ function initHomeHero() {
         clearTimeout(heroTimer);
         heroTimer = setTimeout(() => {
             if (!document.body.contains(root)) return;
-            if (paused) { schedule(); return; }
+            if (paused || window.heroHold) { schedule(); return; }
             show(idx + 1);
         }, HERO_SLIDE_MS[idx] || 6000);
     }
@@ -97,6 +103,7 @@ function initHomeHero() {
             d.setAttribute('aria-current', i === idx ? 'true' : 'false');
         });
         if (slides[idx].dataset.slide === 'stats') heroAnimateCounts(root);
+        if (typeof phone3dSetActive === 'function') phone3dSetActive(slides[idx].dataset.slide === 'phone');
         schedule();
     }
 
