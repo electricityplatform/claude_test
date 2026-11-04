@@ -1215,7 +1215,7 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 /* =====================================================================
    قسم التليفون ثلاثي الأبعاد في الشاشة الرئيسية (phone3d.js)
    ===================================================================== */
-.phone-stage { position: relative; margin: 0 0 1rem; padding: 0; overflow: hidden; isolation: isolate; border: 1px solid rgba(201, 169, 98, .5); box-shadow: 0 .4rem 1.1rem rgba(60, 48, 30, .12); }
+.phone-stage { position: relative; margin: 0 0 1rem; padding: 0; overflow: hidden; isolation: isolate; border-radius: 1.6rem; border: 1px solid rgba(201, 169, 98, .5); box-shadow: 0 .4rem 1.1rem rgba(60, 48, 30, .12); }
 .phone-stage-cap { position: relative; text-align: center; font-size: .85rem; font-weight: 700; color: #5b4a2a; margin: 0; padding: .1rem .75rem .75rem; }
 .hero-phone { overflow: hidden; position: relative; width: 100%; height: 26rem; direction: ltr; touch-action: pan-y pinch-zoom; }
 .hero-phone canvas { display: block; width: 100%; height: 100%; }
@@ -1283,3 +1283,54 @@ html:has(#appContainer .app-topbar) .app-topbar.has-search { position: static; }
 .hero-dot { background: rgba(246, 241, 231, .32); }
 .hero-dot.active { background: #ecd9a6; }
 .phone-stage { background: linear-gradient(180deg, var(--panel-mid) 0%, #cdbb8f 40%, var(--panel-light) 100%); }
+
+.hero { border-radius: 1.6rem; }
+@media (min-width: 900px) { .hero, .phone-stage { border-radius: 2.2rem; } }
+
+/* =====================================================================
+   ألوان الشريط العلوي + البحث + الشريط السفلي + بطاقات الأقسام وعناصر القوائم:
+   نفس لون لوحة الترحيب وتدرّجها (غامق -> --panel-mid)، في الوضعين الفاتح والداكن.
+   (لوحة التليفون مش مرجع للألوان دي.)
+   ===================================================================== */
+:root, html.dark {
+    --hero-grad: linear-gradient(180deg, var(--panel-dark) 0%, var(--panel-mid) 100%);
+    --dark-bar: var(--hero-grad);
+    --dark-surface: var(--hero-grad);
+    --dark-edge: rgba(236, 217, 166, .4);
+}
+/* البطاقات: خلفية موحّدة بتدرّج لوحة الترحيب (بتغطي ألوان hover القديمة، فبنعمل hover بسطوع) */
+html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature,
+html.dark .dash-card, html.dark .dash-card.feature {
+    background-color: var(--panel-dark) !important;
+    background-image: var(--hero-grad) !important;
+    color: #f6f1e7 !important;
+}
+html:not(.dark) .dash-card:hover, html:not(.dark) .dash-card.feature:hover,
+html.dark .dash-card:hover, html.dark .dash-card.feature:hover { background-color: var(--panel-dark) !important; filter: brightness(1.1); }
+html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200),
+html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
+    background-color: var(--panel-dark);
+    background-image: var(--hero-grad);
+    border-color: var(--dark-edge);
+}
+html #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover,
+html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
+    background-color: var(--panel-dark);
+    background-image: var(--hero-grad);
+    filter: brightness(1.1);
+}
+/* الشريط العلوي والسفلي */
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar),
+html.dark :is(.bottom-nav, #appContainer .app-topbar) { background: var(--hero-grad); border-color: var(--dark-edge); }
+html.dark .bottom-nav .bottom-nav-item { color: rgba(245, 233, 196, .78) !important; }
+html.dark .bottom-nav .bottom-nav-item:hover, html.dark .bottom-nav .bottom-nav-item:active { color: #f6e3ae !important; background: rgba(236, 217, 166, .14); }
+/* شريط البحث فوق التدرّج */
+html #appContainer .app-topbar .input {
+    background: rgba(246, 241, 231, .14);
+    border-color: rgba(236, 217, 166, .5);
+    color: #f6f1e7;
+}
+html #appContainer .app-topbar .input input { color: #f6f1e7; }
+html #appContainer .app-topbar .input input::placeholder { color: rgba(246, 241, 231, .65); }
+html #appContainer .app-topbar .input svg { color: #ecd9a6; opacity: .9; }
+html #appContainer .app-topbar .btn-outline { border-color: rgba(236, 217, 166, .55); color: #ecd9a6; background: rgba(246, 241, 231, .08); }
