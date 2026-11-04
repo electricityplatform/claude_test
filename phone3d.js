@@ -309,26 +309,31 @@ function p3Build(host, imgs) {
         if (pkey && !g.main) { g.main = true; g.delay = delay; g.z = z; g.t = t; }   // القطعة الأساسية هي اللي بتحدد عمق الشريحة
         g.items.push({ file, cx, cy, w, h, z, t, side, poly, pick: !!pkey });
     });
-    const layerZ = [...new Set(Object.values(groups).map(g => g.z))].sort((a, b) => b - a);
+    // كل شريحة (على عمقها) ليها ميل لوحدها: +زاوية، -زاوية، +زاوية... بنفس القيمة بالظبط (٧٨٧٨)
+    const isStuck = (g, it) => g.key === 'camera' && it.z !== g.z;
+    const layerZ = [...new Set(Object.values(groups).flatMap(g => g.items.map(it => isStuck(g, it) ? g.z : it.z)))].sort((a, b) => b - a);
+    const tiltOf = z => (layerZ.indexOf(z) % 2 ? -1 : 1) * P3_TILT;
     Object.keys(groups).forEach(gk => {
         const g = groups[gk];
         const x0 = Math.min(...g.items.map(i => i.cx - i.w / 2)), x1 = Math.max(...g.items.map(i => i.cx + i.w / 2));
         const y0 = Math.min(...g.items.map(i => i.cy - i.h / 2)), y1 = Math.max(...g.items.map(i => i.cy + i.h / 2));
         const gcx = (x0 + x1) / 2, gcy = (y0 + y1) / 2;
         const obj = new T.Group();
-        const mats = [], capMats = [];
+        const mats = [], capMats = [], slabs = [];
         g.items.forEach(it => {
             const sl = slabFor(imgs[it.file], it);
             // كاميرا/فلاش: لازقين في وش شريحة الكاميرا؛ باقي القطع بتتباعد زي ما هي
-            const stuck = g.key === 'camera' && it.z !== g.z;
+            const stuck = isStuck(g, it);
             const dz = stuck ? Math.sign(it.z - g.z) * (g.t + it.t) / 2 : (it.z - g.z) * P3_SPREAD;
-            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, dz);
+            const dx = (it.cx - gcx) * PHONE_K, dy = -(it.cy - gcy) * PHONE_K;
+            sl.g.position.set(dx, dy, dz);
+            slabs.push({ g: sl.g, dx, dy, dz, stuck, tilt: tiltOf(stuck ? g.z : it.z) });
             if (g.key && it.pick) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
             obj.add(sl.g); mats.push(...sl.mats); capMats.push(...sl.capMats);
         });
         const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, g.z * P3_SPREAD);
         exWrap.add(obj);
-        const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3(), tilt: (layerZ.indexOf(g.z) % 2 ? -1 : 1) * P3_TILT, v: new T.Vector3() };
+        const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3(), slabs };
         if (g.key) parts[g.key] = rec; else decos.push(rec);
     });
 
@@ -593,10 +598,14 @@ function p3Smooth(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * 
 function p3Apply(s, e) {
     const place = (p) => {
         const t = p3Smooth((e - p.delay) / (1 - p.delay * 0.9));
-        const a = p.tilt * t, ca = Math.cos(a), sa = Math.sin(a);
-        p.obj.rotation.y = a;   // زجزاج: الشرايح بتميل بالتبادل حوالين محور التليفون
-        p.v.set(p.ex.x * ca, p.ex.y, p.ex.z - p.ex.x * sa);
-        p.obj.position.lerpVectors(s.baseVec, p.v, t);
+        p.obj.position.lerpVectors(s.baseVec, p.ex, t);
+        // زجزاج: كل شريحة بتميل حوالين محور التليفون الراسي، والميل بالتبادل +/- بنفس الزاوية
+        const gx = p.obj.position.x;
+        p.slabs.forEach(sl => {
+            const a = sl.tilt * t, ca = Math.cos(a), sa = Math.sin(a), X = gx + sl.dx;
+            sl.g.rotation.y = a;
+            sl.g.position.set(X * ca + (sl.stuck ? sl.dz * sa : 0) - gx, sl.dy, -X * sa + (sl.stuck ? sl.dz * ca : sl.dz));
+        });
         p.obj.scale.setScalar(0.5 + 0.5 * t);
         p.mats.forEach(m => { m.opacity = t; });
         p.obj.visible = t > 0.01;
