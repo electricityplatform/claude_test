@@ -44,6 +44,9 @@ const PHONE_LAYOUT = [
     ['inner', 'back', 660.0, 606.0, 463, 1000, -0.40, 0.24, 0.035, 0x41403f, [0.2592,0.0,0.257,0.002,0.2289,0.005,0.1965,0.013,0.1814,0.014,0.1728,0.018,0.1728,0.025,0.1857,0.029,0.1857,0.034,0.1793,0.036,0.1706,0.076,0.1771,0.08,0.1685,0.087,0.1512,0.171,0.1555,0.181,0.149,0.184,0.1447,0.203,0.149,0.219,0.1447,0.235,0.1382,0.237,0.1425,0.243,0.1425,0.25,0.1361,0.252,0.1404,0.253,0.1382,0.265,0.1274,0.268,0.095,0.27,0.0886,0.276,0.0691,0.279,0.0648,0.303,0.0799,0.306,0.0842,0.314,0.0756,0.322,0.0346,0.514,0.0389,0.521,0.0324,0.524,0.0043,0.656,0.0086,0.669,0.0065,0.672,0.0,0.673,0.0,0.839,0.0151,0.842,0.0086,0.871,0.013,0.89,0.0043,0.933,0.0,0.934,0.0,0.984,0.0194,0.987,0.0238,0.991,0.0497,0.999,0.6004,0.999,0.6026,0.997,0.6307,0.999,0.6328,0.997,0.797,0.996,0.9114,0.993,0.9417,0.994,0.9546,0.999,0.9935,0.999,0.9935,0.723,0.9978,0.722,0.9892,0.717,0.9892,0.713,0.9978,0.711,0.9978,0.192,0.9914,0.19,0.9914,0.138,0.9978,0.136,0.9978,0.117,0.9935,0.116,0.9935,0.0,0.9633,0.0,0.9633,0.004,0.9525,0.007,0.6479,0.002,0.6458,0.0]],
     ['back', 'back', 660.0, 606.0, 463, 1000, -0.62, 0.24, 0.030, 0x635f5c, [0.0173,0.01,0.0,0.014,0.0,0.19,0.0043,0.191,0.0,0.264,0.0043,0.265,0.0065,0.49,0.0043,0.635,0.0,0.636,0.0,0.974,0.0259,0.985,0.0497,0.991,0.0778,0.995,0.1296,0.997,0.1317,0.999,0.8985,0.999,0.9006,0.997,0.9374,0.994,0.9676,0.984,0.9827,0.975,0.9914,0.965,0.9914,0.953,0.9978,0.951,0.9978,0.045,0.9914,0.043,0.987,0.028,0.9741,0.018,0.9438,0.008,0.9093,0.003,0.8704,0.002,0.8683,0.0,0.8618,0.002,0.8531,0.002,0.851,0.0,0.8402,0.0,0.838,0.002,0.8294,0.0,0.8272,0.002,0.8099,0.002,0.8078,0.0,0.8035,0.002,0.7732,0.002,0.7711,0.0,0.7689,0.002,0.7516,0.002,0.7495,0.0,0.7451,0.002,0.4082,0.002,0.406,0.0,0.3974,0.002,0.2484,0.002,0.2462,0.0,0.2441,0.002,0.2354,0.002,0.2333,0.0,0.2246,0.002,0.216,0.0,0.2138,0.002,0.1987,0.002,0.1965,0.0,0.1944,0.002,0.1857,0.002,0.1836,0.0,0.1577,0.0,0.149,0.002,0.1469,0.0,0.1274,0.0,0.1253,0.002,0.0799,0.003]]
 ];
+const P3_TILT = 12 * Math.PI / 180;   // زاوية الزجزاج: كل شريحة بتميل +/- الزاوية دي عن اللي جنبها (0 = متوازية)
+// أجزاء صغيرة بتتلزق في شريحتها بدل ما تبقى شرايح منفصلة (القطعة : الشريحة اللي تنضم لها)
+const PHONE_ATTACH = { lspk: 'port', spk: 'port', strip: 'battery' };
 const P3_SPREAD = 1.3;   // معامل تباعد الشرايح عن بعض وقت الفك (1 = زي الأول)
 const PHONE_PCX = 660, PHONE_PCY = 606;   // مركز التليفون في مستوى التركيبة (بكسل)
 const PHONE_K = 1.7 / 1000;                // وحدة العالم لكل بكسل (طول الشاشة 1.7)
@@ -300,9 +303,13 @@ function p3Build(host, imgs) {
 
     const groups = {};
     PHONE_LAYOUT.forEach(([file, pkey, cx, cy, w, h, z, delay, t, side, poly]) => {
-        const gk = pkey || ('deco-' + file);
-        (groups[gk] = groups[gk] || { key: pkey, delay, z, items: [] }).items.push({ file, cx, cy, w, h, z, t, side, poly });
+        const owner = pkey || PHONE_ATTACH[file] || null;
+        const gk = owner || ('deco-' + file);
+        const g = groups[gk] = groups[gk] || { key: owner, delay, z, t, items: [] };
+        if (pkey && !g.main) { g.main = true; g.delay = delay; g.z = z; g.t = t; }   // القطعة الأساسية هي اللي بتحدد عمق الشريحة
+        g.items.push({ file, cx, cy, w, h, z, t, side, poly, pick: !!pkey });
     });
+    const layerZ = [...new Set(Object.values(groups).map(g => g.z))].sort((a, b) => b - a);
     Object.keys(groups).forEach(gk => {
         const g = groups[gk];
         const x0 = Math.min(...g.items.map(i => i.cx - i.w / 2)), x1 = Math.max(...g.items.map(i => i.cx + i.w / 2));
@@ -312,13 +319,16 @@ function p3Build(host, imgs) {
         const mats = [], capMats = [];
         g.items.forEach(it => {
             const sl = slabFor(imgs[it.file], it);
-            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, (it.z - g.z) * P3_SPREAD);
-            if (g.key) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
+            // كاميرا/فلاش: لازقين في وش شريحة الكاميرا؛ باقي القطع بتتباعد زي ما هي
+            const stuck = g.key === 'camera' && it.z !== g.z;
+            const dz = stuck ? Math.sign(it.z - g.z) * (g.t + it.t) / 2 : (it.z - g.z) * P3_SPREAD;
+            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, dz);
+            if (g.key && it.pick) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
             obj.add(sl.g); mats.push(...sl.mats); capMats.push(...sl.capMats);
         });
         const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, g.z * P3_SPREAD);
         exWrap.add(obj);
-        const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3() };
+        const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3(), tilt: (layerZ.indexOf(g.z) % 2 ? -1 : 1) * P3_TILT, v: new T.Vector3() };
         if (g.key) parts[g.key] = rec; else decos.push(rec);
     });
 
@@ -432,7 +442,14 @@ function p3Build(host, imgs) {
     cv.addEventListener('pointercancel', e => endPtr(e, true));
     // الماوس على الكمبيوتر: العجلة بتكبّر لما يكون مفكوك (وهو متجمّع بنسيب الصفحة تتمرر عادي)
     cv.addEventListener('wheel', e => {
-        if (s.target !== 1) return;
+        if (s.target !== 1 || e.ctrlKey || e.metaKey) return;   // Ctrl+سكرول = تكبير الصفحة كلها (بتاع المتصفح)، منلمسوش
+        // الكانفاس بقى أكبر من الإطار، فالعجلة بتكبّر بس لو الماوس فوق التليفون نفسه؛ برّاه الصفحة بتتمرر عادي
+        const rect = cv.getBoundingClientRect();
+        s.raycaster.setFromCamera(new THREE.Vector2(
+            ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            -((e.clientY - rect.top) / rect.height) * 2 + 1), s.camera);
+        const onPhone = s.raycaster.intersectObjects(s.exWrap.children, true).some(h => h.object.material && h.object.material.opacity > 0.5);
+        if (!onPhone) return;
         e.preventDefault();
         s.zoomT = clampZoom(s.zoomT * Math.exp(-e.deltaY * 0.0012));
     }, { passive: false });
@@ -576,7 +593,10 @@ function p3Smooth(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * 
 function p3Apply(s, e) {
     const place = (p) => {
         const t = p3Smooth((e - p.delay) / (1 - p.delay * 0.9));
-        p.obj.position.lerpVectors(s.baseVec, p.ex, t);
+        const a = p.tilt * t, ca = Math.cos(a), sa = Math.sin(a);
+        p.obj.rotation.y = a;   // زجزاج: الشرايح بتميل بالتبادل حوالين محور التليفون
+        p.v.set(p.ex.x * ca, p.ex.y, p.ex.z - p.ex.x * sa);
+        p.obj.position.lerpVectors(s.baseVec, p.v, t);
         p.obj.scale.setScalar(0.5 + 0.5 * t);
         p.mats.forEach(m => { m.opacity = t; });
         p.obj.visible = t > 0.01;
