@@ -1,5 +1,5 @@
-// ================= تليفون ثلاثي الأبعاد في الهيرو: بيلف لوحده، واللمس بيفككه لقطع الغيار =================
-// قسم مستقل في الشاشة الرئيسية (بين لوحة العرض وكارت شراء قطع الغيار).
+// ================= تليفون في الهيرو: صور حقيقية، بيلف 360° بصباعك، واللمسة بتفككه لقطع الغيار =================
+// لوحة مستقلة في الشاشة الرئيسية (بعد لوحة الترحيب بمسافتها الطبيعية، ولونها كمّلة تدرّج لوحة الترحيب).
 // dashboard.js بينادي phone3dSectionHtml() ثم phone3dMount(). المكتبة (Three.js) بتتحمّل أول ما القسم يظهر.
 //
 // أسماء القطع اللي بتظهر على الشاشة (غيّرها لو أسماء قطع الغيار عندك في قاعدة البيانات مختلفة):
@@ -11,11 +11,19 @@ const PHONE_PARTS = [
     ['back',    'غطاء خلفي'],
     ['camera',  'كاميرا']
 ];
-const PHONE_CAP_IDLE = 'المس التليفون لتفكيكه';
+const PHONE_CAP_IDLE = 'لفّ التليفون بصباعك، أو المسه لتفكيكه';
 const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية لفتح أسعارها';
-// الصور: التليفون وقطعه صور حقيقية مقصوصة (PNG شفاف) في نفس فولدر index.html.
-// كل سطر: [اسم الملف، القطعة اللي بتتحدد (null = ديكور من غير اسم)، مركز X، مركز Y، العرض، الطول (بكسل من الصورة الأصلية)، عمق، تأخير]
-const PHONE_WHOLE_IMG = 'phone-whole.png';
+const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+
+// صور التليفون: ظهر وواجهة (مفرودين من الصورتين الحقيقيتين) في نفس فولدر index.html.
+const PHONE_BACK_TEX = 'phone-back-tex.jpg';
+const PHONE_FRONT_TEX = 'phone-front-tex.jpg';
+const PHONE_H = 1.65, PHONE_W = PHONE_H * 0.487, PHONE_D = 0.09, PHONE_R = 0.1;   // مقاسات الجسم
+const PHONE_Z = 0.15, PHONE_CY = 0.08;                                            // مكانه في المشهد
+const PHONE_SIDE_COLOR = 0x3b3c40;                                                // لون الإطار الجانبي (جرافيت)
+
+// القطع بعد التفكيك (صور حقيقية مقصوصة PNG شفاف):
+// [اسم الملف، القطعة اللي بتتحدد (null = ديكور من غير اسم)، مركز X، مركز Y، العرض، الطول (بكسل من الصورة الأصلية)، عمق، تأخير]
 const PHONE_LAYOUT = [
     ['screen',  'screen',  110.5,  591.5, 189,  963, 0.00, 0.00],
     ['digit',   'screen',  245.0,  592.0, 100,  942, 0.01, 0.00],
@@ -35,12 +43,6 @@ const PHONE_LAYOUT = [
 ];
 const PHONE_SRC_CX = 641, PHONE_SRC_CY = 606;   // مركز التركيبة في الصورة الأصلية
 const PHONE_K = 1.7 / 1077;                      // وحدة العالم لكل بكسل (التركيبة طولها 1.7)
-const PHONE_H = 1.65;                            // طول التليفون الكامل واقف على الشلف
-// الشلف: حيطة كريمي نازلة من لوحة الترحيب وبتلف في النص بقوس ناعم لبرا (مش زاوية 90)، وحافة ذهبي.
-// الكريمي هنا لازم يطابق --shop-cream في theme.css
-const PHONE_SHELF_CREAM = 0xfbf8f1;
-const PHONE_SHELF_GOLD = 0xe4d09c;
-const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 let _p3 = null;          // حالة النموذج الحالي
 let _p3Pending = null;   // الـ host اللي بنبنيه دلوقتي (عشان ما نبنيش مرتين)
@@ -76,9 +78,9 @@ function phone3dLoadImages() {
         im.onerror = () => rej(new Error('img ' + src));
         im.src = src;
     });
-    return Promise.all([load(PHONE_WHOLE_IMG), ...names.map(n => load('phone-' + n + '.png'))]).then(list => {
-        const map = { whole: list[0] };
-        names.forEach((n, i) => { map[n] = list[i + 1]; });
+    return Promise.all([load(PHONE_BACK_TEX), load(PHONE_FRONT_TEX), ...names.map(n => load('phone-' + n + '.png'))]).then(list => {
+        const map = { backTex: list[0], frontTex: list[1] };
+        names.forEach((n, i) => { map[n] = list[i + 2]; });
         return map;
     });
 }
@@ -113,7 +115,6 @@ function phone3dMount() {
     });
 }
 
-// ---------- أدوات صغيرة ----------
 function p3RoundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -146,6 +147,22 @@ function p3Environment(renderer) {
 }
 
 // ---------- بناء المشهد ----------
+// مستطيل بحواف دايرية (Shape) مرسوم حوالين نقطة الأصل
+function p3RRShape(w, h, r) {
+    r = Math.min(r, w / 2 - 0.001, h / 2 - 0.001);
+    const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y);
+    s.lineTo(x + w - r, y);
+    s.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
+    s.lineTo(x + w, y + h - r);
+    s.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
+    s.lineTo(x + r, y + h);
+    s.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
+    s.lineTo(x, y + r);
+    s.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
+    return s;
+}
+
 function p3Build(host, imgs) {
     const T = THREE;
     host.innerHTML = '';
@@ -157,91 +174,98 @@ function p3Build(host, imgs) {
 
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(34, 1, 0.1, 60);
-    camera.position.set(0, 0.3, 4.8);
-    camera.lookAt(0, 0.12, 0);
+    camera.position.set(0, 0.12, 4.8);
+    camera.lookAt(0, 0.1, 0);
 
+    // الإضاءة والانعكاسات للإطار المعدني بس (الصور نفسها بتتعرض زي ما هي)
     scene.environment = p3Environment(renderer);
     scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 0.5));
-    const key = new T.DirectionalLight(0xffffff, 1.8); key.position.set(2.5, 3, 4); scene.add(key);
-    const rim = new T.DirectionalLight(0xdfe6ff, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
+    const keyLight = new T.DirectionalLight(0xffffff, 1.6); keyLight.position.set(2.5, 3, 4); scene.add(keyLight);
+    const rimLight = new T.DirectionalLight(0xdfe6ff, 1.2); rimLight.position.set(-3, 1.5, -2.5); scene.add(rimLight);
 
-    // ---------- الشلف: حيطة كريمي نازلة من فوق، بتلف عند النص بقوس (نصف قطر R) وتبقى سطح أفقي قدّام ----------
-    // المقطع (z,y) بيتبني مرة واحدة وبيتسحب على عرض الشاشة كله (scale.x بيتظبط في resize).
-    const SHELF_TOP = -0.755;      // سطح الشلف (تحت التليفون مباشرة)
-    const SHELF_WALL_Z = -0.95;    // مكان الحيطة
-    const SHELF_R = 0.55;          // قوس اللفّة
-    const SHELF_FRONT_Z = 0.95;    // حافة الشلف الأمامية
-    const SHELF_T = 0.05;          // السُمك
-    const SHELF_TOP_Y = 2.4;       // أعلى الحيطة (برا الكادر عشان تلزق في اللوحة)
-    const PHONE_Z = 0.15;          // التليفون واقف على الجزء المسطّح
-    const shelfFit = [];
+    const meshList = [];   // اللي بيتلمس: جسم التليفون + القطع المسمّاة
+
+    function imgTexture(img) {
+        const t = new T.Texture(img);
+        t.colorSpace = T.SRGBColorSpace;
+        t.anisotropy = 4;
+        t.needsUpdate = true;
+        return t;
+    }
+
+    // ---------- جسم التليفون: إطار معدني + ظهر وواجهة من الصور الحقيقية ----------
+    const body = new T.Group();
+    const bodyMats = [];
+    {
+        const bev = 0.012, bs = bev * 0.8;
+        const sideMat = new T.MeshStandardMaterial({ color: PHONE_SIDE_COLOR, metalness: 1, roughness: 0.32, transparent: true });
+        bodyMats.push(sideMat);
+
+        // الإطار (الحواف): ممتد بحيث الحجم الكلي بالظبط W × H × D
+        const frameGeo = new T.ExtrudeGeometry(p3RRShape(PHONE_W - bs * 2, PHONE_H - bs * 2, PHONE_R - bs), {
+            depth: PHONE_D - bev * 2, bevelEnabled: true, bevelThickness: bev, bevelSize: bs, bevelSegments: 4, curveSegments: 20
+        });
+        frameGeo.translate(0, 0, -(PHONE_D - bev * 2) / 2);
+        const frame = new T.Mesh(frameGeo, sideMat);
+        body.add(frame); meshList.push(frame);
+
+        // وش الظهر والواجهة: صورة مفرودة على شكل مستطيل دايري، متثبتة على الوجهين
+        const inset = 0.006;
+        const cw = PHONE_W - inset * 2, ch = PHONE_H - inset * 2;
+        const capGeo = () => new T.ShapeGeometry(p3RRShape(cw, ch, PHONE_R - inset), 24);
+        const capMat = (img) => {
+            const tex = imgTexture(img);
+            tex.repeat.set(1 / cw, 1 / ch);        // UV بتبدأ من إحداثيات الشكل؛ بنحوّلها لـ 0..1
+            tex.offset.set(0.5, 0.5);
+            const m = new T.MeshBasicMaterial({ map: tex, toneMapped: false, transparent: true });
+            bodyMats.push(m);
+            return m;
+        };
+        const front = new T.Mesh(capGeo(), capMat(imgs.frontTex));
+        front.position.z = PHONE_D / 2 + 0.0006;
+        const backCap = new T.Mesh(capGeo(), capMat(imgs.backTex));
+        backCap.rotation.y = Math.PI;
+        backCap.position.z = -(PHONE_D / 2 + 0.0006);
+        body.add(front, backCap); meshList.push(front, backCap);
+
+        // زرّين على الجنب (زي الصورة: على شمال الظهر)
+        [[0.35, 0.14], [0.62, 0.14]].forEach(([f, l]) => {
+            const b = new T.Mesh(new T.BoxGeometry(0.018, PHONE_H * l, 0.026), sideMat);
+            b.position.set(PHONE_W / 2 + 0.003, PHONE_H / 2 - PHONE_H * f, 0);
+            body.add(b); meshList.push(b);
+        });
+        body.children.forEach(o => { o.userData.key = 'phone'; });
+    }
+    body.position.set(0, PHONE_CY, PHONE_Z);
+    scene.add(body);
+
+    // ضل ناعم تحت التليفون (بيفضل ناحية الكاميرا فمش بيتأثر بالدوران)
     let shadow = null;
     {
-        const cream = new T.MeshStandardMaterial({ color: PHONE_SHELF_CREAM, metalness: 0, roughness: 0.5 });
-        const gold = new T.MeshStandardMaterial({ color: PHONE_SHELF_GOLD, metalness: 0.6, roughness: 0.32 });
-
-        const zc = SHELF_WALL_Z + SHELF_R, yc = SHELF_TOP + SHELF_R, N = 28;
-        const pts = [];
-        pts.push([SHELF_WALL_Z, SHELF_TOP_Y]);
-        for (let i = 0; i <= N; i++) {                       // السطح الأمامي: القوس من الحيطة للأرضية
-            const f = Math.PI + (Math.PI / 2) * (i / N);
-            pts.push([zc + SHELF_R * Math.cos(f), yc + SHELF_R * Math.sin(f)]);
-        }
-        pts.push([SHELF_FRONT_Z, SHELF_TOP]);
-        pts.push([SHELF_FRONT_Z, SHELF_TOP - SHELF_T]);
-        for (let i = N; i >= 0; i--) {                       // الوش الخلفي: قوس أكبر بسُمك الشلف
-            const f = Math.PI + (Math.PI / 2) * (i / N);
-            const r = SHELF_R + SHELF_T;
-            pts.push([zc + r * Math.cos(f), yc + r * Math.sin(f)]);
-        }
-        pts.push([SHELF_WALL_Z - SHELF_T, SHELF_TOP_Y]);
-        const shape = new T.Shape();
-        pts.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
-        shape.closePath();
-        const geo = new T.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false, curveSegments: 1 });
-        geo.translate(0, 0, -0.5);
-        geo.rotateY(-Math.PI / 2);                           // الشكل (z,y) والسحب على محور x
-        const wall = new T.Mesh(geo, cream);
-        scene.add(wall);
-        shelfFit.push(wall);
-
-        // حافة ذهبي على الطرف الأمامي
-        const lipGeo = new T.CylinderGeometry(0.03, 0.03, 1, 20);
-        lipGeo.rotateZ(Math.PI / 2);
-        const lip = new T.Mesh(lipGeo, gold);
-        lip.position.set(0, SHELF_TOP - SHELF_T / 2, SHELF_FRONT_Z);
-        scene.add(lip);
-        shelfFit.push(lip);
-
-        // ضل ناعم تحت التليفون
         const sc = document.createElement('canvas');
-        sc.width = sc.height = 128;
+        sc.width = 256; sc.height = 64;
         const sx = sc.getContext('2d');
-        const sg = sx.createRadialGradient(64, 64, 8, 64, 64, 64);
-        sg.addColorStop(0, 'rgba(60,48,30,0.35)'); sg.addColorStop(1, 'rgba(60,48,30,0)');
-        sx.fillStyle = sg; sx.fillRect(0, 0, 128, 128);
+        sx.translate(128, 32); sx.scale(1, 0.25);
+        const sg = sx.createRadialGradient(0, 0, 4, 0, 0, 128);
+        sg.addColorStop(0, 'rgba(30,22,10,0.38)'); sg.addColorStop(1, 'rgba(30,22,10,0)');
+        sx.fillStyle = sg; sx.fillRect(-128, -128, 256, 256);
         const st = new T.CanvasTexture(sc);
         st.colorSpace = T.SRGBColorSpace;
-        shadow = new T.Mesh(new T.PlaneGeometry(1.2, 1.2), new T.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
-        shadow.rotation.x = -Math.PI / 2;
-        shadow.position.set(0, SHELF_TOP + 0.002, PHONE_Z);
+        shadow = new T.Mesh(new T.PlaneGeometry(1.5, 0.375), new T.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
+        shadow.position.set(0, PHONE_CY - PHONE_H / 2 - 0.02, PHONE_Z - 0.05);
+        shadow.renderOrder = -1;
         scene.add(shadow);
     }
 
-    // ---------- صور حقيقية على مستويات (planes) ----------
+    // ---------- القطع بعد التفكيك: صور حقيقية على مستويات ----------
     const parts = {};        // القطع اللي ليها اسم وبتتحدد
     const decos = [];        // قطع ديكور من غير اسم
-    const meshList = [];     // اللي بيتلمس: التليفون كامل + القطع المسمّاة
     const exWrap = new T.Group();   // التركيبة المفكوكة (بتتكبّر/تتصغّر حسب عرض الشاشة)
-    exWrap.position.z = PHONE_Z;
+    exWrap.position.set(0, 0.1, PHONE_Z);
     scene.add(exWrap);
 
     function planeFor(img, w, h) {
-        const tex = new T.Texture(img);
-        tex.colorSpace = T.SRGBColorSpace;
-        tex.anisotropy = 4;
-        tex.needsUpdate = true;
-        const mat = new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false });
+        const mat = new T.MeshBasicMaterial({ map: imgTexture(img), transparent: true, depthWrite: false, toneMapped: false });
         const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
         // قناع الشفافية (عشان اللمس يتحسب على شكل القطعة مش على المستطيل)
         try {
@@ -250,23 +274,14 @@ function p3Build(host, imgs) {
             const c = document.createElement('canvas'); c.width = cw; c.height = ch;
             const cx = c.getContext('2d'); cx.drawImage(img, 0, 0, cw, ch);
             m.userData.alpha = { w: cw, h: ch, d: cx.getImageData(0, 0, cw, ch).data };
-        } catch (e) { /* لو الصورة اتحجبت من المتصفح نعتمد على المستطيل */ }
+        } catch (e) { /* لو المتصفح حجب قراءة الصورة نعتمد على المستطيل */ }
         return m;
     }
 
-    // التليفون كامل (صورة حقيقية واقفة على الشلف)
-    const wholeW = PHONE_H * imgs.whole.naturalWidth / imgs.whole.naturalHeight;
-    const whole = planeFor(imgs.whole, wholeW, PHONE_H);
-    whole.position.set(0, SHELF_TOP + PHONE_H / 2, PHONE_Z);
-    whole.userData.key = 'phone';
-    scene.add(whole);
-    meshList.push(whole);
-
-    // القطع: بنجمّع كل مجموعة في Group مركزه مركز القطع اللي فيه
     const groups = {};
-    PHONE_LAYOUT.forEach(([file, key, cx, cy, w, h, z, delay]) => {
-        const gk = key || ('deco-' + file);
-        (groups[gk] = groups[gk] || { key, delay, z, items: [] }).items.push({ file, cx, cy, w, h, z });
+    PHONE_LAYOUT.forEach(([file, pkey, cx, cy, w, h, z, delay]) => {
+        const gk = pkey || ('deco-' + file);
+        (groups[gk] = groups[gk] || { key: pkey, delay, z, items: [] }).items.push({ file, cx, cy, w, h, z });
     });
     Object.keys(groups).forEach(gk => {
         const g = groups[gk];
@@ -317,10 +332,11 @@ function p3Build(host, imgs) {
     host.appendChild(back);
 
     const s = {
-        host, renderer, scene, camera, exWrap, whole, parts, decos, meshList, chips, lines, back,
-        raycaster: new T.Raycaster(), vec: new T.Vector3(),
+        host, renderer, scene, camera, body, bodyMats, exWrap, parts, decos, meshList, chips, lines, back, shadow,
+        raycaster: new T.Raycaster(), vec: new T.Vector3(), baseVec: new T.Vector3(),
         ex: 0, target: 0, last: 0, raf: 0, active: false, selected: null,
-        w: 1, h: 1, down: null, ro: null, shadow, baseVec: new T.Vector3(), fit: 1
+        spin: 0.8, vel: 0.45, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
+        w: 1, h: 1, down: null, ro: null
     };
 
     function resize() {
@@ -329,35 +345,46 @@ function p3Build(host, imgs) {
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        // الحيطة والشلف يملّوا عرض الكادر كله (من حافة لحافة) مهما كان حجم الشاشة
-        const d = camera.position.z - SHELF_WALL_Z;
-        const fullW = 2 * d * Math.tan(T.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
-        shelfFit.forEach(m => { m.scale.x = fullW * 1.25; });
-        // التركيبة المفكوكة تتظبط على عرض الكادر وتفضل فوق الشلف
+        // التركيبة المفكوكة تتظبط على عرض الكادر
         const dl = camera.position.z - PHONE_Z;
         const visW = 2 * dl * Math.tan(T.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
         const fit = Math.min(1.12, (visW * 0.94) / (1250 * PHONE_K));
-        s.fit = fit;
         exWrap.scale.setScalar(fit);
-        exWrap.position.y = SHELF_TOP + 0.1 + (1077 * PHONE_K * fit) / 2;
-        s.baseVec.set(0, (whole.position.y - exWrap.position.y) / fit, -0.05);
+        s.baseVec.set(0, (body.position.y - exWrap.position.y) / fit, -0.05);
     }
     resize();
     s.ro = new ResizeObserver(resize);
     s.ro.observe(host);
 
-    // لمسة واحدة (مش سحب): نختار القطعة أو نفكك/نجمّع
+    // الإصبع: سحب أفقي = لفّ التليفون 360°، لمسة واحدة (من غير سحب) = تفكيك/اختيار
     const cv = renderer.domElement;
-    cv.addEventListener('pointerdown', e => { s.down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    cv.addEventListener('pointerdown', e => {
+        s.down = { x: e.clientX, y: e.clientY, t: performance.now(), lx: e.clientX, lt: performance.now() };
+        try { cv.setPointerCapture(e.pointerId); } catch (err) { /* مش مشكلة */ }
+    });
+    cv.addEventListener('pointermove', e => {
+        const d = s.down;
+        if (!d || s.target !== 0) return;
+        const now = performance.now();
+        const dx = e.clientX - d.lx, dt = Math.max(1, now - d.lt) / 1000;
+        d.lx = e.clientX; d.lt = now;
+        if (Math.abs(e.clientX - d.x) > 4) s.dragging = true;
+        if (s.dragging) {
+            s.spin += dx * 0.013;
+            s.vel = 0.5 * s.vel + 0.5 * (dx * 0.013 / dt);   // سرعة الإصبع (بتكمّل بعد ما تسيبه)
+        }
+    });
     cv.addEventListener('pointerup', e => {
         const d = s.down; s.down = null;
+        s.dragging = false;
         if (!d) return;
         if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10 || performance.now() - d.t > 600) return;
         p3Tap(e);
     });
-    cv.addEventListener('pointercancel', () => { s.down = null; });
+    cv.addEventListener('pointercancel', () => { s.down = null; s.dragging = false; });
 
     p3Apply(s, 0);
+    body.rotation.y = Math.PI + s.spin;
     renderer.render(scene, camera);
     return s;
 }
@@ -448,10 +475,10 @@ function p3Apply(s, e) {
     };
     Object.keys(s.parts).forEach(k => place(s.parts[k]));
     s.decos.forEach(place);
-    // التليفون الكامل بيختفي بسرعة أول ما التفكيك يبدأ
+    // التليفون بيختفي بسرعة أول ما التفكيك يبدأ
     const w = 1 - p3Smooth(e * 2.5);
-    s.whole.material.opacity = w;
-    s.whole.visible = w > 0.01;
+    s.bodyMats.forEach(m => { m.opacity = w; });
+    s.body.visible = w > 0.01;
 }
 
 function p3Start() {
@@ -474,13 +501,21 @@ function p3Frame(now) {
     if (Math.abs(s.target - s.ex) < 0.002) s.ex = s.target;
     const e = s.ex;
 
+    // دوران التليفون: الإصبع بيحرّكه، وبعد ما تسيبه بيكمّل بقوة الدفعة وبعدين يهدى لدوران بطيء
+    if (!s.dragging) {
+        s.vel += (0.45 - s.vel) * Math.min(1, dt * 1.2);
+        s.spin += s.vel * dt;
+    }
+    s.spin = ((s.spin + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    s.body.rotation.y = Math.PI + s.spin;
+
     // ميل خفيف للتركيبة المفكوكة عشان يبان العمق بين الطبقات
     s.exWrap.rotation.y = Math.sin(now / 1600) * 0.1 * e;
 
     p3Apply(s, e);
     if (s.shadow) {
-        s.shadow.material.opacity = 1 - 0.35 * e;
-        s.shadow.scale.set(1 + 1.8 * e, 1, 1 + 0.2 * e);
+        s.shadow.material.opacity = 1 - 0.4 * e;
+        s.shadow.scale.set(1 + 1.7 * e, 1, 1);
     }
     s.renderer.render(s.scene, s.camera);
     p3Labels(s, e);
