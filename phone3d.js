@@ -17,8 +17,11 @@ const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية
 const PHONE_BACK_COLOR = 0x55575b;
 // لون الإطار الجانبي (ألومنيوم داكن)
 const PHONE_FRAME_COLOR = 0x2b2c2f;
-// لون الإضاءة حوالين المسرح (أحمر زي الصورة). للدهبي استخدم 0xe8c97a
-const PHONE_STAGE_GLOW = 0xff2a2a;
+// الترابيزة (الشلف): نفس كريمي وذهبي التندة. الكريمي هنا لازم يطابق --shop-cream في theme.css
+const PHONE_SHELF_CREAM = 0xfbf8f1;
+const PHONE_SHELF_GOLD = 0xe4d09c;
+// زاوية ميل الترابيزة (بالراديان). 0 = مستقيمة قدام الكاميرا، 0.45 تقريباً 26 درجة
+const PHONE_SHELF_YAW = 0.45;
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 let _p3 = null;          // حالة النموذج الحالي
@@ -209,72 +212,62 @@ function p3Build(host) {
 
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(34, 1, 0.1, 60);
-    camera.position.set(0, 0.5, 3.75);
-    camera.lookAt(0, -0.3, 0);
+    camera.position.set(0, 0.45, 4.1);
+    camera.lookAt(0, -0.2, 0);
 
     scene.environment = p3Environment(renderer);
     scene.add(new T.HemisphereLight(0xfff3d6, 0x2a2318, 0.5));
     const key = new T.DirectionalLight(0xffffff, 1.8); key.position.set(2.5, 3, 4); scene.add(key);
     const rim = new T.DirectionalLight(0xdfe6ff, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
 
-    // ---------- المسرح: منصة دايرية داكنة بحلقة مضيئة على الحافة (زي صورة المرجع) ----------
+    // ---------- الترابيزة: شلف كريمي بإطار ذهبي من غير رجلين، مايل بزاوية، وعليه حامل التليفون (زي حوامل المحلات) ----------
+    let holder = null;
+    const SHELF_TOP = -0.9;
     {
-        const topY = -0.93;
+        const cream = new T.MeshStandardMaterial({ color: PHONE_SHELF_CREAM, metalness: 0, roughness: 0.42 });
+        const gold = new T.MeshStandardMaterial({ color: PHONE_SHELF_GOLD, metalness: 0.6, roughness: 0.32 });
         const stage = new T.Group();
-        const glow = new T.Color(PHONE_STAGE_GLOW);
 
-        // القاعدة السفلية (أكبر شوية)
-        const baseDisc = new T.Mesh(
-            new T.CylinderGeometry(1.32, 1.34, 0.07, 96),
-            new T.MeshPhysicalMaterial({ color: 0x0c0c0e, metalness: 0.5, roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.3 })
-        );
-        baseDisc.position.set(0, topY - 0.035, 0);
-        stage.add(baseDisc);
+        const top = p3Slab(2.0, 1.1, 0.08, 0.1, cream, 0.012);          // سطح الشلف
+        top.rotation.x = -Math.PI / 2;
+        top.position.set(0, SHELF_TOP - 0.04, 0);
+        stage.add(top);
 
-        // السطح العلوي الداكن (فيه خطوط خفيفة زي الخشب الأسود)
-        const c = document.createElement('canvas');
-        c.width = 512; c.height = 512;
-        const x = c.getContext('2d');
-        x.fillStyle = '#16161a'; x.fillRect(0, 0, 512, 512);
-        for (let i = 0; i < 90; i++) {
-            const a = 0.03 + Math.random() * 0.05;
-            x.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
-            x.fillRect(0, Math.random() * 512, 512, 1 + Math.random() * 2);
-        }
-        const topTex = new T.CanvasTexture(c);
-        topTex.colorSpace = T.SRGBColorSpace;
-        const topDisc = new T.Mesh(
-            new T.CylinderGeometry(1.22, 1.22, 0.025, 96),
-            new T.MeshPhysicalMaterial({ map: topTex, color: 0xffffff, metalness: 0.3, roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.2 })
-        );
-        topDisc.position.set(0, topY - 0.0125, 0);
-        stage.add(topDisc);
+        const rim = p3Ring(2.06, 1.16, 0.13, 1.98, 1.08, 0.09, 0.085, gold, 0.008);   // إطار ذهبي حوالين الحافة
+        rim.rotation.x = -Math.PI / 2;
+        rim.position.set(0, SHELF_TOP - 0.04, 0);
+        stage.add(rim);
 
-        // الحلقة المضيئة على الحافة + هالة ناعمة حواليها
-        const ring = new T.Mesh(new T.TorusGeometry(1.29, 0.014, 12, 128), new T.MeshBasicMaterial({ color: glow }));
-        ring.rotation.x = Math.PI / 2;
-        ring.position.set(0, topY - 0.012, 0);
-        stage.add(ring);
-        const halo = new T.Mesh(new T.TorusGeometry(1.29, 0.05, 12, 128), new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: 0.22, depthWrite: false }));
-        halo.rotation.x = Math.PI / 2;
-        halo.position.copy(ring.position);
-        stage.add(halo);
+        // ضل ناعم تحت الحامل
+        const sc = document.createElement('canvas');
+        sc.width = sc.height = 128;
+        const sx = sc.getContext('2d');
+        const sg = sx.createRadialGradient(64, 64, 8, 64, 64, 64);
+        sg.addColorStop(0, 'rgba(60,48,30,0.35)'); sg.addColorStop(1, 'rgba(60,48,30,0)');
+        sx.fillStyle = sg; sx.fillRect(0, 0, 128, 128);
+        const st = new T.CanvasTexture(sc);
+        st.colorSpace = T.SRGBColorSpace;
+        const shadow = new T.Mesh(new T.PlaneGeometry(1.2, 1.2), new T.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.set(0, SHELF_TOP + 0.002, 0);
+        stage.add(shadow);
 
-        // لمعة على الأرض تحت المنصة
-        const gc = document.createElement('canvas');
-        gc.width = gc.height = 256;
-        const gx = gc.getContext('2d');
-        const rgb = Math.round(glow.r * 255) + ',' + Math.round(glow.g * 255) + ',' + Math.round(glow.b * 255);
-        const gg = gx.createRadialGradient(128, 128, 60, 128, 128, 128);
-        gg.addColorStop(0, 'rgba(' + rgb + ',0.38)'); gg.addColorStop(0.55, 'rgba(' + rgb + ',0.14)'); gg.addColorStop(1, 'rgba(' + rgb + ',0)');
-        gx.fillStyle = gg; gx.fillRect(0, 0, 256, 256);
-        const gt = new T.CanvasTexture(gc);
-        gt.colorSpace = T.SRGBColorSpace;
-        const floor = new T.Mesh(new T.PlaneGeometry(3.6, 3.6), new T.MeshBasicMaterial({ map: gt, transparent: true, depthWrite: false }));
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.set(0, topY - 0.075, 0);
-        stage.add(floor);
+        // الحامل: قاعدة كريمي بحلقة ذهبية، التليفون واقف عليها. (الأصل عند سطح الشلف عشان نقدر نقصّره وقت التفكيك)
+        holder = new T.Group();
+        const puck = new T.Mesh(new T.CylinderGeometry(0.25, 0.28, 0.14, 48), cream);
+        puck.position.y = 0.07;
+        holder.add(puck);
+        const ringTop = new T.Mesh(new T.TorusGeometry(0.25, 0.014, 10, 64), gold);
+        ringTop.rotation.x = Math.PI / 2;
+        ringTop.position.y = 0.14;
+        holder.add(ringTop);
+        const pad = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, 0.012, 48), gold);
+        pad.position.y = 0.144;
+        holder.add(pad);
+        holder.position.set(0, SHELF_TOP, 0);
+        stage.add(holder);
 
+        stage.rotation.y = PHONE_SHELF_YAW;
         scene.add(stage);
     }
 
@@ -432,7 +425,7 @@ function p3Build(host) {
         host, renderer, scene, camera, group, parts, meshList, chips, lines, back,
         raycaster: new T.Raycaster(), vec: new T.Vector3(),
         ex: 0, target: 0, spin: 0.4, last: 0, raf: 0, active: false, selected: null,
-        w: 1, h: 1, down: null, ro: null
+        w: 1, h: 1, down: null, ro: null, holder
     };
 
     function resize() {
@@ -562,6 +555,7 @@ function p3Frame(now) {
     s.group.rotation.x = 0.08 * (1 - e) + 0.2 * e;
 
     p3Apply(s, e);
+    if (s.holder) s.holder.scale.y = Math.max(0.04, 1 - e);   // الحامل بيدخل في الشلف وقت التفكيك عشان فلاتة الشحن تنزل براحتها
     s.renderer.render(s.scene, s.camera);
     p3Labels(s, e);
 }
