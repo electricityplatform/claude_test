@@ -1215,12 +1215,12 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 /* =====================================================================
    قسم التليفون ثلاثي الأبعاد في الشاشة الرئيسية (phone3d.js)
    ===================================================================== */
-.phone-stage { position: relative; margin: -1rem 0 1rem; padding: 0; color: oklch(var(--bc)); }   /* لازقة في لوحة الترحيب: الحيطة الكريمي بتنزل منها */
-.phone-stage-cap { text-align: center; font-size: .85rem; font-weight: 700; color: oklch(var(--bc)); opacity: .85; margin: .35rem 0 0; }
+.phone-stage { position: relative; margin: 0 0 1rem; padding: 0; overflow: hidden; isolation: isolate; border: 1px solid rgba(201, 169, 98, .5); box-shadow: 0 .4rem 1.1rem rgba(60, 48, 30, .12); }
+.phone-stage-cap { position: relative; text-align: center; font-size: .85rem; font-weight: 700; color: #5b4a2a; margin: 0; padding: .1rem .75rem .75rem; }
 .hero-phone { overflow: hidden; position: relative; width: 100%; height: 26rem; direction: ltr; touch-action: pan-y pinch-zoom; }
 .hero-phone canvas { display: block; width: 100%; height: 100%; }
 .hp3-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.hp3-lines line { stroke: rgba(201, 169, 98, .85); stroke-width: 1; transition: opacity .25s; }
+.hp3-lines line { stroke: rgba(107, 85, 48, .9); stroke-width: 1; transition: opacity .25s; }
 .hp3-chip, .hp3-collapse {
     position: absolute; padding: .22rem .65rem; border-radius: .4rem;
     background: rgba(26, 21, 13, .88); border: 1px solid rgba(232, 201, 122, .5);
@@ -1233,7 +1233,8 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 .hp3-chip.active { background: linear-gradient(180deg, #ecd9a6, #c9a962); color: #1a150d; border-color: transparent; }
 .hp3-fail { padding: 2rem 1rem; text-align: center; font-size: .8rem; opacity: .8; }
 @media (min-width: 900px) {
-    .phone-stage-cap { font-size: 1.1rem; }
+    .phone-stage { border-radius: 2.2rem; }
+    .phone-stage-cap { font-size: 1.1rem; padding-bottom: 1rem; }
     .hero-phone { height: 32rem; }
     .hp3-chip, .hp3-collapse { font-size: .85rem; padding: .3rem .8rem; }
 }
@@ -1268,3 +1269,17 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 
 /* الهيدر + البحث في الشاشة الرئيسية: بيتمرروا ويختفوا مع النزول (من غير تندة) */
 html:has(#appContainer .app-topbar) .app-topbar.has-search { position: static; }
+
+/* =====================================================================
+   لوحة الترحيب + لوحة التليفون: لوحتين منفصلتين (بمسافة بينهم) بس لونهم متكمّل:
+   غامق فوق في لوحة الترحيب، بيفتح لحد آخرها (--panel-mid)، ولوحة التليفون بتبدأ بنفس اللون وتكمّل فتح لحد الكريمي.
+   ===================================================================== */
+:root { --panel-dark: #2a2219; --panel-mid: #7a6740; --panel-light: #f6f1e7; }
+.hero { color: #f6f1e7; background: linear-gradient(180deg, var(--panel-dark) 0%, var(--panel-mid) 100%); }
+.hero-kicker, .hero-cap { color: #ecd9a6; }
+.hero-tag { opacity: .92; }
+.hero-stat b { background: linear-gradient(180deg, #f6e3ae, #d9b45a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-tile { color: #f6f1e7; background: rgba(246, 241, 231, .1); border-color: rgba(232, 201, 122, .55); }
+.hero-dot { background: rgba(246, 241, 231, .32); }
+.hero-dot.active { background: #ecd9a6; }
+.phone-stage { background: linear-gradient(180deg, var(--panel-mid) 0%, #cdbb8f 40%, var(--panel-light) 100%); }
