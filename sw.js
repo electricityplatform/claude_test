@@ -6,12 +6,12 @@
 // - ملفات الـ CDN (tailwind / daisyui / supabase / الخطوط): نعرض المخزن فوراً ونحدّثه في الخلفية.
 // - أي طلبات تانية (زي API بتاع Supabase) بنسيبها تعدّي من غير تدخل.
 
-const VERSION = '20261104-9';
+const VERSION = '20261104-13';
 const CACHE = 'electricity-shell-' + VERSION;
 const NETWORK_TIMEOUT_MS = 8000;
 
 // صور كروت الأقسام في الشاشة الرئيسية (في نفس فولدر index.html): بتتحمّل مع التثبيت عشان تظهر حتى لو مفيش نت.
-const CARD_IMAGES = ['buy-parts.jpg', 'compat.jpg', 'maintenance-alerts.jpg', 'repair-shops.jpg', 'phone-back-tex.jpg', 'phone-front-tex.jpg', 'phone-screen.png', 'phone-digit.png', 'phone-frame.png', 'phone-board.png', 'phone-camera.png', 'phone-battery.png', 'phone-strip.png', 'phone-inner.png', 'phone-back.png', 'phone-lspk.png', 'phone-port.png', 'phone-spk.png', 'phone-flash.png', 'phone-cam1.png', 'phone-cam2.png'];
+const CARD_IMAGES = ['buy-parts.jpg', 'compat.jpg', 'maintenance-alerts.jpg', 'repair-shops.jpg', 'phone-3d/phone-back-tex.jpg', 'phone-3d/phone-front-tex.jpg', 'phone-3d/phone-screen.webp', 'phone-3d/phone-digit.webp', 'phone-3d/phone-frame.webp', 'phone-3d/phone-board.webp', 'phone-3d/phone-battery.webp', 'phone-3d/phone-lspk.webp', 'phone-3d/phone-port.webp', 'phone-3d/phone-spk.webp', 'phone-3d/phone-strip.webp', 'phone-3d/phone-camera.webp', 'phone-3d/phone-flash.webp', 'phone-3d/phone-cam1.webp', 'phone-3d/phone-cam2.webp', 'phone-3d/phone-inner.webp', 'phone-3d/phone-back.webp'];
 const CDN_HOSTS = [
     'cdn.tailwindcss.com',
     'cdn.jsdelivr.net',
