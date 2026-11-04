@@ -1215,10 +1215,9 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 /* =====================================================================
    قسم التليفون ثلاثي الأبعاد في الشاشة الرئيسية (phone3d.js)
    ===================================================================== */
-.phone-stage { position: relative; margin: 0 -1rem 1rem; padding: .2rem 0 0; color: oklch(var(--bc)); }
-@media (min-width: 640px) { .phone-stage { margin-inline: -1.5rem; } }
-.phone-stage-cap { text-align: center; font-size: .85rem; font-weight: 700; color: oklch(var(--bc)); opacity: .85; margin-bottom: .1rem; }
-.hero-phone { position: relative; width: 100%; height: 22rem; direction: ltr; touch-action: pan-y pinch-zoom; }
+.phone-stage { position: relative; margin: -1rem 0 1rem; padding: 0; color: oklch(var(--bc)); }   /* لازقة في لوحة الترحيب: الحيطة الكريمي بتنزل منها */
+.phone-stage-cap { text-align: center; font-size: .85rem; font-weight: 700; color: oklch(var(--bc)); opacity: .85; margin: .35rem 0 0; }
+.hero-phone { overflow: hidden; position: relative; width: 100%; height: 22rem; direction: ltr; touch-action: pan-y pinch-zoom; }
 .hero-phone canvas { display: block; width: 100%; height: 100%; }
 .hp3-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .hp3-lines line { stroke: rgba(201, 169, 98, .85); stroke-width: 1; transition: opacity .25s; }
@@ -1267,14 +1266,5 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
     background-color: transparent !important;
 }
 
-
-/* =====================================================================
-   التندة تحت شريط البحث (layout.js): كريمي وذهبي الموقع.
-   الهيدر (القائمة + الاسم + الصورة + البحث) بيتمرر ويختفي، والتندة بتفضل لازقة فوق.
-   ===================================================================== */
-html:has(#appContainer .app-topbar) .app-topbar.has-awning { position: static !important; border-radius: 0 !important; margin-bottom: 0 !important; box-shadow: none !important; }
-.shop-awning { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 41; margin: 0 -1rem .75rem; pointer-events: none; }
-@media (min-width: 640px) { .shop-awning { margin-inline: -1.5rem; } }
-.awning-valance { height: .5rem; background: linear-gradient(180deg, #f5e9c4 0%, #e2cd92 55%, #d3b977 100%); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .14); }
-.awning-scallops { height: 2rem; margin-top: -1px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 40'><path d='M0 0H52V14A26 26 0 0 1 0 14Z' fill='%23e8d5a0'/><path d='M0 14H52A26 26 0 0 1 0 14Z' fill='%23d3b977'/><path d='M52 0H104V14A26 26 0 0 1 52 14Z' fill='%23fdfbf6'/><path d='M52 14H104A26 26 0 0 1 52 14Z' fill='%23eee5d0'/></svg>") 0 0 / 5.2rem 2rem round no-repeat; filter: drop-shadow(0 3px 3px rgba(60, 48, 30, .28)); }
-.shop-awning.stuck::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: env(safe-area-inset-top, 0px); background: #d3b977; }
+/* الهيدر + البحث في الشاشة الرئيسية: بيتمرروا ويختفوا مع النزول (من غير تندة) */
+html:has(#appContainer .app-topbar) .app-topbar.has-search { position: static; }
