@@ -11,8 +11,9 @@ const PHONE_PARTS = [
     ['back',    'غطاء خلفي'],
     ['camera',  'كاميرا']
 ];
-const PHONE_CAP_IDLE = 'لفّ التليفون بصباعك، أو المسه لتفكيكه';
+const PHONE_CAP_IDLE = 'لفّ التليفون بصباعك، المسه لتفكيكه، أو اسحب شريط «افرد» اللي على اليمين';
 const PHONE_CAP_OPEN = 'لفّ المجسم بصباعك في كل الاتجاهات، والمس قطعة لتحديدها ومرة تانية لفتح أسعارها';
+const PHONE_CAP_FOLD = 'اسحب يمين وشمال عشان تتنقّل بين الصفحات، وارجّع الشريط لفوق لتجميعه';
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 // صور التليفون: ظهر وواجهة (مفرودين من الصورتين الحقيقيتين).
@@ -44,13 +45,15 @@ const PHONE_LAYOUT = [
     ['inner', 'back', 660.0, 606.0, 463, 1000, -0.40, 0.24, 0.035, 0x41403f, [0.2592,0.0,0.257,0.002,0.2289,0.005,0.1965,0.013,0.1814,0.014,0.1728,0.018,0.1728,0.025,0.1857,0.029,0.1857,0.034,0.1793,0.036,0.1706,0.076,0.1771,0.08,0.1685,0.087,0.1512,0.171,0.1555,0.181,0.149,0.184,0.1447,0.203,0.149,0.219,0.1447,0.235,0.1382,0.237,0.1425,0.243,0.1425,0.25,0.1361,0.252,0.1404,0.253,0.1382,0.265,0.1274,0.268,0.095,0.27,0.0886,0.276,0.0691,0.279,0.0648,0.303,0.0799,0.306,0.0842,0.314,0.0756,0.322,0.0346,0.514,0.0389,0.521,0.0324,0.524,0.0043,0.656,0.0086,0.669,0.0065,0.672,0.0,0.673,0.0,0.839,0.0151,0.842,0.0086,0.871,0.013,0.89,0.0043,0.933,0.0,0.934,0.0,0.984,0.0194,0.987,0.0238,0.991,0.0497,0.999,0.6004,0.999,0.6026,0.997,0.6307,0.999,0.6328,0.997,0.797,0.996,0.9114,0.993,0.9417,0.994,0.9546,0.999,0.9935,0.999,0.9935,0.723,0.9978,0.722,0.9892,0.717,0.9892,0.713,0.9978,0.711,0.9978,0.192,0.9914,0.19,0.9914,0.138,0.9978,0.136,0.9978,0.117,0.9935,0.116,0.9935,0.0,0.9633,0.0,0.9633,0.004,0.9525,0.007,0.6479,0.002,0.6458,0.0]],
     ['back', 'back', 660.0, 606.0, 463, 1000, -0.62, 0.24, 0.030, 0x635f5c, [0.0173,0.01,0.0,0.014,0.0,0.19,0.0043,0.191,0.0,0.264,0.0043,0.265,0.0065,0.49,0.0043,0.635,0.0,0.636,0.0,0.974,0.0259,0.985,0.0497,0.991,0.0778,0.995,0.1296,0.997,0.1317,0.999,0.8985,0.999,0.9006,0.997,0.9374,0.994,0.9676,0.984,0.9827,0.975,0.9914,0.965,0.9914,0.953,0.9978,0.951,0.9978,0.045,0.9914,0.043,0.987,0.028,0.9741,0.018,0.9438,0.008,0.9093,0.003,0.8704,0.002,0.8683,0.0,0.8618,0.002,0.8531,0.002,0.851,0.0,0.8402,0.0,0.838,0.002,0.8294,0.0,0.8272,0.002,0.8099,0.002,0.8078,0.0,0.8035,0.002,0.7732,0.002,0.7711,0.0,0.7689,0.002,0.7516,0.002,0.7495,0.0,0.7451,0.002,0.4082,0.002,0.406,0.0,0.3974,0.002,0.2484,0.002,0.2462,0.0,0.2441,0.002,0.2354,0.002,0.2333,0.0,0.2246,0.002,0.216,0.0,0.2138,0.002,0.1987,0.002,0.1965,0.0,0.1944,0.002,0.1857,0.002,0.1836,0.0,0.1577,0.0,0.149,0.002,0.1469,0.0,0.1274,0.0,0.1253,0.002,0.0799,0.003]]
 ];
-const P3_TILT = 20 * Math.PI / 180;   // زاوية الأكورديون: كل شريحة بتميل +/- الزاوية دي عن اللي جنبها
-// أجزاء صغيرة بتتلزق في شريحتها بدل ما تبقى شرايح منفصلة (القطعة : الشريحة اللي تنضم لها)
-const PHONE_ATTACH = { lspk: 'port', spk: 'port', strip: 'battery' };
+const P3_SPREAD = 1.3;
+// ---------- شريط «افرد»: التليفون بيتفرد زي المطوية (كل قطعة صفحة، والصفحات جنب بعض) ----------
+const P3_U_EXPLODE = 0.22;   // أول جزء من الشريط بيفكّ التليفون لطبقات، والباقي بيفرد الصفحات
+const P3_FOLD_SCALE = 0.5;   // تصغير المطوية وهي مفرودة عشان تبان صفحات أكتر على الشاشة
+const P3_PAGE_H = 1.95, P3_PAGE_PAD = 0.1, P3_PAGE_MIN = 0.4;   // مقاس ورقة كل صفحة
+const P3_FOLD_ORDER = ['screen', 'deco-frame', 'board', 'battery', 'camera', 'port', 'deco-lspk', 'deco-spk', 'deco-strip', 'back'];   // ترتيب الصفحات من الواجهة للضهر
+const P3_FOLD_LABELS = { 'screen': 'شاشة', 'deco-frame': 'إطار', 'board': 'بوردة', 'battery': 'بطارية', 'camera': 'كاميرا', 'port': 'فلاتة شحن', 'back': 'غطاء خلفي' };   // معامل تباعد الشرايح عن بعض وقت الفك (1 = زي الأول)
 const PHONE_PCX = 660, PHONE_PCY = 606;   // مركز التليفون في مستوى التركيبة (بكسل)
 const PHONE_K = 1.7 / 1000;                // وحدة العالم لكل بكسل (طول الشاشة 1.7)
-// المسافة بين كل شريحة والتانية = عرض الشريحة × sin(الزاوية)، فأطراف الشرايح بتتقابل بالظبط يمين وشمال بالتبادل (أكورديون)
-const P3_PITCH = (463 * PHONE_K) * Math.sin(P3_TILT);
 
 let _p3 = null;          // حالة النموذج الحالي
 let _p3Pending = null;   // الـ host اللي بنبنيه دلوقتي (عشان ما نبنيش مرتين)
@@ -302,42 +305,41 @@ function p3Build(host, imgs) {
         return { g, meshes: [side, front, rear], capMats: [front.material, rear.material], mats: [sideMat, front.material, rear.material] };
     }
 
-    const groups = {};
+    const groups = {}, pageRecs = {};
     PHONE_LAYOUT.forEach(([file, pkey, cx, cy, w, h, z, delay, t, side, poly]) => {
-        const owner = pkey || PHONE_ATTACH[file] || null;
-        const gk = owner || ('deco-' + file);
-        const g = groups[gk] = groups[gk] || { key: owner, delay, z, t, items: [] };
-        if (pkey && !g.main) { g.main = true; g.delay = delay; g.z = z; g.t = t; }   // القطعة الأساسية هي اللي بتحدد عمق الشريحة
-        g.items.push({ file, cx, cy, w, h, z, t, side, poly, pick: !!pkey });
+        const gk = pkey || ('deco-' + file);
+        (groups[gk] = groups[gk] || { key: pkey, delay, z, items: [] }).items.push({ file, cx, cy, w, h, z, t, side, poly });
     });
-    // كل شريحة (على عمقها) ليها ميل لوحدها: +زاوية، -زاوية، +زاوية... بنفس القيمة بالظبط (٧٨٧٨)
-    const isStuck = (g, it) => g.key === 'camera' && it.z !== g.z;
-    const layerZ = [...new Set(Object.values(groups).flatMap(g => g.items.map(it => isStuck(g, it) ? g.z : it.z)))].sort((a, b) => b - a);
-    const zOf = z => ((layerZ.length - 1) / 2 - layerZ.indexOf(z)) * P3_PITCH;
-    const tiltOf = z => (layerZ.indexOf(z) % 2 ? -1 : 1) * P3_TILT;
     Object.keys(groups).forEach(gk => {
         const g = groups[gk];
         const x0 = Math.min(...g.items.map(i => i.cx - i.w / 2)), x1 = Math.max(...g.items.map(i => i.cx + i.w / 2));
         const y0 = Math.min(...g.items.map(i => i.cy - i.h / 2)), y1 = Math.max(...g.items.map(i => i.cy + i.h / 2));
         const gcx = (x0 + x1) / 2, gcy = (y0 + y1) / 2;
         const obj = new T.Group();
-        const mats = [], capMats = [], slabs = [];
+        const mats = [], capMats = [];
         g.items.forEach(it => {
             const sl = slabFor(imgs[it.file], it);
-            // كاميرا/فلاش: لازقين في وش شريحة الكاميرا؛ باقي القطع بتتباعد زي ما هي
-            const stuck = isStuck(g, it);
-            const dz = stuck ? Math.sign(it.z - g.z) * (g.t + it.t) / 2 : zOf(it.z) - zOf(g.z);
-            const dx = (it.cx - gcx) * PHONE_K, dy = -(it.cy - gcy) * PHONE_K;
-            sl.g.position.set(dx, dy, dz);
-            slabs.push({ g: sl.g, dx, dy, dz, stuck, tilt: tiltOf(stuck ? g.z : it.z) });
-            if (g.key && it.pick) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
+            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, (it.z - g.z) * P3_SPREAD);
+            if (g.key) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
             obj.add(sl.g); mats.push(...sl.mats); capMats.push(...sl.capMats);
         });
-        const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, zOf(g.z));
-        exWrap.add(obj);
-        const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3(), slabs };
+        const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, g.z * P3_SPREAD);
+        // الصفحة: مجموعة بتتلف حوالين مفصّلتها وقت الفرد، جواها ورقة خلفية والقطعة نفسها
+        const pw = Math.max(P3_PAGE_MIN, (x1 - x0) * PHONE_K + P3_PAGE_PAD * 2);
+        const page = new T.Group();
+        const paper = new T.Mesh(new T.PlaneGeometry(pw, P3_PAGE_H), new T.MeshBasicMaterial({
+            map: p3PaperTex(pw, P3_FOLD_LABELS[gk] || '', (Object.keys(pageRecs).length + 1).toLocaleString('ar-EG')),
+            transparent: true, opacity: 0, side: T.DoubleSide, toneMapped: false
+        }));
+        paper.position.z = -0.34; paper.visible = false;
+        page.add(paper, obj);
+        exWrap.add(page);
+        const rec = { obj, page, paper, pw, ex, delay: g.delay, mats, capMats, base: new T.Vector3() };
+        pageRecs[gk] = rec;
         if (g.key) parts[g.key] = rec; else decos.push(rec);
     });
+    const pages = P3_FOLD_ORDER.map(k => pageRecs[k]).filter(Boolean);
+    Object.keys(pageRecs).forEach(k => { if (!pages.includes(pageRecs[k])) pages.push(pageRecs[k]); });
 
     // ---------- طبقة الأسماء والخطوط ----------
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -374,13 +376,17 @@ function p3Build(host, imgs) {
         ex: 0, target: 0, last: 0, raf: 0, active: false, selected: null,
         spin: 0.8, vel: 0.45, exQuat: new T.Quaternion(), exYaw: P3_INIT_YAW, exPitch: P3_INIT_PITCH, exInit: true, exVx: 0, exVy: 0, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
         zoom: 1, zoomT: 1, ptrs: new Map(), pinch: null, multi: false,                                                                                       // التكبير (بإصبعين أو عجلة الماوس)
-        w: 1, h: 1, down: null, ro: null, pad: false, padL: 0, padT: 0, cw: 1, ch: 1
+        w: 1, h: 1, down: null, ro: null, pad: false, padL: 0, padT: 0, cw: 1, ch: 1,
+        pages, foldW: pages.reduce((a, p) => a + p.pw, 0), u: 0, uT: 0, f: 0, panX: 0, panT: 0, qId: new T.Quaternion(), tnone: false, thumbSync: null   // الشريط والفرد
     };
+    p3InjectStyle();
+    p3BuildSlider(s);
 
     function resize() {
         const w = host.clientWidth || 300, h = host.clientHeight || 200;
         s.w = w; s.h = h;
         p3ApplyPad(s);
+        if (s.thumbSync) s.thumbSync();
         s.baseVec.set(0, body.position.y - exWrap.position.y, 0);
     }
     resize();
@@ -422,9 +428,15 @@ function p3Build(host, imgs) {
         const k = 0.013 / Math.max(1, s.zoom * 0.8 + 0.2) ;   // لما تكبّر الحركة بتبقى أنعم
         const da = dx * k, db = dy * k;
         const cap = v => Math.max(-4, Math.min(4, v));
-        if (s.target === 0) {                         // متجمّع: بنلف التليفون يمين وشمال
+        const open = s.target === 1 || s.u > 0.02;
+        if (!open) {                                  // متجمّع: بنلف التليفون يمين وشمال
             s.spin += da;
             s.vel = cap(0.5 * s.vel + 0.5 * (da / dt));
+        } else if (s.f > 0.05) {                      // مفرود: السحب يمين وشمال بيحرّك الصفحات (تنقّل بينهم)
+            const sc = 1 + (P3_FOLD_SCALE - 1) * p3Smooth(s.f);
+            const visW = 2.84 / s.zoom * (s.w / s.h);
+            const lim = Math.max(0, (s.foldW * sc - visW) / 2 + 0.25);
+            s.panT = Math.max(-lim, Math.min(lim, s.panT + dx * 2.84 / (s.zoom * s.h)));
         } else {                                      // مفكوك: يمين/شمال = لفّ حوالين طول المجسم، فوق/تحت = ميل لقدام ولورا
             s.exInit = false;
             s.exVy = cap(0.5 * s.exVy + 0.5 * (da / dt));
@@ -449,14 +461,7 @@ function p3Build(host, imgs) {
     cv.addEventListener('pointercancel', e => endPtr(e, true));
     // الماوس على الكمبيوتر: العجلة بتكبّر لما يكون مفكوك (وهو متجمّع بنسيب الصفحة تتمرر عادي)
     cv.addEventListener('wheel', e => {
-        if (s.target !== 1 || e.ctrlKey || e.metaKey) return;   // Ctrl+سكرول = تكبير الصفحة كلها (بتاع المتصفح)، منلمسوش
-        // الكانفاس بقى أكبر من الإطار، فالعجلة بتكبّر بس لو الماوس فوق التليفون نفسه؛ برّاه الصفحة بتتمرر عادي
-        const rect = cv.getBoundingClientRect();
-        s.raycaster.setFromCamera(new THREE.Vector2(
-            ((e.clientX - rect.left) / rect.width) * 2 - 1,
-            -((e.clientY - rect.top) / rect.height) * 2 + 1), s.camera);
-        const onPhone = s.raycaster.intersectObjects(s.exWrap.children, true).some(h => h.object.material && h.object.material.opacity > 0.5);
-        if (!onPhone) return;
+        if (!(s.target === 1 || s.u > 0.02)) return;
         e.preventDefault();
         s.zoomT = clampZoom(s.zoomT * Math.exp(-e.deltaY * 0.0012));
     }, { passive: false });
@@ -544,11 +549,12 @@ function p3Pick(e) {
 function p3Tap(e) {
     const s = _p3; if (!s) return;
     const hit = p3Pick(e);
-    if (s.target === 0) {
+    const open = s.target === 1 || s.u > 0.02;
+    if (!open) {
         if (hit) p3Explode();
         return;
     }
-    if (!hit) { p3Collapse(false); return; }
+    if (!hit) { if (s.f > 0.05) p3Select(null); else p3Collapse(false); return; }
     if (s.selected === hit) p3Open(hit); else p3Select(hit);
 }
 
@@ -572,7 +578,9 @@ function p3Collapse(instant) {
     s.zoomT = 1;
     s.renderer.domElement.style.touchAction = 'pan-y';
     p3SetCaption(PHONE_CAP_IDLE);
-    if (instant) { s.ex = 0; p3Apply(s, 0); p3SetPad(s, false); }
+    s.uT = 0; s.panT = 0;
+    if (s.thumbSync) s.thumbSync();
+    if (instant) { s.ex = 0; s.u = 0; s.f = 0; s.panX = 0; p3Apply(s, 0, 0); p3SetPad(s, false); }
 }
 
 function p3Select(key) {
@@ -597,23 +605,40 @@ function p3Open(key) {
 // ---------- الحركة ----------
 function p3Smooth(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
 
-function p3Apply(s, e) {
+function p3Apply(s, e, f) {
+    f = f || 0;
+    const bf = p3Smooth(Math.min(1, f * 5));     // بيدخّل الصفحات في وضع المطوية بالتدريج
     const place = (p) => {
         const t = p3Smooth((e - p.delay) / (1 - p.delay * 0.9));
-        p.obj.position.lerpVectors(s.baseVec, p.ex, t);
-        // زجزاج: كل شريحة بتميل حوالين محور التليفون الراسي، والميل بالتبادل +/- بنفس الزاوية
-        const gx = p.obj.position.x;
-        p.slabs.forEach(sl => {
-            const a = sl.tilt * t, ca = Math.cos(a), sa = Math.sin(a), X = gx + sl.dx;
-            sl.g.rotation.y = a;
-            sl.g.position.set(X * ca + (sl.stuck ? sl.dz * sa : 0) - gx, sl.dy, -X * sa + (sl.stuck ? sl.dz * ca : sl.dz));
-        });
+        p.obj.position.lerpVectors(s.baseVec, p.ex, t).multiplyScalar(1 - bf);
         p.obj.scale.setScalar(0.5 + 0.5 * t);
         p.mats.forEach(m => { m.opacity = t; });
         p.obj.visible = t > 0.01;
     };
     Object.keys(s.parts).forEach(k => place(s.parts[k]));
     s.decos.forEach(place);
+
+    // المطوية: الصفحات متوصّلة بمفصّلات (فردة زجزاج). الصفحة الأولى (الواجهة) ثابتة، والباقي بيتفرد منها يمين
+    const A = Math.PI * (1 - f);
+    let cx = 0, cz = 0, x0 = 0, x1 = 0;
+    const L = s.pages.map((p, k) => {
+        const a = (k % 2) ? A : 0, dx = Math.cos(a), dz = -Math.sin(a);
+        const c = { x: cx + dx * p.pw / 2, z: cz + dz * p.pw / 2, a };
+        cx += dx * p.pw; cz += dz * p.pw;
+        x0 = Math.min(x0, cx); x1 = Math.max(x1, cx);
+        return c;
+    });
+    const mx = (x0 + x1) / 2, mz = L.reduce((a, c) => a + c.z, 0) / Math.max(1, L.length);
+    s.pages.forEach((p, k) => {
+        const c = L[k];
+        p.page.position.set((c.x - mx) * bf, 0, (c.z - mz - k * 0.05 * (1 - f)) * bf);
+        p.page.rotation.y = c.a * bf;
+        p.paper.material.opacity = bf;
+        p.paper.visible = bf > 0.01;
+    });
+    s.exWrap.scale.setScalar(1 + (P3_FOLD_SCALE - 1) * p3Smooth(f));
+    s.exWrap.position.x = s.panX;
+
     // التليفون بيختفي بسرعة أول ما التفكيك يبدأ
     const w = 1 - p3Smooth(e * 2.5);
     s.bodyMats.forEach(m => { m.opacity = w; });
@@ -638,8 +663,17 @@ function p3Frame(now) {
 
     s.ex += (s.target - s.ex) * Math.min(1, dt * 4.5);
     if (Math.abs(s.target - s.ex) < 0.002) s.ex = s.target;
-    const e = s.ex;
-    if (s.pad && s.target === 0 && e < 0.02) p3SetPad(s, false);   // خلص التجميع: الكانفاس يرجع لحجم الإطار
+
+    // شريط «افرد»: أول جزء منه بيفكّ التليفون، والباقي بيفرد الصفحات
+    s.u += (s.uT - s.u) * Math.min(1, dt * 9);
+    if (Math.abs(s.uT - s.u) < 0.0005) s.u = s.uT;
+    const f = Math.max(0, (s.u - P3_U_EXPLODE) / (1 - P3_U_EXPLODE));
+    s.f = f;
+    const e = Math.max(s.ex, p3Smooth(Math.min(1, s.u / P3_U_EXPLODE)));
+    const open = s.target === 1 || s.u > 0.01;
+    if (open && !s.pad) p3SetPad(s, true);
+    if (!open && s.pad && e < 0.02) p3SetPad(s, false);   // خلص التجميع: الكانفاس يرجع لحجم الإطار
+    if (s.tnone !== open) { s.tnone = open; s.renderer.domElement.style.touchAction = open ? 'none' : 'pan-y'; }
 
     // دوران التليفون المتجمّع: الإصبع بيحرّكه، وبعد ما تسيبه بيكمّل بقوة الدفعة وبعدين يهدى لدوران بطيء
     if (!s.dragging) {
@@ -651,9 +685,9 @@ function p3Frame(now) {
 
     // دوران المجسم المفكوك: بالإصبع في كل الاتجاهات، بيكمّل بقوة الدفعة وبعدين يقف.
     // وهو متجمّع بنجهّز وضعه الأولي (من الجنب، زي صورة الفك)، ولما تجمّع بيرجع لوضعه.
-    if (e < 0.02 && s.target === 0) {
+    if (e < 0.02 && !open) {
         s.exYaw = P3_INIT_YAW; s.exPitch = P3_INIT_PITCH; s.exVx = s.exVy = 0; s.exInit = true;
-    } else if (s.target === 0) {
+    } else if (!open) {
         s.exVx = s.exVy = 0;
     } else if (!s.dragging && !s.multi) {
         if (s.exInit) {
@@ -662,30 +696,35 @@ function p3Frame(now) {
             s.exPitch += (P3_INIT_PITCH - s.exPitch) * k;
         } else {
             p3Rotate(s, s.exVy * dt, s.exVx * dt);
-            const f = Math.exp(-dt * 4);
-            s.exVx *= f; s.exVy *= f;
+            const fr = Math.exp(-dt * 4);
+            s.exVx *= fr; s.exVy *= fr;
             if (Math.abs(s.exVx) < 0.03) s.exVx = 0;
             if (Math.abs(s.exVy) < 0.03) s.exVy = 0;
         }
     }
-    s.exWrap.quaternion.copy(p3ExQuat(s));
+    // وهو مفرود: المطوية بتتعدّل لوش الكاميرا (من غير ميلان) والسحب بيبقى للتنقّل بدل اللف
+    s.exWrap.quaternion.copy(p3ExQuat(s)).slerp(s.qId, p3Smooth(Math.min(1, f * 4)));
+
+    if (f < 0.05) s.panT = 0;
+    s.panX += (s.panT - s.panX) * Math.min(1, dt * 10);
 
     // التكبير: بيقرّب الكاميرا بنعومة
     s.zoom += (s.zoomT - s.zoom) * Math.min(1, dt * 10);
     s.camera.position.z = 4.8 / s.zoom;
 
-    p3Apply(s, e);
+    p3Apply(s, e, f);
     if (s.shadow) {
         s.shadow.material.opacity = 1 - 0.4 * e;
         s.shadow.scale.set(1 + 1.7 * e, 1, 1);
+        s.shadow.visible = f < 0.05;
     }
     s.renderer.render(s.scene, s.camera);
-    p3Labels(s, e);
+    p3Labels(s, e, f);
 }
 
-function p3Labels(s, e) {
-    const showing = e > 0.85;
-    s.back.classList.toggle('show', showing);
+function p3Labels(s, e, f) {
+    const showing = e > 0.85 && f < 0.08;   // الأسماء بتختفي وهو مفرود (الصفحات عليها أسماءها)
+    s.back.classList.toggle('show', e > 0.85);
 
     if (e < 0.02) {
         PHONE_PARTS.forEach(([k]) => { s.chips[k].classList.remove('show'); s.lines[k].style.opacity = '0'; });
@@ -733,6 +772,87 @@ function p3Labels(s, e) {
             ln.style.opacity = showing ? '1' : '0';
         });
     });
+}
+
+// ---------- ورقة الصفحة (اسم القطعة ورقمها) ----------
+function p3PaperTex(pw, label, num) {
+    const ch = 512, cw = Math.max(96, Math.round(ch * pw / P3_PAGE_H));
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, ch);
+    g.addColorStop(0, '#f7f0df'); g.addColorStop(1, '#eadfc4');
+    x.fillStyle = g; p3RoundRect(x, 2, 2, cw - 4, ch - 4, 18); x.fill();
+    x.lineWidth = 4; x.strokeStyle = '#c9a962'; x.stroke();
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    const font = px => '700 ' + px + 'px "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    x.font = font(30); x.fillStyle = 'rgba(107,85,48,.55)'; x.fillText(num, cw / 2, 40);
+    if (label) {
+        let fs = 36; x.font = font(fs);
+        while (fs > 14 && x.measureText(label).width > cw - 24) { fs -= 2; x.font = font(fs); }
+        x.fillStyle = '#4a3b1f'; x.fillText(label, cw / 2, ch - 44);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+}
+
+// ---------- شريط «افرد» (على اليمين، بيتسحب لتحت للفرد ولفوق للتجميع) ----------
+function p3InjectStyle() {
+    if (document.getElementById('hp3-fold-style')) return;
+    const st = document.createElement('style');
+    st.id = 'hp3-fold-style';
+    st.textContent = `
+.hp3-slider { position: absolute; right: 6px; top: 8%; bottom: 8%; width: 38px; z-index: 6; direction: ltr; touch-action: none; user-select: none; -webkit-user-select: none; }
+.hp3-slider-rail { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; border-radius: 2px; background: rgba(201, 169, 98, .35); }
+.hp3-slider-thumb { position: absolute; left: 0; top: 0; width: 38px; height: 104px; padding: 0; border-radius: 19px; border: 1px solid rgba(232, 201, 122, .6);
+    background: linear-gradient(180deg, #ecd9a6, #c9a962); color: #1a150d; font-weight: 700; font-size: .95rem; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .28); touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
+.hp3-slider-thumb span { writing-mode: vertical-rl; letter-spacing: .04em; pointer-events: none; }
+.hp3-slider-thumb.drag { cursor: grabbing; filter: brightness(1.06); }
+@media (min-width: 900px) { .hp3-slider { right: 14px; } .hp3-slider-thumb { width: 44px; left: -3px; } }`;
+    document.head.appendChild(st);
+}
+
+function p3BuildSlider(s) {
+    const sl = document.createElement('div');
+    sl.className = 'hp3-slider';
+    sl.innerHTML = '<span class="hp3-slider-rail"></span><button type="button" class="hp3-slider-thumb" aria-label="افرد التليفون"><span>افرد</span></button>';
+    s.host.appendChild(sl);
+    const thumb = sl.querySelector('.hp3-slider-thumb');
+    const room = () => Math.max(1, sl.clientHeight - thumb.offsetHeight);
+    s.thumbSync = () => { thumb.style.transform = 'translateY(' + (s.uT * room()) + 'px)'; };
+    let drag = null;
+    const setFrom = (clientY, off) => {
+        const r = sl.getBoundingClientRect();
+        s.uT = Math.max(0, Math.min(1, (clientY - off - r.top) / room()));
+        s.thumbSync();
+        p3SliderChanged(s);
+    };
+    thumb.addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        drag = { id: e.pointerId, off: e.clientY - thumb.getBoundingClientRect().top };
+        try { thumb.setPointerCapture(e.pointerId); } catch (err) { /* مش مشكلة */ }
+        thumb.classList.add('drag');
+    });
+    thumb.addEventListener('pointermove', e => { if (drag && drag.id === e.pointerId) setFrom(e.clientY, drag.off); });
+    const end = e => { if (drag && drag.id === e.pointerId) { drag = null; thumb.classList.remove('drag'); } };
+    thumb.addEventListener('pointerup', end);
+    thumb.addEventListener('pointercancel', end);
+    sl.addEventListener('pointerdown', e => {          // لمسة على الخط نفسه: الشريط يقفز لمكانها
+        if (e.target === thumb || thumb.contains(e.target)) return;
+        e.stopPropagation();
+        setFrom(e.clientY, thumb.offsetHeight / 2);
+    });
+    requestAnimationFrame(s.thumbSync);
+}
+
+function p3SliderChanged(s) {
+    const u = s.uT;
+    if (u > 0.01 && !s.pad) p3SetPad(s, true);
+    if (u > P3_U_EXPLODE + 0.05) p3SetCaption(PHONE_CAP_FOLD);
+    else if (u > 0.01 || s.target === 1) p3SetCaption(PHONE_CAP_OPEN);
+    else p3SetCaption(PHONE_CAP_IDLE);
+    p3Start();
 }
 
 function p3Dispose() {
