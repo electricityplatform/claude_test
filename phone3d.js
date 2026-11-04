@@ -17,11 +17,10 @@ const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية
 const PHONE_BACK_COLOR = 0x55575b;
 // لون الإطار الجانبي (ألومنيوم داكن)
 const PHONE_FRAME_COLOR = 0x2b2c2f;
-// الترابيزة (الشلف): نفس كريمي وذهبي التندة. الكريمي هنا لازم يطابق --shop-cream في theme.css
+// الشلف: حيطة كريمي نازلة من لوحة الترحيب وبتلف في النص بقوس ناعم لبرا (مش زاوية 90)، وحافة ذهبي.
+// الكريمي هنا لازم يطابق --shop-cream في theme.css
 const PHONE_SHELF_CREAM = 0xfbf8f1;
 const PHONE_SHELF_GOLD = 0xe4d09c;
-// زاوية ميل الترابيزة (بالراديان). 0 = مستقيمة قدام الكاميرا، 0.45 تقريباً 26 درجة
-const PHONE_SHELF_YAW = 0.45;
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 let _p3 = null;          // حالة النموذج الحالي
@@ -45,8 +44,8 @@ function phone3dLoadThree() {
 function phone3dSectionHtml() {
     return `
         <section class="phone-stage" aria-label="تليفون ثلاثي الأبعاد">
-            <div class="phone-stage-cap" id="heroPhoneCap">${PHONE_CAP_IDLE}</div>
             <div class="hero-phone" id="heroPhone"></div>
+            <div class="phone-stage-cap" id="heroPhoneCap">${PHONE_CAP_IDLE}</div>
         </section>`;
 }
 
@@ -220,25 +219,55 @@ function p3Build(host) {
     const key = new T.DirectionalLight(0xffffff, 1.8); key.position.set(2.5, 3, 4); scene.add(key);
     const rim = new T.DirectionalLight(0xdfe6ff, 1.4); rim.position.set(-3, 1.5, -2.5); scene.add(rim);
 
-    // ---------- الترابيزة: شلف كريمي بإطار ذهبي من غير رجلين، مايل بزاوية، وعليه حامل التليفون (زي حوامل المحلات) ----------
-    let holder = null;
-    const SHELF_TOP = -0.9;
+    // ---------- الشلف: حيطة كريمي نازلة من فوق، بتلف عند النص بقوس (نصف قطر R) وتبقى سطح أفقي قدّام ----------
+    // المقطع (z,y) بيتبني مرة واحدة وبيتسحب على عرض الشاشة كله (scale.x بيتظبط في resize).
+    const SHELF_TOP = -0.755;      // سطح الشلف (تحت التليفون مباشرة)
+    const SHELF_WALL_Z = -0.95;    // مكان الحيطة
+    const SHELF_R = 0.55;          // قوس اللفّة
+    const SHELF_FRONT_Z = 0.95;    // حافة الشلف الأمامية
+    const SHELF_T = 0.05;          // السُمك
+    const SHELF_TOP_Y = 2.4;       // أعلى الحيطة (برا الكادر عشان تلزق في اللوحة)
+    const PHONE_Z = 0.15;          // التليفون واقف على الجزء المسطّح
+    const shelfFit = [];
+    let shadow = null;
     {
-        const cream = new T.MeshStandardMaterial({ color: PHONE_SHELF_CREAM, metalness: 0, roughness: 0.42 });
+        const cream = new T.MeshStandardMaterial({ color: PHONE_SHELF_CREAM, metalness: 0, roughness: 0.5 });
         const gold = new T.MeshStandardMaterial({ color: PHONE_SHELF_GOLD, metalness: 0.6, roughness: 0.32 });
-        const stage = new T.Group();
 
-        const top = p3Slab(2.0, 1.1, 0.08, 0.1, cream, 0.012);          // سطح الشلف
-        top.rotation.x = -Math.PI / 2;
-        top.position.set(0, SHELF_TOP - 0.04, 0);
-        stage.add(top);
+        const zc = SHELF_WALL_Z + SHELF_R, yc = SHELF_TOP + SHELF_R, N = 28;
+        const pts = [];
+        pts.push([SHELF_WALL_Z, SHELF_TOP_Y]);
+        for (let i = 0; i <= N; i++) {                       // السطح الأمامي: القوس من الحيطة للأرضية
+            const f = Math.PI + (Math.PI / 2) * (i / N);
+            pts.push([zc + SHELF_R * Math.cos(f), yc + SHELF_R * Math.sin(f)]);
+        }
+        pts.push([SHELF_FRONT_Z, SHELF_TOP]);
+        pts.push([SHELF_FRONT_Z, SHELF_TOP - SHELF_T]);
+        for (let i = N; i >= 0; i--) {                       // الوش الخلفي: قوس أكبر بسُمك الشلف
+            const f = Math.PI + (Math.PI / 2) * (i / N);
+            const r = SHELF_R + SHELF_T;
+            pts.push([zc + r * Math.cos(f), yc + r * Math.sin(f)]);
+        }
+        pts.push([SHELF_WALL_Z - SHELF_T, SHELF_TOP_Y]);
+        const shape = new T.Shape();
+        pts.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
+        shape.closePath();
+        const geo = new T.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false, curveSegments: 1 });
+        geo.translate(0, 0, -0.5);
+        geo.rotateY(-Math.PI / 2);                           // الشكل (z,y) والسحب على محور x
+        const wall = new T.Mesh(geo, cream);
+        scene.add(wall);
+        shelfFit.push(wall);
 
-        const rim = p3Ring(2.06, 1.16, 0.13, 1.98, 1.08, 0.09, 0.085, gold, 0.008);   // إطار ذهبي حوالين الحافة
-        rim.rotation.x = -Math.PI / 2;
-        rim.position.set(0, SHELF_TOP - 0.04, 0);
-        stage.add(rim);
+        // حافة ذهبي على الطرف الأمامي
+        const lipGeo = new T.CylinderGeometry(0.03, 0.03, 1, 20);
+        lipGeo.rotateZ(Math.PI / 2);
+        const lip = new T.Mesh(lipGeo, gold);
+        lip.position.set(0, SHELF_TOP - SHELF_T / 2, SHELF_FRONT_Z);
+        scene.add(lip);
+        shelfFit.push(lip);
 
-        // ضل ناعم تحت الحامل
+        // ضل ناعم تحت التليفون
         const sc = document.createElement('canvas');
         sc.width = sc.height = 128;
         const sx = sc.getContext('2d');
@@ -247,31 +276,14 @@ function p3Build(host) {
         sx.fillStyle = sg; sx.fillRect(0, 0, 128, 128);
         const st = new T.CanvasTexture(sc);
         st.colorSpace = T.SRGBColorSpace;
-        const shadow = new T.Mesh(new T.PlaneGeometry(1.2, 1.2), new T.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
+        shadow = new T.Mesh(new T.PlaneGeometry(1.2, 1.2), new T.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false }));
         shadow.rotation.x = -Math.PI / 2;
-        shadow.position.set(0, SHELF_TOP + 0.002, 0);
-        stage.add(shadow);
-
-        // الحامل: قاعدة كريمي بحلقة ذهبية، التليفون واقف عليها. (الأصل عند سطح الشلف عشان نقدر نقصّره وقت التفكيك)
-        holder = new T.Group();
-        const puck = new T.Mesh(new T.CylinderGeometry(0.25, 0.28, 0.14, 48), cream);
-        puck.position.y = 0.07;
-        holder.add(puck);
-        const ringTop = new T.Mesh(new T.TorusGeometry(0.25, 0.014, 10, 64), gold);
-        ringTop.rotation.x = Math.PI / 2;
-        ringTop.position.y = 0.14;
-        holder.add(ringTop);
-        const pad = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, 0.012, 48), gold);
-        pad.position.y = 0.144;
-        holder.add(pad);
-        holder.position.set(0, SHELF_TOP, 0);
-        stage.add(holder);
-
-        stage.rotation.y = PHONE_SHELF_YAW;
-        scene.add(stage);
+        shadow.position.set(0, SHELF_TOP + 0.002, PHONE_Z);
+        scene.add(shadow);
     }
 
     const group = new T.Group();
+    group.position.z = PHONE_Z;
     scene.add(group);
 
     const M = (color, metal, rough) => new T.MeshStandardMaterial({ color, metalness: metal, roughness: rough });
@@ -425,7 +437,7 @@ function p3Build(host) {
         host, renderer, scene, camera, group, parts, meshList, chips, lines, back,
         raycaster: new T.Raycaster(), vec: new T.Vector3(),
         ex: 0, target: 0, spin: 0.4, last: 0, raf: 0, active: false, selected: null,
-        w: 1, h: 1, down: null, ro: null, holder
+        w: 1, h: 1, down: null, ro: null, shadow
     };
 
     function resize() {
@@ -434,6 +446,10 @@ function p3Build(host) {
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
+        // الحيطة والشلف يملّوا عرض الكادر كله (من حافة لحافة) مهما كان حجم الشاشة
+        const d = camera.position.z - SHELF_WALL_Z;
+        const fullW = 2 * d * Math.tan(T.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+        shelfFit.forEach(m => { m.scale.x = fullW * 1.25; });
     }
     resize();
     s.ro = new ResizeObserver(resize);
@@ -555,7 +571,8 @@ function p3Frame(now) {
     s.group.rotation.x = 0.08 * (1 - e) + 0.2 * e;
 
     p3Apply(s, e);
-    if (s.holder) s.holder.scale.y = Math.max(0.04, 1 - e);   // الحامل بيدخل في الشلف وقت التفكيك عشان فلاتة الشحن تنزل براحتها
+    s.group.position.y = 0.25 * e;                            // وقت التفكيك التليفون بيطلع شوية عشان فلاتة الشحن ما تدخلش في الشلف
+    if (s.shadow) s.shadow.material.opacity = 1 - 0.6 * e;
     s.renderer.render(s.scene, s.camera);
     p3Labels(s, e);
 }
