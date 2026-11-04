@@ -13,7 +13,7 @@ function getHeaderTemplate(showSearch = false) {
         : `<span class="topbar-user-spacer" aria-hidden="true"></span>`;
 
     return `
-        <header class="app-topbar flex-shrink-0">
+        <header class="app-topbar flex-shrink-0${showSearch ? ' has-awning' : ''}">
             <div class="navbar min-h-0 p-0 gap-3">
                 <div class="flex-none">
                     <button type="button" onclick="toggleSidebar()" class="btn btn-primary btn-square" aria-label="فتح القائمة">
@@ -42,8 +42,24 @@ function getHeaderTemplate(showSearch = false) {
             </div>
             ` : ''}
         </header>
+        ${showSearch ? '<div class="shop-awning" aria-hidden="true"><div class="awning-valance"></div><div class="awning-scallops"></div></div>' : ''}
     `;
 }
+
+// التندة بتفضل لازقة فوق لما الهيدر والبحث يختفوا بالتمرير؛ لما تلزق بنضيف كلاس stuck (بيغطي منطقة شريط الحالة في الأجهزة اللي فيها notch)
+(function setupAwningStuck() {
+    let ticking = false;
+    function update() {
+        ticking = false;
+        const a = document.querySelector('.shop-awning');
+        if (!a) return;
+        const top = parseFloat(getComputedStyle(a).top) || 0;
+        a.classList.toggle('stuck', a.getBoundingClientRect().top <= top + 1);
+    }
+    window.addEventListener('scroll', function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+})();
 
 // ================= أيقونة عنصر القائمة الجانبية =================
 function menuIconFor(item) {
