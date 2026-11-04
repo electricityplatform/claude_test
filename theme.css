@@ -1283,7 +1283,11 @@ html:has(#appContainer .app-topbar) .app-topbar.has-search { position: static; }
 .hero-tile { color: #f6f1e7; background: rgba(246, 241, 231, .1); border-color: rgba(232, 201, 122, .55); }
 .hero-dot { background: rgba(246, 241, 231, .32); }
 .hero-dot.active { background: #ecd9a6; }
-.phone-stage { background: linear-gradient(180deg, var(--panel-mid) 0%, #cdbb8f 36%, var(--panel-light) 76%, rgba(246, 241, 231, 0) 100%); }   /* آخرها بيدخل في لون الصفحة اللي تحته */
+/* لوحة التليفون: من غير خلفية ولا إطار (المجسم فوق خلفية الصفحة مباشرة) */
+.phone-stage { background: none; }
+.phone-stage::after { display: none; }
+html.dark .phone-stage-cap { color: #ecd9a6; }
+html.dark .hp3-lines line { stroke: rgba(236, 217, 166, .75); }
 
 .hero { border-radius: 1.6rem; }
 @media (min-width: 900px) { .hero, .phone-stage { border-radius: 2.2rem; } }
