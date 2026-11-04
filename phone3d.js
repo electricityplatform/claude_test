@@ -44,6 +44,7 @@ const PHONE_LAYOUT = [
     ['inner', 'back', 660.0, 606.0, 463, 1000, -0.40, 0.24, 0.035, 0x41403f, [0.2592,0.0,0.257,0.002,0.2289,0.005,0.1965,0.013,0.1814,0.014,0.1728,0.018,0.1728,0.025,0.1857,0.029,0.1857,0.034,0.1793,0.036,0.1706,0.076,0.1771,0.08,0.1685,0.087,0.1512,0.171,0.1555,0.181,0.149,0.184,0.1447,0.203,0.149,0.219,0.1447,0.235,0.1382,0.237,0.1425,0.243,0.1425,0.25,0.1361,0.252,0.1404,0.253,0.1382,0.265,0.1274,0.268,0.095,0.27,0.0886,0.276,0.0691,0.279,0.0648,0.303,0.0799,0.306,0.0842,0.314,0.0756,0.322,0.0346,0.514,0.0389,0.521,0.0324,0.524,0.0043,0.656,0.0086,0.669,0.0065,0.672,0.0,0.673,0.0,0.839,0.0151,0.842,0.0086,0.871,0.013,0.89,0.0043,0.933,0.0,0.934,0.0,0.984,0.0194,0.987,0.0238,0.991,0.0497,0.999,0.6004,0.999,0.6026,0.997,0.6307,0.999,0.6328,0.997,0.797,0.996,0.9114,0.993,0.9417,0.994,0.9546,0.999,0.9935,0.999,0.9935,0.723,0.9978,0.722,0.9892,0.717,0.9892,0.713,0.9978,0.711,0.9978,0.192,0.9914,0.19,0.9914,0.138,0.9978,0.136,0.9978,0.117,0.9935,0.116,0.9935,0.0,0.9633,0.0,0.9633,0.004,0.9525,0.007,0.6479,0.002,0.6458,0.0]],
     ['back', 'back', 660.0, 606.0, 463, 1000, -0.62, 0.24, 0.030, 0x635f5c, [0.0173,0.01,0.0,0.014,0.0,0.19,0.0043,0.191,0.0,0.264,0.0043,0.265,0.0065,0.49,0.0043,0.635,0.0,0.636,0.0,0.974,0.0259,0.985,0.0497,0.991,0.0778,0.995,0.1296,0.997,0.1317,0.999,0.8985,0.999,0.9006,0.997,0.9374,0.994,0.9676,0.984,0.9827,0.975,0.9914,0.965,0.9914,0.953,0.9978,0.951,0.9978,0.045,0.9914,0.043,0.987,0.028,0.9741,0.018,0.9438,0.008,0.9093,0.003,0.8704,0.002,0.8683,0.0,0.8618,0.002,0.8531,0.002,0.851,0.0,0.8402,0.0,0.838,0.002,0.8294,0.0,0.8272,0.002,0.8099,0.002,0.8078,0.0,0.8035,0.002,0.7732,0.002,0.7711,0.0,0.7689,0.002,0.7516,0.002,0.7495,0.0,0.7451,0.002,0.4082,0.002,0.406,0.0,0.3974,0.002,0.2484,0.002,0.2462,0.0,0.2441,0.002,0.2354,0.002,0.2333,0.0,0.2246,0.002,0.216,0.0,0.2138,0.002,0.1987,0.002,0.1965,0.0,0.1944,0.002,0.1857,0.002,0.1836,0.0,0.1577,0.0,0.149,0.002,0.1469,0.0,0.1274,0.0,0.1253,0.002,0.0799,0.003]]
 ];
+const P3_SPREAD = 1.3;   // معامل تباعد الشرايح عن بعض وقت الفك (1 = زي الأول)
 const PHONE_PCX = 660, PHONE_PCY = 606;   // مركز التليفون في مستوى التركيبة (بكسل)
 const PHONE_K = 1.7 / 1000;                // وحدة العالم لكل بكسل (طول الشاشة 1.7)
 
@@ -311,11 +312,11 @@ function p3Build(host, imgs) {
         const mats = [], capMats = [];
         g.items.forEach(it => {
             const sl = slabFor(imgs[it.file], it);
-            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, it.z - g.z);
+            sl.g.position.set((it.cx - gcx) * PHONE_K, -(it.cy - gcy) * PHONE_K, (it.z - g.z) * P3_SPREAD);
             if (g.key) sl.meshes.forEach(m => { m.userData.key = g.key; meshList.push(m); });
             obj.add(sl.g); mats.push(...sl.mats); capMats.push(...sl.capMats);
         });
-        const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, g.z);
+        const ex = new T.Vector3((gcx - PHONE_PCX) * PHONE_K, -(gcy - PHONE_PCY) * PHONE_K, g.z * P3_SPREAD);
         exWrap.add(obj);
         const rec = { obj, ex, delay: g.delay, mats, capMats, base: new T.Vector3() };
         if (g.key) parts[g.key] = rec; else decos.push(rec);
@@ -356,15 +357,13 @@ function p3Build(host, imgs) {
         ex: 0, target: 0, last: 0, raf: 0, active: false, selected: null,
         spin: 0.8, vel: 0.45, exQuat: new T.Quaternion(), exYaw: P3_INIT_YAW, exPitch: P3_INIT_PITCH, exInit: true, exVx: 0, exVy: 0, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
         zoom: 1, zoomT: 1, ptrs: new Map(), pinch: null, multi: false,                                                                                       // التكبير (بإصبعين أو عجلة الماوس)
-        w: 1, h: 1, down: null, ro: null
+        w: 1, h: 1, down: null, ro: null, pad: false, padL: 0, padT: 0, cw: 1, ch: 1
     };
 
     function resize() {
         const w = host.clientWidth || 300, h = host.clientHeight || 200;
         s.w = w; s.h = h;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+        p3ApplyPad(s);
         s.baseVec.set(0, body.position.y - exWrap.position.y, 0);
     }
     resize();
@@ -373,7 +372,7 @@ function p3Build(host, imgs) {
 
     // الإصبع: سحب أفقي = لفّ التليفون 360°، لمسة واحدة (من غير سحب) = تفكيك/اختيار
     const cv = renderer.domElement;
-    const clampZoom = z => Math.max(0.6, Math.min(2.4, z));
+    const clampZoom = z => Math.max(0.6, Math.min(3.4, z));
     const pinchDist = () => { const p = [...s.ptrs.values()]; return Math.max(1, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)); };
 
     cv.addEventListener('pointerdown', e => {
@@ -444,6 +443,41 @@ function p3Build(host, imgs) {
     return s;
 }
 
+// ---------- خروج المجسم المفكوك برّه إطار اللوحة ----------
+// وهو مفكوك: الكانفاس بيكبر لبرّه الإطار (لحد حواف الشاشة يمين وشمال، ونص طول الإطار فوق وتحت)،
+// والكاميرا بتفضل بتعرض نفس الكادر (setViewOffset) فحجم المجسم ما بيتغيّرش، بس بقى مش مقصوص.
+function p3ApplyPad(s) {
+    const cv = s.renderer.domElement, T = THREE, w = s.w, h = s.h;
+    if (s.pad) {
+        const r = s.host.getBoundingClientRect();
+        const vw = document.documentElement.clientWidth || window.innerWidth;
+        s.padL = Math.max(0, Math.floor(r.left));
+        const padR = Math.max(0, Math.floor(vw - r.right));
+        s.padT = Math.round(h * 0.5);
+        s.cw = w + s.padL + padR; s.ch = h + s.padT * 2;
+        cv.style.position = 'absolute'; cv.style.left = -s.padL + 'px'; cv.style.top = -s.padT + 'px';
+        cv.style.width = s.cw + 'px'; cv.style.height = s.ch + 'px';
+        s.renderer.setSize(s.cw, s.ch, false);
+        s.camera.aspect = w / h;
+        s.camera.setViewOffset(w, h, -s.padL, -s.padT, s.cw, s.ch);
+    } else {
+        s.padL = s.padT = 0; s.cw = w; s.ch = h;
+        cv.style.position = ''; cv.style.left = ''; cv.style.top = '';
+        cv.style.width = ''; cv.style.height = '';
+        s.renderer.setSize(w, h, false);
+        s.camera.clearViewOffset();
+        s.camera.aspect = w / h;
+    }
+    s.camera.updateProjectionMatrix();
+    s.host.classList.toggle('p3-open', s.pad);
+    const st = s.host.closest('.phone-stage'); if (st) st.classList.toggle('p3-open', s.pad);
+}
+function p3SetPad(s, on) {
+    if (s.pad === on) return;
+    s.pad = on;
+    p3ApplyPad(s);
+}
+
 // ---------- التفاعل ----------
 // دوران "تورنتيبل" (من غير ميلان جانبي): يمين/شمال = لفّ حوالين طول المجسم نفسه، فوق/تحت = ميل لقدام ولورا حوالين محور الشاشة الأفقي.
 // الزاويتين بيتخزنوا لوحدهم وبيتركّبوا بنفس الترتيب كل مرة، فمهما لفّيت ما بيتجمّعش ميلان ومفيش "عوم".
@@ -502,6 +536,7 @@ function p3SetCaption(text) {
 function p3Explode() {
     const s = _p3; if (!s) return;
     s.target = 1;
+    p3SetPad(s, true);
     s.renderer.domElement.style.touchAction = 'none';   // مفكوك: السحب في كل الاتجاهات للّف (مش للتمرير)
     p3SetCaption(PHONE_CAP_OPEN);
 }
@@ -513,7 +548,7 @@ function p3Collapse(instant) {
     s.zoomT = 1;
     s.renderer.domElement.style.touchAction = 'pan-y';
     p3SetCaption(PHONE_CAP_IDLE);
-    if (instant) { s.ex = 0; p3Apply(s, 0); }
+    if (instant) { s.ex = 0; p3Apply(s, 0); p3SetPad(s, false); }
 }
 
 function p3Select(key) {
@@ -573,6 +608,7 @@ function p3Frame(now) {
     s.ex += (s.target - s.ex) * Math.min(1, dt * 4.5);
     if (Math.abs(s.target - s.ex) < 0.002) s.ex = s.target;
     const e = s.ex;
+    if (s.pad && s.target === 0 && e < 0.02) p3SetPad(s, false);   // خلص التجميع: الكانفاس يرجع لحجم الإطار
 
     // دوران التليفون المتجمّع: الإصبع بيحرّكه، وبعد ما تسيبه بيكمّل بقوة الدفعة وبعدين يهدى لدوران بطيء
     if (!s.dragging) {
@@ -629,7 +665,7 @@ function p3Labels(s, e) {
     const items = PHONE_PARTS.map(([k]) => {
         s.parts[k].obj.getWorldPosition(s.vec);
         const p = s.vec.clone().project(s.camera);
-        return { k, x: (p.x * 0.5 + 0.5) * W, y: (-p.y * 0.5 + 0.5) * H };
+        return { k, x: (p.x * 0.5 + 0.5) * s.cw - s.padL, y: (-p.y * 0.5 + 0.5) * s.ch - s.padT };
     }).sort((a, b) => a.x - b.x);
 
     // صفّين: فوق وتحت بالتبادل، عشان الأسماء ما تتراكبش
