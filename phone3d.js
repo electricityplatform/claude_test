@@ -171,8 +171,8 @@ function p3Build(host, imgs) {
     host.innerHTML = '';
 
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // أخف على الجهاز (وأثبت وقت تسجيل الشاشة)
+    renderer.domElement.style.touchAction = 'pan-y';
     host.appendChild(renderer.domElement);
 
     const scene = new T.Scene();
@@ -354,7 +354,8 @@ function p3Build(host, imgs) {
         host, renderer, scene, camera, body, bodyMats, exWrap, parts, decos, meshList, chips, lines, back, shadow,
         raycaster: new T.Raycaster(), vec: new T.Vector3(), baseVec: new T.Vector3(),
         ex: 0, target: 0, last: 0, raf: 0, active: false, selected: null,
-        spin: 0.8, vel: 0.45, exQuat: new T.Quaternion(), exInitQ: new T.Quaternion().setFromEuler(new T.Euler(0.1, -1.0, 0, 'YXZ')), exInit: true, exVx: 0, exVy: 0, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
+        spin: 0.8, vel: 0.45, exQuat: new T.Quaternion(), exYaw: P3_INIT_YAW, exPitch: P3_INIT_PITCH, exInit: true, exVx: 0, exVy: 0, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
+        zoom: 1, zoomT: 1, ptrs: new Map(), pinch: null, multi: false,                                                                                       // التكبير (بإصبعين أو عجلة الماوس)
         w: 1, h: 1, down: null, ro: null
     };
 
@@ -372,37 +373,70 @@ function p3Build(host, imgs) {
 
     // الإصبع: سحب أفقي = لفّ التليفون 360°، لمسة واحدة (من غير سحب) = تفكيك/اختيار
     const cv = renderer.domElement;
+    const clampZoom = z => Math.max(0.6, Math.min(2.4, z));
+    const pinchDist = () => { const p = [...s.ptrs.values()]; return Math.max(1, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)); };
+
     cv.addEventListener('pointerdown', e => {
-        s.down = { x: e.clientX, y: e.clientY, t: performance.now(), lx: e.clientX, ly: e.clientY, lt: performance.now() };
+        s.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
         try { cv.setPointerCapture(e.pointerId); } catch (err) { /* مش مشكلة */ }
+        if (s.ptrs.size === 1) {
+            s.multi = false;
+            s.down = { x: e.clientX, y: e.clientY, t: performance.now(), lx: e.clientX, ly: e.clientY, lt: performance.now() };
+        } else {                                      // إصبعين: تكبير/تصغير بس، من غير لفّ ولا لمسة
+            s.multi = true; s.down = null; s.dragging = false;
+            s.exVx = s.exVy = 0; s.vel = 0.45;
+            s.pinch = { d: pinchDist(), z: s.zoomT };
+        }
     });
     cv.addEventListener('pointermove', e => {
+        const pt = s.ptrs.get(e.pointerId);
+        if (pt) { pt.x = e.clientX; pt.y = e.clientY; }
+        if (s.ptrs.size >= 2) {
+            if (s.pinch) s.zoomT = clampZoom(s.pinch.z * pinchDist() / s.pinch.d);
+            return;
+        }
+        if (s.multi) return;                          // لسه فيه إصبع نازل من الإيماءة اللي فاتت
         const d = s.down;
         if (!d) return;
         const now = performance.now();
-        const dx = e.clientX - d.lx, dy = e.clientY - d.ly, dt = Math.max(1, now - d.lt) / 1000;
+        const dx = e.clientX - d.lx, dy = e.clientY - d.ly, dt = Math.max(16, now - d.lt) / 1000;
         d.lx = e.clientX; d.ly = e.clientY; d.lt = now;
         if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) s.dragging = true;
         if (!s.dragging) return;
-        const da = dx * 0.013, db = dy * 0.013;
+        const k = 0.013 / Math.max(1, s.zoom * 0.8 + 0.2) ;   // لما تكبّر الحركة بتبقى أنعم
+        const da = dx * k, db = dy * k;
+        const cap = v => Math.max(-4, Math.min(4, v));
         if (s.target === 0) {                         // متجمّع: بنلف التليفون يمين وشمال
             s.spin += da;
-            s.vel = 0.5 * s.vel + 0.5 * (da / dt);    // سرعة الإصبع (بتكمّل بعد ما تسيبه)
-        } else {                                      // مفكوك: بنلف المجسم في كل الاتجاهات (فوق/تحت/يمين/شمال)
+            s.vel = cap(0.5 * s.vel + 0.5 * (da / dt));
+        } else {                                      // مفكوك: يمين/شمال = لفّ حوالين طول المجسم، فوق/تحت = ميل لقدام ولورا
             s.exInit = false;
-            s.exVy = 0.5 * s.exVy + 0.5 * (da / dt);
-            s.exVx = 0.5 * s.exVx + 0.5 * (db / dt);
+            s.exVy = cap(0.5 * s.exVy + 0.5 * (da / dt));
+            s.exVx = cap(0.5 * s.exVx + 0.5 * (db / dt));
             p3Rotate(s, da, db);
         }
     });
-    cv.addEventListener('pointerup', e => {
+    const endPtr = (e, cancelled) => {
+        s.ptrs.delete(e.pointerId);
+        s.pinch = null;
+        if (s.multi) {                                // إيماءة إصبعين: ما فيش لمسة ولا دفعة لفّ
+            if (s.ptrs.size === 0) { s.multi = false; s.down = null; s.dragging = false; }
+            return;
+        }
         const d = s.down; s.down = null;
         s.dragging = false;
-        if (!d) return;
+        if (cancelled || !d) return;
         if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10 || performance.now() - d.t > 600) return;
         p3Tap(e);
-    });
-    cv.addEventListener('pointercancel', () => { s.down = null; s.dragging = false; });
+    };
+    cv.addEventListener('pointerup', e => endPtr(e, false));
+    cv.addEventListener('pointercancel', e => endPtr(e, true));
+    // الماوس على الكمبيوتر: العجلة بتكبّر لما يكون مفكوك (وهو متجمّع بنسيب الصفحة تتمرر عادي)
+    cv.addEventListener('wheel', e => {
+        if (s.target !== 1) return;
+        e.preventDefault();
+        s.zoomT = clampZoom(s.zoomT * Math.exp(-e.deltaY * 0.0012));
+    }, { passive: false });
 
     p3Apply(s, 0);
     body.rotation.y = Math.PI + s.spin;
@@ -411,12 +445,18 @@ function p3Build(host, imgs) {
 }
 
 // ---------- التفاعل ----------
-// دوران حر حوالين محاور الشاشة (زي كرة تراك): الإصبع يمين/شمال = لفّ حوالين الرأسي، فوق/تحت = قلب المجسم
+// دوران "تورنتيبل" (من غير ميلان جانبي): يمين/شمال = لفّ حوالين طول المجسم نفسه، فوق/تحت = ميل لقدام ولورا حوالين محور الشاشة الأفقي.
+// الزاويتين بيتخزنوا لوحدهم وبيتركّبوا بنفس الترتيب كل مرة، فمهما لفّيت ما بيتجمّعش ميلان ومفيش "عوم".
+const P3_INIT_YAW = -1.0, P3_INIT_PITCH = 0.1, P3_MAX_PITCH = 1.45;
 function p3Rotate(s, ay, ax) {
+    s.exYaw += ay;
+    s.exPitch = Math.max(-P3_MAX_PITCH, Math.min(P3_MAX_PITCH, s.exPitch + ax));
+}
+function p3ExQuat(s) {
     const T = THREE;
-    const qy = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), ay);
-    const qx = new T.Quaternion().setFromAxisAngle(new T.Vector3(1, 0, 0), ax);
-    s.exQuat.premultiply(qy).premultiply(qx).normalize();
+    const qy = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), s.exYaw);
+    const qx = new T.Quaternion().setFromAxisAngle(new T.Vector3(1, 0, 0), s.exPitch);
+    return s.exQuat.copy(qx).multiply(qy);
 }
 
 
@@ -470,7 +510,8 @@ function p3Collapse(instant) {
     const s = _p3; if (!s) return;
     p3Select(null);
     s.target = 0;
-    s.renderer.domElement.style.touchAction = 'pan-y pinch-zoom';
+    s.zoomT = 1;
+    s.renderer.domElement.style.touchAction = 'pan-y';
     p3SetCaption(PHONE_CAP_IDLE);
     if (instant) { s.ex = 0; p3Apply(s, 0); }
 }
@@ -544,18 +585,27 @@ function p3Frame(now) {
     // دوران المجسم المفكوك: بالإصبع في كل الاتجاهات، بيكمّل بقوة الدفعة وبعدين يقف.
     // وهو متجمّع بنجهّز وضعه الأولي (من الجنب، زي صورة الفك)، ولما تجمّع بيرجع لوضعه.
     if (e < 0.02 && s.target === 0) {
-        s.exQuat.copy(s.exInitQ); s.exVx = s.exVy = 0; s.exInit = true;
+        s.exYaw = P3_INIT_YAW; s.exPitch = P3_INIT_PITCH; s.exVx = s.exVy = 0; s.exInit = true;
     } else if (s.target === 0) {
         s.exVx = s.exVy = 0;
-    } else if (!s.dragging) {
-        if (s.exInit) s.exQuat.slerp(s.exInitQ, Math.min(1, dt * 3));
-        else {
+    } else if (!s.dragging && !s.multi) {
+        if (s.exInit) {
+            const k = Math.min(1, dt * 3);
+            s.exYaw += (P3_INIT_YAW - s.exYaw) * k;
+            s.exPitch += (P3_INIT_PITCH - s.exPitch) * k;
+        } else {
             p3Rotate(s, s.exVy * dt, s.exVx * dt);
-            const f = Math.exp(-dt * 2.2);
+            const f = Math.exp(-dt * 4);
             s.exVx *= f; s.exVy *= f;
+            if (Math.abs(s.exVx) < 0.03) s.exVx = 0;
+            if (Math.abs(s.exVy) < 0.03) s.exVy = 0;
         }
     }
-    s.exWrap.quaternion.copy(s.exQuat);
+    s.exWrap.quaternion.copy(p3ExQuat(s));
+
+    // التكبير: بيقرّب الكاميرا بنعومة
+    s.zoom += (s.zoomT - s.zoom) * Math.min(1, dt * 10);
+    s.camera.position.z = 4.8 / s.zoom;
 
     p3Apply(s, e);
     if (s.shadow) {
