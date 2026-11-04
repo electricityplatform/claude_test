@@ -12,7 +12,7 @@ const PHONE_PARTS = [
     ['camera',  'كاميرا']
 ];
 const PHONE_CAP_IDLE = 'لفّ التليفون بصباعك، أو المسه لتفكيكه';
-const PHONE_CAP_OPEN = 'المس قطعة لتحديدها، ومرة تانية لفتح أسعارها';
+const PHONE_CAP_OPEN = 'لفّ القطع بصباعك، والمس قطعة لتحديدها ومرة تانية لفتح أسعارها';
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 // صور التليفون: ظهر وواجهة (مفرودين من الصورتين الحقيقيتين) في نفس فولدر index.html.
@@ -265,7 +265,7 @@ function p3Build(host, imgs) {
     scene.add(exWrap);
 
     function planeFor(img, w, h) {
-        const mat = new T.MeshBasicMaterial({ map: imgTexture(img), transparent: true, depthWrite: false, toneMapped: false });
+        const mat = new T.MeshBasicMaterial({ map: imgTexture(img), transparent: true, depthWrite: false, toneMapped: false, side: T.DoubleSide });
         const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
         // قناع الشفافية (عشان اللمس يتحسب على شكل القطعة مش على المستطيل)
         try {
@@ -335,7 +335,7 @@ function p3Build(host, imgs) {
         host, renderer, scene, camera, body, bodyMats, exWrap, parts, decos, meshList, chips, lines, back, shadow,
         raycaster: new T.Raycaster(), vec: new T.Vector3(), baseVec: new T.Vector3(),
         ex: 0, target: 0, last: 0, raf: 0, active: false, selected: null,
-        spin: 0.8, vel: 0.45, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
+        spin: 0.8, vel: 0.45, exSpin: 0, exVel: 0, dragging: false,   // زاوية الدوران (راديان)، سرعته، وهل الإصبع ماسكه
         w: 1, h: 1, down: null, ro: null
     };
 
@@ -364,14 +364,19 @@ function p3Build(host, imgs) {
     });
     cv.addEventListener('pointermove', e => {
         const d = s.down;
-        if (!d || s.target !== 0) return;
+        if (!d) return;
         const now = performance.now();
         const dx = e.clientX - d.lx, dt = Math.max(1, now - d.lt) / 1000;
         d.lx = e.clientX; d.lt = now;
         if (Math.abs(e.clientX - d.x) > 4) s.dragging = true;
-        if (s.dragging) {
-            s.spin += dx * 0.013;
-            s.vel = 0.5 * s.vel + 0.5 * (dx * 0.013 / dt);   // سرعة الإصبع (بتكمّل بعد ما تسيبه)
+        if (!s.dragging) return;
+        const da = dx * 0.013;
+        if (s.target === 0) {                         // متجمّع: بنلف التليفون
+            s.spin += da;
+            s.vel = 0.5 * s.vel + 0.5 * (da / dt);    // سرعة الإصبع (بتكمّل بعد ما تسيبه)
+        } else {                                      // مفكوك: بنلف القطع كلها
+            s.exSpin += da;
+            s.exVel = 0.5 * s.exVel + 0.5 * (da / dt);
         }
     });
     cv.addEventListener('pointerup', e => {
@@ -501,7 +506,7 @@ function p3Frame(now) {
     if (Math.abs(s.target - s.ex) < 0.002) s.ex = s.target;
     const e = s.ex;
 
-    // دوران التليفون: الإصبع بيحرّكه، وبعد ما تسيبه بيكمّل بقوة الدفعة وبعدين يهدى لدوران بطيء
+    // دوران التليفون المتجمّع: الإصبع بيحرّكه، وبعد ما تسيبه بيكمّل بقوة الدفعة وبعدين يهدى لدوران بطيء
     if (!s.dragging) {
         s.vel += (0.45 - s.vel) * Math.min(1, dt * 1.2);
         s.spin += s.vel * dt;
@@ -509,8 +514,16 @@ function p3Frame(now) {
     s.spin = ((s.spin + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
     s.body.rotation.y = Math.PI + s.spin;
 
-    // ميل خفيف للتركيبة المفكوكة عشان يبان العمق بين الطبقات
-    s.exWrap.rotation.y = Math.sin(now / 1600) * 0.1 * e;
+    // دوران القطع المفكوكة: بالإصبع بس، بيكمّل بقوة الدفعة وبعدين يقف. ولما تجمّع بيرجع لوضعه.
+    s.exSpin = ((s.exSpin + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    if (s.target === 0) {
+        s.exVel = 0;
+        if (!s.dragging) s.exSpin *= Math.exp(-dt * 6);
+    } else if (!s.dragging) {
+        s.exSpin += s.exVel * dt;
+        s.exVel *= Math.exp(-dt * 2.2);
+    }
+    s.exWrap.rotation.y = s.exSpin + Math.sin(now / 1600) * 0.06 * e;
 
     p3Apply(s, e);
     if (s.shadow) {
