@@ -113,6 +113,32 @@ function logoutUser() {
     const sb = document.getElementById('sideMenu');
     if (sb && !sb.classList.contains('translate-x-full')) toggleSidebar();
 
+    // نافذة التأكيد: مفيش خروج غير بعد "تأكيد خروج"
+    if (document.getElementById('logoutConfirmModal')) return;
+    const m = document.createElement('div');
+    m.id = 'logoutConfirmModal';
+    m.className = 'modal modal-open';
+    m.innerHTML = `
+        <div class="modal-box max-w-xs text-center">
+            <h3 class="font-bold text-lg mb-5">تأكيد الخروج</h3>
+            <div class="flex gap-3 justify-center">
+                <button type="button" class="btn btn-error text-white flex-1" onclick="confirmLogout()">تأكيد خروج</button>
+                <button type="button" class="btn btn-ghost flex-1" onclick="closeLogoutConfirm()">إلغاء</button>
+            </div>
+        </div>
+        <div class="modal-backdrop" onclick="closeLogoutConfirm()"></div>
+    `;
+    document.body.appendChild(m);
+}
+
+function closeLogoutConfirm() {
+    const m = document.getElementById('logoutConfirmModal');
+    if (m) m.remove();
+}
+
+function confirmLogout() {
+    closeLogoutConfirm();
+
     // وقف الهيرت بيت وامسح بيانات الجلسة من الذاكرة
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = null;
