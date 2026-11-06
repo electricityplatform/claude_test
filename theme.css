@@ -1498,3 +1498,151 @@ html:has(#appContainer .app-topbar) .app-topbar.topbar-hidden { transform: trans
    من غير تخانة (bold) في كل الموقع
    ===================================================================== */
 html, html *, html *::before, html *::after { font-weight: 400 !important; font-synthesis: none; }
+
+/* =====================================================================
+   الإصدار 6: أسود لامع في الوضعين (من غير ذهبي ومن غير ظلال) + خطوط أكبر
+   ===================================================================== */
+:root {
+    --gloss: linear-gradient(180deg, #3b3b40 0%, #1a1a1d 46%, #070708 54%, #121214 100%);
+    --gloss-hover: linear-gradient(180deg, #4a4a50 0%, #222226 46%, #0b0b0d 54%, #18181b 100%);
+    --gloss-white: linear-gradient(180deg, #ffffff 0%, #d6d6da 100%);
+    --panel-dark: #0a0a0b;
+    --panel-mid: #1c1c1f;
+    --hero-grad: var(--gloss);
+}
+html.dark, html:not(.dark) {
+    --gold-1: #ffffff; --gold-2: #e4e4e7; --gold-3: #bdbdc2;
+    --gold-grad: var(--gloss-white);
+    --amber: #ffffff;
+    --dark-edge: rgba(255, 255, 255, .14);
+}
+
+/* ---------- ألوان الثيم على الأسطح السودا (محايدة، من غير ذهبي) ---------- */
+html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card, .home-intro, .hero, .auth-card,
+                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    --p: 96% 0 0; --pc: 14% 0 0;
+    --b1: 13% 0 0; --b2: 10% 0 0; --b3: 19% 0 0; --bc: 100% 0 0;
+    color: #fff;
+}
+/* الصفحة نفسها */
+html:not(.dark) #appContainer { --p: 20% 0 0; --pc: 98% 0 0; }
+html.dark #appContainer { --p: 96% 0 0; --pc: 14% 0 0; }
+
+/* ---------- الأسطح: أسود لامع ---------- */
+html:is(.dark, :not(.dark)) .dash-card:not(.has-img),
+html:is(.dark, :not(.dark)) .dash-card.feature:not(.has-img) {
+    background-color: #0a0a0b !important;
+    background-image: var(--gloss) !important;
+    border: 1px solid rgba(255, 255, 255, .14) !important;
+    color: #fff !important;
+}
+html:is(.dark, :not(.dark)) .dash-card:not(.has-img):hover,
+html:is(.dark, :not(.dark)) .dash-card.feature:not(.has-img):hover {
+    background-color: #0b0b0d !important;
+    background-image: var(--gloss-hover) !important;
+}
+html:is(.dark, :not(.dark)) .dash-card::before,
+html:is(.dark, :not(.dark)) .dash-card.feature::before { background: none !important; }
+html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
+    background-color: #0a0a0b !important;
+    background-image: var(--gloss) !important;
+    border-color: rgba(255, 255, 255, .14) !important;
+}
+html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
+    background-color: #0b0b0d !important;
+    background-image: var(--gloss-hover) !important;
+}
+html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border.border-primary\/60:is(.bg-base-100, .bg-base-200) { border-color: #fff !important; }
+html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar) {
+    background: var(--gloss) !important;
+    background-color: #0a0a0b !important;
+    border-color: rgba(255, 255, 255, .14) !important;
+}
+html:is(.dark, :not(.dark)) :is(.hero, .home-intro, .auth-card, .auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) {
+    background-image: var(--gloss) !important;
+    background-color: #0a0a0b !important;
+}
+html:is(.dark, :not(.dark)) .home-intro { border-color: rgba(255, 255, 255, .14); }
+html:is(.dark, :not(.dark)) #sideMenu { background-color: #0a0a0b !important; background-image: var(--gloss) !important; }
+
+/* ---------- الأزرار والأيقونات: من غير ذهبي ---------- */
+html:not(.dark) #appContainer .btn-primary:not(.btn-outline) {
+    background: var(--gloss) !important; background-color: #0a0a0b !important;
+    border-color: rgba(255, 255, 255, .2) !important; color: #fff !important;
+}
+html:is(.dark, :not(.dark)) :is(.dash-card, .home-intro, .hero, #appContainer .app-topbar, .modal-box, .photo-sheet-card,
+                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) .btn-primary:not(.btn-outline),
+html:is(.dark, :not(.dark)) .auth-card .btn-primary,
+html.dark #appContainer .btn-primary:not(.btn-outline) {
+    background: var(--gloss-white) !important; background-color: #e4e4e7 !important;
+    border-color: rgba(255, 255, 255, .5) !important; color: #0a0a0b !important;
+}
+html:is(.dark, :not(.dark)) .auth-card .btn-outline { border-color: rgba(255, 255, 255, .6); color: #fff !important; }
+html:is(.dark, :not(.dark)) .dash-ico,
+html:is(.dark, :not(.dark)) .dash-card .dash-ico,
+html:is(.dark, :not(.dark)) .dash-card.feature .dash-ico {
+    background: var(--gloss-white) !important; color: #0a0a0b !important; border: none !important;
+}
+html:is(.dark, :not(.dark)) :is(.app-topbar .bg-primary, .home-step b, .ptr-indicator) { background: var(--gloss-white) !important; color: #0a0a0b !important; }
+html:is(.dark, :not(.dark)) .hero-stat b { background: linear-gradient(180deg, #ffffff, #bdbdc2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html:is(.dark, :not(.dark)) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile, .home-step) { color: #fff; }
+html:is(.dark, :not(.dark)) .hero-tile, html:is(.dark, :not(.dark)) .home-step { border-color: rgba(255, 255, 255, .3); }
+html:is(.dark, :not(.dark)) .hero-dot.active, html:is(.dark, :not(.dark)) .onb-dot.active { background: #fff; }
+html:is(.dark, :not(.dark)) .hp3-chip.active { background: var(--gloss-white); color: #0a0a0b; }
+html.dark .bottom-nav .bottom-nav-item:hover, html.dark .bottom-nav .bottom-nav-item:active { color: #fff !important; background: rgba(255, 255, 255, .12); }
+html.dark .bottom-nav .bottom-nav-item { color: #fff !important; }
+html.dark #appContainer :focus-visible { outline-color: #fff; }
+html.dark ::selection { background: rgba(255, 255, 255, .3); }
+
+/* ---------- شاشات الدخول والترحيب: كتابة بيضا في الوضعين ---------- */
+html:is(.dark, :not(.dark)) .auth-card :is(h1, p, label, .label-text, .line-field, .line-field svg, .line-field button, .auth-foot, .btn-ghost) { color: #fff !important; }
+html:is(.dark, :not(.dark)) .auth-card .line-field { border-bottom-color: rgba(255, 255, 255, .75); }
+html:is(.dark, :not(.dark)) .auth-card .line-field input { color: #fff !important; -webkit-text-fill-color: #fff; }
+html:is(.dark, :not(.dark)) .auth-card .line-field input::placeholder { color: #fff !important; opacity: .85; }
+html:is(.dark, :not(.dark)) .auth-card .checkbox { border-color: #fff; }
+html:is(.dark, :not(.dark)) .auth-card .auth-foot { background: rgba(255, 255, 255, .08) !important; }
+html:is(.dark, :not(.dark)) .home-intro :is(h2, p) { color: #fff !important; }
+html:is(.dark, :not(.dark)) .auth-avatar { background: var(--gloss-white); color: #0a0a0b; }
+html.dark :is(.app-search-bar, #appContainer .app-search-bar) input::placeholder { color: #fff !important; opacity: .85; }
+html.dark .app-search-bar input { color: #fff; }
+
+/* ---------- الوضع الداكن: من غير ظلال ---------- */
+html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
+html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
+html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* ---------- الخطوط أكبر (Katibeh صغير بطبيعته فكنت بتظهر صغيرة جوه الكروت) ---------- */
+#appContainer .text-xs { font-size: 1rem !important; line-height: 1.5 !important; }
+#appContainer .text-sm { font-size: 1.2rem !important; line-height: 1.5 !important; }
+#appContainer .text-base { font-size: 1.35rem !important; line-height: 1.5 !important; }
+#appContainer .text-lg { font-size: 1.55rem !important; line-height: 1.45 !important; }
+#appContainer .text-xl { font-size: 1.75rem !important; line-height: 1.4 !important; }
+#appContainer .text-2xl { font-size: 2rem !important; line-height: 1.35 !important; }
+@media (min-width: 640px) {
+    #appContainer .sm\:text-base { font-size: 1.35rem !important; }
+    #appContainer .sm\:text-lg { font-size: 1.55rem !important; }
+}
+#appContainer .btn { font-size: 1.15rem; }
+#appContainer .btn-sm { font-size: 1.1rem; }
+#appContainer .badge { font-size: 1.05rem; }
+#appContainer .badge-lg { font-size: 1.2rem; }
+#appContainer .label-text { font-size: 1.15rem; }
+#appContainer .input, #appContainer .select, #appContainer .textarea, #appContainer .input > input { font-size: 1.2rem; }
+#appContainer .dash-card.compact h3 { font-size: 1.4rem !important; line-height: 1.35; }
+#appContainer .dash-card h3 { font-size: 1.5rem; }
+.home-intro h2 { font-size: 1.2rem; }
+.home-intro p { font-size: 1.05rem; }
+.home-step { font-size: 1rem; }
+.hero-kicker { font-size: 1.05rem; }
+.hero-cap { font-size: 1.15rem; }
+.hero-tag { font-size: 1.1rem; }
+.hero-tile { font-size: .95rem; }
+.hero-stat span { font-size: 1.1rem; }
+.hp-label { font-size: .8em; }
+.phone-stage-cap { font-size: 1.1rem; }
+.hp3-chip, .hp3-collapse { font-size: .9rem; }
+.auth-card h1 { font-size: 1.6rem; }
+.auth-card .line-field input { font-size: 1.1rem; }
