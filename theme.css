@@ -1381,7 +1381,7 @@ html.dark .bottom-nav {
    ===================================================================== */
 .app-search-bar {
     position: sticky;
-    top: var(--search-top, calc(var(--topbar-h, 3.5rem) + 14px));   /* تحت الهيدر بمسافة واضحة؛ الجافاسكريبت بيغيّرها لما الهيدر يختفي */
+    top: var(--search-top, calc(var(--topbar-h, 3.5rem) + 6px));   /* تحت الهيدر بمسافة واضحة؛ الجافاسكريبت بيغيّرها لما الهيدر يختفي */
     transition: top .3s ease;
     z-index: 39;
     display: flex;
@@ -1490,3 +1490,6 @@ html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, 
 .app-topbar { transition: transform .3s ease; }
 html:has(#appContainer .app-topbar) .app-topbar.topbar-hidden { transform: translateY(-130%); pointer-events: none; }
 .search-sentinel { height: 0; flex: none; margin: 0; padding: 0; pointer-events: none; }
+
+/* الشاشات اللي فيها شريط بحث: مسافة أكبر بين الهيدر والبحث وهما في مكانهم، عشان البحث يقرّب من الهيدر وهو بينزل قبل ما الهيدر يختفي */
+.app-topbar.has-search { margin-bottom: 2.75rem; }
