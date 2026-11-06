@@ -1,36 +1,19 @@
 // ================= الهيدر العلوي (DaisyUI navbar) =================
 // showSearch: يظهر البحث (كتابة / صوت / كاميرا) فقط داخل رحلة "شراء قطع الغيار"
 function getHeaderTemplate(showSearch = false) {
-    const initial = currentUserName ? escapeHtmlValue(String(currentUserName).trim().charAt(0)) : '';
-
-    const avatarHtml = typeof profileAvatarHtml === 'function'
-        ? profileAvatarHtml()
-        : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${initial}</span></div></div>`;
-
-    // الصورة الشخصية على الطرف الشمال بنفس حجم زر القائمة (لو مفيش مستخدم: مساحة فاضية عشان اللوجو يفضل في النص)
-    const userBtnHtml = currentUserId && currentUserName
-        ? `<button type="button" class="user-avatar-btn flex-shrink-0" onclick="openProfilePhotoSheet()" aria-label="الصورة الشخصية" title="${escapeHtmlValue(currentUserName)}${currentUserPhone ? ' - ' + escapeHtmlValue(currentUserPhone) : ''}">${avatarHtml}</button>`
-        : `<span class="topbar-user-spacer" aria-hidden="true"></span>`;
-
     const headerHtml = `
         <header class="app-topbar flex-shrink-0${showSearch ? ' has-search' : ''}">
             <div class="navbar min-h-0 p-0 gap-3">
-                <div class="flex-none">
-                    <button type="button" onclick="toggleSidebar()" class="btn btn-primary btn-square" aria-label="فتح القائمة">
-                        ${uiIcon('menu', 'w-5 h-5')}
-                    </button>
-                </div>
                 <div class="flex flex-1 min-w-0 items-center justify-center gap-2.5 topbar-center">
                     <span class="topbar-brand">ELECTRICITY</span>
                     <span class="brand-chip">${logoImg()}</span>
                 </div>
-                <div class="flex-none">${userBtnHtml}</div>
             </div>
-
         </header>
     `;
     // showSearch === true: البحث شريط منفصل تحت الهيدر (بيفضل ثابت فوق وانت بتنزل)
     // showSearch === 'home': الهيدر بس (والبحث بيتحط في الرئيسية تحت مجسم التليفون)
+    renderBottomNav();   // الشريط السفلي (الرئيسية / القائمة / الإعدادات / حسابي)
     return showSearch === true ? headerHtml + getSearchBarHtml() : headerHtml;
 }
 
@@ -64,19 +47,27 @@ function menuIconFor(item) {
 }
 
 // ================= القائمة الجانبية الديناميكية (DaisyUI menu) =================
-async function loadDynamicMenuIntoSidebar() {
-    const sidebarContainer = document.getElementById('sidebarContent');
-    if (!sidebarContainer) return;
+// القائمة الجانبية القديمة اتلغت (القائمة بقت صفحة من الشريط السفلي). الدالة فاضية عشان الشاشات القديمة بتناديها.
+function loadDynamicMenuIntoSidebar() {}
 
-    sidebarContainer.innerHTML = `<div class="text-center text-base-content/50 text-xs py-4"><span class="loading loading-dots loading-sm"></span></div>`;
+// ================= صفحة القائمة =================
+// البيانات الشخصية + الإعدادات العامة + تسجيل الخروج اتنقلوا للشريط السفلي، فهنا مجرد تنبيه.
+async function renderMenuScreen() {
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center mb-4 flex-shrink-0">
+            <h2 class="text-sm sm:text-base font-bold text-base-content">القائمة</h2>
+        </div>
+        <div id="menuPageContent" class="flex-1 p-1">
+            <div class="text-center text-base-content/50 text-sm py-8"><span class="loading loading-dots loading-sm"></span></div>
+        </div>
+    `;
+    const box = document.getElementById('menuPageContent');
 
     try {
-        const { data, error } = await supabaseClient.rpc('get_main_menu', {
-            p_user_id: currentUserId
-        });
-
+        const { data, error } = await supabaseClient.rpc('get_main_menu', { p_user_id: currentUserId });
         if (error) {
-            sidebarContainer.innerHTML = `<div class="text-center text-error text-xs py-4">تعذر تحميل القائمة</div>`;
+            box.innerHTML = `<div class="text-center text-error text-sm py-4">تعذر تحميل القائمة</div>`;
             return;
         }
 
@@ -84,48 +75,123 @@ async function loadDynamicMenuIntoSidebar() {
         if (Array.isArray(data)) {
             menuItems = data;
         } else if (typeof data === 'string') {
-            try { menuItems = JSON.parse(data); } catch(e){}
+            try { menuItems = JSON.parse(data); } catch (e) {}
         }
 
-        if (menuItems && menuItems.length > 0) {
-            sidebarContainer.innerHTML = `<div class="w-full">` + menuItems.map(item => {
-                let clickAction = `alert(${jsArg(item)})`;
-
-                if (item.includes('البيانات الشخصية')) {
-                    clickAction = "renderPersonalProfileScreen()";
-                } else if (item.includes('بيانات المستخدمين')) {
-                    clickAction = "renderUserProfilesScreen()";
-                } else if (item.includes('مركز البيانات')) {
-                    clickAction = "renderDataCenterScreen()";
-                } else if (item.includes('مركز العمليات')) {
-                    clickAction = "renderOperationCenterScreen()";
-                } else if (item.includes('الإعدادات العامة')) {
-                    clickAction = "renderGeneralSettingsScreen()";
-                } else if (item.includes('المنتجات المعروضة للبيع')) {
-                    clickAction = "renderMyProductsScreen()";
-                } else if (item.includes('خروج')) {
-                    clickAction = "logoutUser()";
-                }
-
-                return `
-                    <a role="button" onclick="${clickAction}" class="side-item" data-label="${escapeHtmlValue(item)}">
-                        ${uiIcon(menuIconFor(item), 'w-5 h-5')}
-                        <span class="flex-1" dir="auto">${escapeHtmlValue(item)}</span>
-                    </a>
-                `;
-            }).join('') + `</div>`;
-        } else {
-            sidebarContainer.innerHTML = `<div class="text-center text-base-content/50 text-xs py-4">لا توجد عناصر متاحة</div>`;
+        if (!menuItems || menuItems.length === 0) {
+            box.innerHTML = `<div class="text-center text-base-content/50 text-sm py-4">لا توجد عناصر متاحة</div>`;
+            return;
         }
+
+        box.innerHTML = `<div class="flex flex-col gap-3 pb-4">` + menuItems.map(item => {
+            let clickAction = `alert(${jsArg(item)})`;
+            if (item.includes('بيانات المستخدمين')) {
+                clickAction = "renderUserProfilesScreen()";
+            } else if (item.includes('مركز البيانات')) {
+                clickAction = "renderDataCenterScreen()";
+            } else if (item.includes('مركز العمليات')) {
+                clickAction = "renderOperationCenterScreen()";
+            } else if (item.includes('المنتجات المعروضة للبيع')) {
+                clickAction = "renderMyProductsScreen()";
+            }
+            return `
+                <button type="button" onclick="${clickAction}" class="dash-card feature teal-floral">
+                    <div class="dash-ico">${uiIcon(menuIconFor(item), 'w-6 h-6')}</div>
+                    <div class="flex-1 min-w-0 relative">
+                        <h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(item)}</h3>
+                    </div>
+                    ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
+                </button>`;
+        }).join('') + `</div>`;
     } catch (err) {
-        sidebarContainer.innerHTML = `<div class="text-center text-error text-xs py-4">خطأ في الاتصال</div>`;
+        box.innerHTML = `<div class="text-center text-error text-sm py-4">خطأ في الاتصال</div>`;
     }
 }
 
+// ================= الإعدادات (من الشريط السفلي) =================
+function openSettingsScreen() {
+    if (typeof renderGeneralSettingsScreen === 'function') renderGeneralSettingsScreen();
+    else alert('الإعدادات العامة');
+}
 
+// ================= صفحة حسابي: الصورة + البيانات الشخصية + تسجيل الخروج =================
+function openAccountScreen() {
+    if (!currentUserId) { renderLoginScreen(); return; }   // الزائر: يروح لشاشة الدخول
+    renderAccountScreen();
+}
+
+function renderAccountScreen() {
+    const card = (icon, label, action) => `
+        <button type="button" onclick="${action}" class="dash-card feature teal-floral">
+            <div class="dash-ico">${uiIcon(icon, 'w-6 h-6')}</div>
+            <div class="flex-1 min-w-0 relative"><h3 class="font-bold text-lg" dir="auto">${label}</h3></div>
+            ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
+        </button>`;
+    const avatar = typeof profileAvatarHtml === 'function'
+        ? profileAvatarHtml()
+        : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${escapeHtmlValue(String(currentUserName || '').trim().charAt(0))}</span></div></div>`;
+
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex-1 p-1 flex flex-col items-center gap-4 pt-2">
+            <button type="button" class="user-avatar-btn user-avatar-lg" onclick="openProfilePhotoSheet()" aria-label="تغيير الصورة الشخصية">${avatar}</button>
+            <div class="text-center">
+                <div class="font-bold text-lg" dir="auto">${escapeHtmlValue(currentUserName)}</div>
+                ${currentUserRole ? `<div class="text-sm text-base-content/70" dir="auto">${escapeHtmlValue(currentUserRole)}</div>` : ''}
+                ${currentUserPhone ? `<div class="text-sm text-base-content/70" dir="ltr">${escapeHtmlValue(currentUserPhone)}</div>` : ''}
+            </div>
+            <div class="w-full flex flex-col gap-3 pb-4">
+                ${card('user', 'البيانات الشخصية', 'renderPersonalProfileScreen()')}
+                ${card('logout', 'تسجيل خروج', 'logoutUser()')}
+            </div>
+        </div>
+    `;
+}
+
+// ================= الشريط السفلي: الرئيسية | القائمة | الإعدادات | حسابي =================
+function renderBottomNav() {
+    const nav = document.querySelector('.bottom-nav');
+    if (!nav) return;
+    const loggedIn = !!(currentUserId && currentUserName);
+    const avatar = loggedIn
+        ? (typeof profileAvatarHtml === 'function' ? profileAvatarHtml() : uiIcon('user', 'w-6 h-6'))
+        : uiIcon('user', 'w-6 h-6');
+    nav.innerHTML = `
+        <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span>الرئيسية</span>
+        </button>
+        <button type="button" onclick="renderMenuScreen()" class="bottom-nav-item" aria-label="القائمة">
+            ${uiIcon('menu', 'w-6 h-6')}
+            <span>القائمة</span>
+        </button>
+        <button type="button" onclick="openSettingsScreen()" class="bottom-nav-item" aria-label="الإعدادات">
+            ${uiIcon('cog', 'w-6 h-6')}
+            <span>الإعدادات</span>
+        </button>
+        <button type="button" onclick="openAccountScreen()" class="bottom-nav-item" aria-label="حسابي">
+            <span class="user-avatar-btn">${avatar}</span>
+            <span>حسابي</span>
+        </button>
+    `;
+}
 function filterSideMenu(q) {
     q = (q || '').trim();
     document.querySelectorAll('#sidebarContent .side-item').forEach(el => {
         el.style.display = !q || (el.dataset.label || '').includes(q) ? '' : 'none';
     });
 }
+
+
+// ================= ارتفاع الهيدر الثابت (عشان شريط البحث يتعلق تحته مباشرة) =================
+(function () {
+    function syncTopbarHeight() {
+        const bar = document.querySelector('#appContainer .app-topbar');
+        if (bar) document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight + 'px');
+    }
+    const host = document.getElementById('appContainer');
+    if (host) new MutationObserver(syncTopbarHeight).observe(host, { childList: true });
+    window.addEventListener('resize', syncTopbarHeight);
+    window.addEventListener('load', syncTopbarHeight);
+    syncTopbarHeight();
+})();
