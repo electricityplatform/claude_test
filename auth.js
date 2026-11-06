@@ -15,7 +15,7 @@ function renderLoginScreen() {
                         <input type="text" id="loginPhone" required inputmode="tel" autocomplete="username" placeholder="رقم الهاتف" dir="ltr">
                     </div>
                     <div class="line-field">
-                        ${uiIcon('cog', 'w-5 h-5')}
+                        ${uiIcon('key', 'w-5 h-5')}
                         <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="رمز المرور" dir="ltr">
                         <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" aria-label="إظهار أو إخفاء رمز المرور">${eye}</button>
                     </div>
