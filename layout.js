@@ -12,7 +12,7 @@ function getHeaderTemplate(showSearch = false) {
         ? `<button type="button" class="user-avatar-btn flex-shrink-0" onclick="openProfilePhotoSheet()" aria-label="الصورة الشخصية" title="${escapeHtmlValue(currentUserName)}${currentUserPhone ? ' - ' + escapeHtmlValue(currentUserPhone) : ''}">${avatarHtml}</button>`
         : `<span class="topbar-user-spacer" aria-hidden="true"></span>`;
 
-    return `
+    const headerHtml = `
         <header class="app-topbar flex-shrink-0${showSearch ? ' has-search' : ''}">
             <div class="navbar min-h-0 p-0 gap-3">
                 <div class="flex-none">
@@ -27,8 +27,17 @@ function getHeaderTemplate(showSearch = false) {
                 <div class="flex-none">${userBtnHtml}</div>
             </div>
 
-            ${showSearch ? `
-            <div class="flex items-center gap-2 mt-3">
+        </header>
+    `;
+    // showSearch === true: البحث شريط منفصل تحت الهيدر (بيفضل ثابت فوق وانت بتنزل)
+    // showSearch === 'home': الهيدر بس (والبحث بيتحط في الرئيسية تحت مجسم التليفون)
+    return showSearch === true ? headerHtml + getSearchBarHtml() : headerHtml;
+}
+
+// ================= شريط البحث (كتابة / صوت / كاميرا) =================
+function getSearchBarHtml() {
+    return `
+            <div class="app-search-bar">
                 <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-100">
                     ${uiIcon('search', 'w-4 h-4 opacity-60')}
                     <input type="text" class="grow w-0 min-w-0" placeholder="ابحث" aria-label="ابحث">
@@ -40,8 +49,6 @@ function getHeaderTemplate(showSearch = false) {
                     ${uiIcon('camera', 'w-5 h-5')}
                 </button>
             </div>
-            ` : ''}
-        </header>
     `;
 }
 
