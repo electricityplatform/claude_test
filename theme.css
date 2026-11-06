@@ -1273,7 +1273,7 @@ html .input, html .select, html .textarea { border-radius: 0.5rem; }
 }
 
 /* الهيدر + البحث في الشاشة الرئيسية: بيتمرروا ويختفوا مع النزول (من غير تندة) */
-html:has(#appContainer .app-topbar) .app-topbar.has-search { position: static; }
+/* الهيدر ثابت فوق في كل الشاشات (حتى اللي فيها بحث) */
 
 /* =====================================================================
    لوحة الترحيب + لوحة التليفون: لوحتين منفصلتين (بمسافة بينهم) بس لونهم متكمّل:
@@ -1382,8 +1382,8 @@ html.dark .bottom-nav {
    ===================================================================== */
 .app-search-bar {
     position: sticky;
-    top: env(safe-area-inset-top, 0px);
-    z-index: 45;
+    top: var(--topbar-h, 3.5rem);   /* تحت الهيدر الثابت مباشرة */
+    z-index: 39;
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -1393,3 +1393,21 @@ html.dark .bottom-nav {
     border: 1px solid var(--dark-edge);
     border-radius: .9rem;
 }
+
+/* =====================================================================
+   الشريط السفلي (4 أزرار) + صورة الحساب
+   ===================================================================== */
+.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .2rem .3rem; }
+.bottom-nav .user-avatar-btn .avatar,
+.bottom-nav .user-avatar-btn .avatar > *,
+.bottom-nav .user-avatar-btn .w-9,
+.bottom-nav .user-avatar-btn img { width: 1.6rem !important; height: 1.6rem !important; }
+.bottom-nav .user-avatar-btn img { object-fit: cover; }
+.bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn img { border-radius: .45rem !important; }
+.user-avatar-lg .avatar,
+.user-avatar-lg .avatar > *,
+.user-avatar-lg .w-9,
+.user-avatar-lg img { width: 6.5rem !important; height: 6.5rem !important; }
+.user-avatar-lg img { object-fit: cover; }
+.user-avatar-lg .avatar, .user-avatar-lg .avatar > *, .user-avatar-lg img { border-radius: .9rem !important; }
+.user-avatar-lg .avatar span { font-size: 2.4rem; }
