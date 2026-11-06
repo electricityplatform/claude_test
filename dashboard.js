@@ -1,18 +1,84 @@
 // مسار الرحلة الحالية: 'buy' (شراء قطع الغيار) أو 'alerts' (تنبيهات الصيانة)
 let currentFlow = 'buy'; // 'buy' | 'alerts' | 'compat'
 
-// بداية رحلة تنبيهات الصيانة: الماركات ← الموديلات ← قطع الغيار ← التنبيه
+// الترتيب الجديد لكل الرحلات (شراء / تنبيهات / توافقات): قطع الغيار ← الماركات ← الموديلات ← صفحة العرض
+
+// بداية رحلة شراء قطع الغيار
+function startBuyFlow() {
+    currentFlow = 'buy';
+    selectedPart = '';
+    renderFlowPartsScreen();
+}
+
+// بداية رحلة تنبيهات الصيانة
 function startMaintenanceAlertsFlow() {
     currentFlow = 'alerts';
     selectedPart = '';
-    renderBrandsScreen('تنبيهات الصيانة');
+    renderFlowPartsScreen();
 }
 
-// بداية رحلة التوافقات: الماركات ← الموديلات ← قطع الغيار ← التوافقات
+// بداية رحلة التوافقات
 function startCompatFlow() {
     currentFlow = 'compat';
     selectedPart = '';
-    renderBrandsScreen('التوافقات');
+    renderFlowPartsScreen();
+}
+
+// اسم الرحلة الحالية (للعناوين)
+function flowTitle() {
+    if (currentFlow === 'alerts') return 'تنبيهات الصيانة';
+    if (currentFlow === 'compat') return 'التوافقات';
+    return 'شراء قطع الغيار';
+}
+
+// ================= أول شاشة في الرحلة: قطع الغيار =================
+async function renderFlowPartsScreen() {
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate(true)}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <button onclick="renderMainDashboard()" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
+                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>رجوع</span>
+            </button>
+            <h2 class="text-sm sm:text-base font-bold text-base-content">اختر قطعة الغيار (${escapeHtmlValue(flowTitle())})</h2>
+        </div>
+        <div id="flowPartsListContainer" class="flex-1 overflow-y-auto p-1">
+            <div class="text-center text-base-content/50 text-sm py-8">جاري جلب قطع الغيار...</div>
+        </div>
+    `;
+
+    loadDynamicMenuIntoSidebar();
+
+    let sparePartsList = [];
+    try {
+        const { data, error } = await supabaseClient.rpc('get_spare_parts');
+        if (error) {
+            showSystemAlert("فشل جلب قطع الغيار", currentUserId || "غير معروف", "دالة get_spare_parts", error.message);
+        } else if (data) {
+            sparePartsList = data;
+        }
+    } catch (err) {
+        showSystemAlert("استثناء في جلب قطع الغيار", currentUserId || "غير معروف", "تنفيذ RPC", err.message);
+    }
+
+    const container = document.getElementById('flowPartsListContainer');
+    if (!container) return;
+
+    if (sparePartsList.length > 0) {
+        container.innerHTML = '<div class="dash-grid2">' + sparePartsList.map(part => `
+            <button type="button" onclick="selectFlowPart(${jsArg(part)})" class="dash-card feature teal-floral compact">
+                <div class="dash-ico">${uiIcon('cog', 'w-6 h-6')}</div>
+                <h3 class="font-bold" dir="auto">${escapeHtmlValue(part)}</h3>
+            </button>`).join('') + '</div>';
+    } else {
+        container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد قطع غيار متاحة حالياً</div>`;
+    }
+}
+
+// اختيار قطعة الغيار ← شاشة الماركات
+function selectFlowPart(part) {
+    selectedPart = part;
+    renderBrandsScreen();
 }
 
 // ================= بيانات كل قسم: الإجراء + الأيقونة + الوصف =================
@@ -22,7 +88,7 @@ function partitionMeta(name) {
     if (n.includes('بحث بالكاميرا')) return { action: `alert(${jsArg('جارِ فتح الكاميرا للمسح الضوئي...')})`, icon: 'camera', desc: '' };
     if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار', img: 'maintenance-alerts.jpg' };
     if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار', img: 'compat.jpg' };
-    if (n.includes('شراء قطع الغيار')) return { action: 'renderBrandsScreen()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true, img: 'buy-parts.jpg' };
+    if (n.includes('شراء قطع الغيار')) return { action: 'startBuyFlow()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true, img: 'buy-parts.jpg' };
     if (n.includes('قطع الغيار')) return { action: 'renderPartsScreen()', icon: 'cog', desc: '' };
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
     if (n.includes('الموديلات')) return { action: "renderModelsScreen('Samsung')", icon: 'device', desc: '' };
@@ -88,10 +154,11 @@ function groupedPartitionsHtml(list) {
 async function renderMainDashboard() {
     currentFlow = 'buy';
     const html = `
-        ${getHeaderTemplate(true)}
+        ${getHeaderTemplate('home')}
         <div class="flex-1 overflow-y-auto home-scroll">
             ${typeof homeHeroHtml === 'function' ? homeHeroHtml() : ''}
             ${typeof phone3dSectionHtml === 'function' ? phone3dSectionHtml() : ''}
+            ${getSearchBarHtml()}
             <div id="partitionsContainer" class="pb-4">
                 <span class="sr-only">جاري تحميل الأقسام...</span>
                 <div class="skeleton h-20 w-full rounded-3xl"></div>
@@ -139,11 +206,11 @@ async function renderBrandsScreen(partName = '') {
     document.getElementById('appContainer').innerHTML = `
         ${getHeaderTemplate(true)}
         <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <button onclick="renderMainDashboard()" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
+            <button onclick="renderFlowPartsScreen()" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
                 <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 <span>رجوع</span>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-base-content">اختر الماركة (${escapeHtmlValue(selectedPart || 'شراء قطع الغيار')})</h2>
+            <h2 class="text-sm sm:text-base font-bold text-base-content">اختر الماركة (${escapeHtmlValue(selectedPart || flowTitle())})</h2>
         </div>
         <div id="brandsListContainer" class="flex-1 overflow-y-auto p-1">
             <div class="text-center text-base-content/50 text-sm py-8">جاري جلب الماركات...</div>
@@ -250,54 +317,14 @@ async function renderModelsScreen(brand) {
     loadDynamicMenuIntoSidebar();
 }
 
-// ================= شاشة قطع الغيار بعد اختيار الموديل =================
+// ================= اختيار الموديل ← صفحة العرض مباشرة =================
+// (الاسم القديم محفوظ عشان كارت الموديل بينادي عليه). قطعة الغيار اتختارت قبل كده في أول الرحلة.
 async function renderPartsScreenAfterModel(modelName = '', modelCode = '', screenCompat = '', batteryModel = '') {
     selectedModel = modelName;
     selectedModelCode = modelCode ? decodeURIComponent(modelCode) : '';
     currentScreenCompatibility = screenCompat ? decodeURIComponent(screenCompat) : '';
     currentBatteryModel = batteryModel ? decodeURIComponent(batteryModel) : '';
-
-    document.getElementById('appContainer').innerHTML = `
-        ${getHeaderTemplate(true)}
-        <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <button onclick="renderModelsScreen(${jsArg(selectedBrand)})" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
-                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                <span>رجوع</span>
-            </button>
-            <h2 class="text-sm sm:text-base font-bold text-base-content">اختر قطعة الغيار (${escapeHtmlValue(selectedModel)})</h2>
-        </div>
-        <div id="partsListContainerAfter" class="flex-1 overflow-y-auto p-1">
-            <div class="text-center text-base-content/50 text-sm py-8">جاري جلب قطع الغيار...</div>
-        </div>
-    `;
-
-    loadDynamicMenuIntoSidebar();
-
-    let sparePartsList = [];
-    try {
-        const { data, error } = await supabaseClient.rpc('get_spare_parts');
-
-        if (error) {
-            showSystemAlert("فشل جلب قطع الغيار", currentUserId || "غير معروف", "دالة get_spare_parts", error.message);
-        } else if (data) {
-            sparePartsList = data;
-        }
-    } catch (err) {
-        showSystemAlert("استثناء في جلب قطع الغيار", currentUserId || "غير معروف", "تنفيذ RPC", err.message);
-    }
-
-    const container = document.getElementById('partsListContainerAfter');
-    if (!container) return;
-
-    if (sparePartsList.length > 0) {
-        container.innerHTML = '<div class="dash-grid2">' + sparePartsList.map(part => `
-            <button type="button" onclick="renderPartDetailsFinal(${jsArg(part)})" class="dash-card feature teal-floral compact">
-                <div class="dash-ico">${uiIcon('cog', 'w-6 h-6')}</div>
-                <h3 class="font-bold" dir="auto">${escapeHtmlValue(part)}</h3>
-            </button>`).join('') + '</div>';
-    } else {
-        container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد قطع غيار متاحة حالياً</div>`;
-    }
+    renderPartDetailsFinal(selectedPart);
 }
 
 async function renderPartDetailsFinal(partName = '') {
@@ -363,23 +390,7 @@ function mprSectionHtml(title, items, kind, emptyText) {
 }
 
 function mprBackAction() {
-    return `renderPartsScreenAfterModel(${jsArg(selectedModel)}, ${jsArg(encodeURIComponent(selectedModelCode || ''))}, ${jsArg(encodeURIComponent(currentScreenCompatibility || ''))}, ${jsArg(encodeURIComponent(currentBatteryModel || ''))})`;
-}
-
-function mprShellHtml(title) {
-    return `
-        ${getHeaderTemplate(true)}
-        <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <button onclick="${mprBackAction()}" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
-                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                <span>رجوع</span>
-            </button>
-            <h2 class="text-sm sm:text-base font-bold text-base-content">${escapeHtmlValue(title)}</h2>
-        </div>
-        <div id="mprBox" class="flex-1 overflow-y-auto space-y-3 p-1">
-            <div class="text-center text-base-content/50 text-sm py-8">جاري التحميل...</div>
-        </div>
-    `;
+    return `renderModelsScreen(${jsArg(selectedBrand)})`;
 }
 
 function mprHeaderCardHtml(partName) {
