@@ -389,6 +389,21 @@ function mprSectionHtml(title, items, kind, emptyText) {
         </div>`;
 }
 
+// ---------- إطار صفحة العرض (الهيدر + رجوع للموديلات + عنوان + صندوق النتائج mprBox) ----------
+function mprShellHtml(title) {
+    return `
+        ${getHeaderTemplate(true)}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <button type="button" onclick="${mprBackAction()}" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
+                <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>رجوع</span>
+            </button>
+            <h2 class="text-sm sm:text-base font-bold text-base-content">${escapeHtmlValue(title)} (${escapeHtmlValue(selectedBrand)})</h2>
+        </div>
+        <div id="mprBox" class="flex-1 overflow-y-auto space-y-3 p-1"></div>
+    `;
+}
+
 function mprBackAction() {
     return `renderModelsScreen(${jsArg(selectedBrand)})`;
 }
