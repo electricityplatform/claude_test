@@ -635,9 +635,9 @@ html.dark #appContainer {
 }
 
 /* الأسطح الغامقة: الشريطين وبطاقات الأقسام وعناصر القوائم (نص فاتح وأزرار ذهبية) */
-html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, .dash-card,
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card,
                     #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)),
-html.dark :is(.bottom-nav, #appContainer .app-topbar, .dash-card,
+html.dark :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card,
               #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
     color-scheme: dark;
     color: oklch(var(--bc));
@@ -812,7 +812,7 @@ html.dark #appContainer :focus-visible { outline-color: var(--amber); }
 html.dark ::selection { background: rgba(226, 169, 59, .35); }
 
 /* الأسطح: فحمي زجاجي (الشريطين، الأقسام، عناصر القوائم) */
-html.dark :is(.bottom-nav, #appContainer .app-topbar, .dash-card,
+html.dark :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card,
               #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
     color-scheme: dark;
     color: oklch(var(--bc));
@@ -1120,12 +1120,12 @@ html:not(.dark) body.bg-base-100 {
 
 
 /* =====================================================================
-   من غير ظلال خالص: لا على الكروت ولا الهيرو ولا الشريطين ولا الأزرار ولا النصوص.
+   الوضع الفاتح فقط: من غير ظلال خالص (الوضع الداكن بظلاله): لا على الكروت ولا الهيرو ولا الشريطين ولا الأزرار ولا النصوص.
    الاستثناء الوحيد: حلقة التركيز على الحقول وخلايا الشيت (عشان تعرف انت واقف فين وانت بتكتب).
    ===================================================================== */
-*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
-*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
-*:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
+html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
+html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
+html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
     box-shadow: none !important;
     text-shadow: none !important;
 }
@@ -1351,3 +1351,45 @@ html:is(.dark, :not(.dark)) .auth-card .btn-outline { border-color: rgba(236, 21
 html:is(.dark, :not(.dark)) .onb-dot { background: rgba(246, 241, 231, .3); }
 html:is(.dark, :not(.dark)) .onb-dot.active { background: #ecd9a6; }
 
+
+/* =====================================================================
+   شاشة تسجيل الدخول: ألوان أوضح وأحجام أكبر
+   ===================================================================== */
+html:is(.dark, :not(.dark)) .auth-card h1 { font-size: 1.7rem !important; }
+html:is(.dark, :not(.dark)) .auth-card .line-field { padding: .95rem .35rem; gap: .9rem; border-bottom: 1.5px solid rgba(236, 217, 166, .75); color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .line-field input { font-size: 1.2rem; color: #f6f1e7 !important; -webkit-text-fill-color: #f6f1e7; }
+html:is(.dark, :not(.dark)) .auth-card .line-field input::placeholder { color: rgba(236, 217, 166, .9) !important; opacity: 1; }
+html:is(.dark, :not(.dark)) .auth-card .line-field svg { width: 1.65rem; height: 1.65rem; color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .line-field button { color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .label-text { font-size: 1.05rem; color: #ecd9a6 !important; }
+html:is(.dark, :not(.dark)) .auth-card .checkbox { width: 1.6rem; height: 1.6rem; border-color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .btn-primary { width: 13rem; height: 3.3rem; font-size: 1.2rem; font-weight: 700; color: #1a150d !important; background: linear-gradient(145deg, #ecd9a6, #c9a962) !important; border-color: #c9a962 !important; }
+html:is(.dark, :not(.dark)) .auth-card .btn-ghost { font-size: 1.1rem; color: #ecd9a6 !important; opacity: 1; }
+html:is(.dark, :not(.dark)) .auth-card .auth-foot { font-size: 1.05rem; color: #ecd9a6 !important; background: rgba(0, 0, 0, .3) !important; }
+
+/* =====================================================================
+   الوضع الداكن: رجوع الظلال بلمسة ذهبية خفيفة
+   ===================================================================== */
+html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 18px rgba(201, 169, 98, .16), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+html.dark .bottom-nav {
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .5), 0 0 18px rgba(201, 169, 98, .16), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+/* =====================================================================
+   شريط البحث: منفصل عن الهيدر، وبيفضل ثابت فوق لما تنزل في الصفحة (الهيدر بيختفي زي ما هو)
+   ===================================================================== */
+.app-search-bar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: 0 0 .75rem;
+    padding: .6rem .6rem;
+    background: var(--dark-bar);
+    border: 1px solid var(--dark-edge);
+    border-radius: .9rem;
+}
