@@ -20,6 +20,7 @@ function getHeaderTemplate(showSearch = false) {
 // ================= شريط البحث (كتابة / صوت / كاميرا) =================
 function getSearchBarHtml() {
     return `
+            <div class="search-sentinel" aria-hidden="true"></div>
             <div class="app-search-bar">
                 <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-100">
                     ${uiIcon('search', 'w-4 h-4 opacity-60')}
@@ -142,13 +143,14 @@ function renderAccountScreen() {
             </div>
             <div class="w-full flex flex-col gap-3 pb-4">
                 ${card('user', 'البيانات الشخصية', 'renderPersonalProfileScreen()')}
+                ${card('cog', 'الإعدادات العامة', 'openSettingsScreen()')}
                 ${card('logout', 'تسجيل خروج', 'logoutUser()')}
             </div>
         </div>
     `;
 }
 
-// ================= الشريط السفلي: الرئيسية | القائمة | الإعدادات | حسابي =================
+// ================= الشريط السفلي: الرئيسية | القائمة | حسابي (الإعدادات جوه حسابي) =================
 function renderBottomNav() {
     const nav = document.querySelector('.bottom-nav');
     if (!nav) return;
@@ -159,22 +161,14 @@ function renderBottomNav() {
     nav.innerHTML = `
         <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            <span>الرئيسية</span>
         </button>
         <button type="button" onclick="renderMenuScreen()" class="bottom-nav-item" aria-label="القائمة">
             ${uiIcon('menu', 'w-6 h-6')}
-            <span>القائمة</span>
-        </button>
-        <button type="button" onclick="openSettingsScreen()" class="bottom-nav-item" aria-label="الإعدادات">
-            ${uiIcon('cog', 'w-6 h-6')}
-            <span>الإعدادات</span>
         </button>
         <button type="button" onclick="openAccountScreen()" class="bottom-nav-item" aria-label="حسابي">
             <span class="user-avatar-btn">${avatar}</span>
-            <span>حسابي</span>
         </button>
-    `;
-}
+    `;}
 function filterSideMenu(q) {
     q = (q || '').trim();
     document.querySelectorAll('#sidebarContent .side-item').forEach(el => {
@@ -194,4 +188,37 @@ function filterSideMenu(q) {
     window.addEventListener('resize', syncTopbarHeight);
     window.addEventListener('load', syncTopbarHeight);
     syncTopbarHeight();
+})();
+
+
+// ================= الهيدر يختفي لما شريط البحث يوصله (بمسافة واضحة بينهم) =================
+// بينفع في الرئيسية وشاشات الرحلات (اللي فيها شريط بحث). شريط البحث بيفضل ثابت تحت الهيدر بمسافة GAP،
+// ولما يوصل للمسافة دي الهيدر بيبدأ يختفي وشريط البحث بيطلع مكانه، ولما ترجع لفوق الهيدر بيرجع.
+(function () {
+    const GAP = 14;
+    let ticking = false;
+    function update() {
+        ticking = false;
+        const bar = document.querySelector('#appContainer .app-topbar');
+        if (!bar) return;
+        const sentinel = document.querySelector('#appContainer .search-sentinel');
+        const root = document.documentElement;
+        if (!sentinel) {
+            bar.classList.remove('topbar-hidden');
+            root.style.removeProperty('--search-top');
+            return;
+        }
+        const h = bar.offsetHeight;
+        const hide = sentinel.getBoundingClientRect().top <= h + GAP;
+        bar.classList.toggle('topbar-hidden', hide);
+        root.style.setProperty('--search-top', hide ? '.5rem' : (h + GAP) + 'px');
+    }
+    function schedule() {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }
+    window.addEventListener('scroll', schedule, { passive: true, capture: true });
+    window.addEventListener('resize', schedule);
+    const host = document.getElementById('appContainer');
+    if (host) new MutationObserver(schedule).observe(host, { childList: true });
+    schedule();
 })();
