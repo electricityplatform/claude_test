@@ -7,7 +7,7 @@ async function renderGeneralSettingsScreen() {
         ${getHeaderTemplate()}
         <div class="flex items-center justify-between mb-4 flex-shrink-0 flex-wrap gap-2">
             <div class="flex items-center gap-2">
-                <button type="button" onclick="renderMainDashboard()" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
+                <button type="button" onclick="openAccountScreen()" class="btn btn-sm btn-ghost bg-base-200 gap-1.5">
                     <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     <span>رجوع</span>
                 </button>
