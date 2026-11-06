@@ -72,7 +72,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
     <link rel="stylesheet" href="style.css?v=20261101-2">
-    <link rel="stylesheet" href="theme.css?v=20261106-6">
+    <link rel="stylesheet" href="theme.css?v=20261106-8">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
@@ -101,17 +101,14 @@
 
         <!-- الشريط السفلي: بيظهر بعد الدخول (مخفي في شاشة تسجيل الدخول من الـ CSS) -->
         <nav class="bottom-nav flex-shrink-0" aria-label="التنقل السفلي">
-            <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                <span>الرئيسية</span>
-            </button>
+            <!-- بيتبني من layout.js (renderBottomNav) -->
         </nav>
     </main>
 
     <!-- ملفات الجافاسكريبت (الترتيب مهم) -->
     <script src="config.js?v=20261101-1"></script>
     <script src="utils.js?v=20261102-3"></script>
-    <script src="layout.js?v=20261106-1"></script>
+    <script src="layout.js?v=20261106-4"></script>
     <script src="auth.js?v=20261106-1"></script>
     <script src="dashboard.js?v=20261106-2"></script>
     <script src="hero.js?v=20261104-2"></script>
@@ -132,7 +129,7 @@
     <script src="general-settings.js?v=20261101-1"></script>
     <script src="my-products.js?v=20261101-1"></script>
     <script src="operation-center.js?v=20261101-1"></script>
-    <script src="profile.js?v=20261101-1"></script>
+    <script src="profile.js?v=20261106-1"></script>
     <script src="main.js?v=20261101-1"></script>
     <script>
         // تسجيل الـ service worker: بيخلي التطبيق يفتح ويتحدّث حتى لو مفيش نت (بعد أول زيارة بنت شغال)
