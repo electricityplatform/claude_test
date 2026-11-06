@@ -1353,19 +1353,18 @@ html:is(.dark, :not(.dark)) .onb-dot.active { background: #ecd9a6; }
 
 
 /* =====================================================================
-   شاشة تسجيل الدخول: ألوان أوضح وأحجام أكبر
+   شاشة تسجيل الدخول: ألوان بس (من غير تكبير)
    ===================================================================== */
-html:is(.dark, :not(.dark)) .auth-card h1 { font-size: 1.7rem !important; }
-html:is(.dark, :not(.dark)) .auth-card .line-field { padding: .95rem .35rem; gap: .9rem; border-bottom: 1.5px solid rgba(236, 217, 166, .75); color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .line-field input { font-size: 1.2rem; color: #f6f1e7 !important; -webkit-text-fill-color: #f6f1e7; }
+html:is(.dark, :not(.dark)) .auth-card .line-field { border-bottom: 1.5px solid rgba(236, 217, 166, .75); color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .line-field input { color: #f6f1e7 !important; -webkit-text-fill-color: #f6f1e7; }
 html:is(.dark, :not(.dark)) .auth-card .line-field input::placeholder { color: rgba(236, 217, 166, .9) !important; opacity: 1; }
-html:is(.dark, :not(.dark)) .auth-card .line-field svg { width: 1.65rem; height: 1.65rem; color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .line-field svg { color: #ecd9a6; }
 html:is(.dark, :not(.dark)) .auth-card .line-field button { color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .label-text { font-size: 1.05rem; color: #ecd9a6 !important; }
-html:is(.dark, :not(.dark)) .auth-card .checkbox { width: 1.6rem; height: 1.6rem; border-color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .btn-primary { width: 13rem; height: 3.3rem; font-size: 1.2rem; font-weight: 700; color: #1a150d !important; background: linear-gradient(145deg, #ecd9a6, #c9a962) !important; border-color: #c9a962 !important; }
-html:is(.dark, :not(.dark)) .auth-card .btn-ghost { font-size: 1.1rem; color: #ecd9a6 !important; opacity: 1; }
-html:is(.dark, :not(.dark)) .auth-card .auth-foot { font-size: 1.05rem; color: #ecd9a6 !important; background: rgba(0, 0, 0, .3) !important; }
+html:is(.dark, :not(.dark)) .auth-card .label-text { color: #ecd9a6 !important; }
+html:is(.dark, :not(.dark)) .auth-card .checkbox { border-color: #ecd9a6; }
+html:is(.dark, :not(.dark)) .auth-card .btn-primary { font-weight: 700; color: #1a150d !important; background: linear-gradient(145deg, #ecd9a6, #c9a962) !important; border-color: #c9a962 !important; }
+html:is(.dark, :not(.dark)) .auth-card .btn-ghost { color: #ecd9a6 !important; opacity: 1; }
+html:is(.dark, :not(.dark)) .auth-card .auth-foot { color: #ecd9a6 !important; background: rgba(0, 0, 0, .3) !important; }
 
 /* =====================================================================
    الوضع الداكن: رجوع الظلال بلمسة ذهبية خفيفة
@@ -1382,7 +1381,8 @@ html.dark .bottom-nav {
    ===================================================================== */
 .app-search-bar {
     position: sticky;
-    top: var(--topbar-h, 3.5rem);   /* تحت الهيدر الثابت مباشرة */
+    top: var(--search-top, calc(var(--topbar-h, 3.5rem) + 14px));   /* تحت الهيدر بمسافة واضحة؛ الجافاسكريبت بيغيّرها لما الهيدر يختفي */
+    transition: top .3s ease;
     z-index: 39;
     display: flex;
     align-items: center;
@@ -1397,11 +1397,12 @@ html.dark .bottom-nav {
 /* =====================================================================
    الشريط السفلي (4 أزرار) + صورة الحساب
    ===================================================================== */
-.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .2rem .3rem; }
+.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .45rem .3rem; }
+.bottom-nav .bottom-nav-item svg { width: 1.9rem; height: 1.9rem; }
 .bottom-nav .user-avatar-btn .avatar,
 .bottom-nav .user-avatar-btn .avatar > *,
 .bottom-nav .user-avatar-btn .w-9,
-.bottom-nav .user-avatar-btn img { width: 1.6rem !important; height: 1.6rem !important; }
+
 .bottom-nav .user-avatar-btn img { object-fit: cover; }
 .bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn img { border-radius: .45rem !important; }
 .user-avatar-lg .avatar,
@@ -1411,3 +1412,81 @@ html.dark .bottom-nav {
 .user-avatar-lg img { object-fit: cover; }
 .user-avatar-lg .avatar, .user-avatar-lg .avatar > *, .user-avatar-lg img { border-radius: .9rem !important; }
 .user-avatar-lg .avatar span { font-size: 2.4rem; }
+
+
+/* =====================================================================
+   الإصدار 5
+   ===================================================================== */
+
+/* ---------- الوضع الفاتح: من غير لمعان (تدرجات/لمعات/زجاج) في كل الموقع ---------- */
+html:not(.dark) .dash-card::before,
+html:not(.dark) .dash-card.feature::before { background: none !important; }
+html:not(.dark) .dash-card:not(.has-img),
+html:not(.dark) .dash-card.feature:not(.has-img) { background-image: none !important; background-color: #3d352c !important; }
+html:not(.dark) .dash-card:not(.has-img):hover,
+html:not(.dark) .dash-card.feature:not(.has-img):hover { background-color: #463d33 !important; }
+html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) { background-image: none !important; background-color: #3d352c; }
+html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-image: none !important; background-color: #4a4136; }
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, .app-search-bar) { background: #2f2a24; }
+html:not(.dark) :is(.hero, .home-intro, .auth-card, .auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-image: none !important; background-color: #2f2a24 !important; }
+html:not(.dark) .btn-primary:not(.btn-outline) { background-image: none !important; }
+html:not(.dark) .auth-card .btn-primary { background: #d9bb77 !important; }
+html:not(.dark) .app-topbar .bg-primary,
+html:not(.dark) .dash-ico,
+html:not(.dark) .dash-card .dash-ico,
+html:not(.dark) .dash-card.feature .dash-ico,
+html:not(.dark) .home-step b,
+html:not(.dark) .ptr-indicator { background: #d9bb77; }
+html:not(.dark) .hero-tile, html:not(.dark) .home-step { background: rgba(255, 255, 255, .1); }
+html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---------- الوضع الفاتح: كل الكتابة فوق الأسطح الغامقة بيضا (ولوحة الدخول والترحيب) ---------- */
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card, .home-intro, .hero, .auth-card,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    --bc: 100% 0 0;
+    color: #fff;
+}
+html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature { color: #fff !important; }
+html:not(.dark) :is(.dash-card, .home-intro, .hero, .auth-card,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) :is(h1, h2, h3, h4, p, label, .label-text, .text-primary, .hero-kicker, .hero-cap, .hero-tag) { color: #fff !important; }
+html:not(.dark) .hero, html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #fff; }
+html:not(.dark) .home-step { color: #fff; }
+html:not(.dark) .auth-card :is(.line-field, .line-field svg, .line-field button, .auth-foot, .btn-outline, .btn-ghost) { color: #fff !important; }
+html:not(.dark) .auth-card .btn-outline { border-color: rgba(255, 255, 255, .6); }
+html:not(.dark) .auth-card .btn-primary { color: #1a150d !important; }
+html:not(.dark) .auth-card .line-field { border-bottom-color: rgba(255, 255, 255, .75); }
+html:not(.dark) .auth-card .line-field input { color: #fff !important; -webkit-text-fill-color: #fff; }
+html:not(.dark) .auth-card .checkbox { border-color: #fff; }
+html:not(.dark) :is(.auth-card, .app-search-bar, #appContainer .app-search-bar) input::placeholder { color: #fff !important; opacity: .85; }
+html:not(.dark) .app-search-bar input { color: #fff; }
+/* الشريط السفلي: أبيض */
+html:not(.dark) .bottom-nav .bottom-nav-item { color: #fff !important; }
+html:not(.dark) .bottom-nav .bottom-nav-item:hover,
+html:not(.dark) .bottom-nav .bottom-nav-item:active { color: #fff !important; background: rgba(255, 255, 255, .14); }
+html:not(.dark) .topbar-brand { color: #fff; }
+
+/* ---------- الوضع الداكن: اللمعان ذهبي ---------- */
+html.dark {
+    --dark-surface:
+        radial-gradient(240px 140px at 0% 0%, rgba(226, 169, 59, .2), transparent 70%),
+        linear-gradient(145deg, #202023, #151517);
+}
+html.dark .dash-card::before, html.dark .dash-card.feature::before {
+    background: linear-gradient(135deg, rgba(226, 169, 59, .14), rgba(226, 169, 59, 0) 45%);
+}
+html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 18px rgba(226, 169, 59, .22), inset 0 1px 0 rgba(226, 169, 59, .3) !important;
+}
+html.dark .bottom-nav {
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .5), 0 0 18px rgba(226, 169, 59, .22), inset 0 1px 0 rgba(226, 169, 59, .3) !important;
+}
+html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
+    background-image:
+        radial-gradient(240px 140px at 0% 0%, rgba(226, 169, 59, .3), transparent 70%),
+        linear-gradient(145deg, #27272b, #19191c);
+}
+
+/* ---------- الهيدر بيختفي لما شريط البحث يوصله (layout.js بيضيف topbar-hidden) ---------- */
+.app-topbar { transition: transform .3s ease; }
+html:has(#appContainer .app-topbar) .app-topbar.topbar-hidden { transform: translateY(-130%); pointer-events: none; }
+.search-sentinel { height: 0; flex: none; margin: 0; padding: 0; pointer-events: none; }
