@@ -195,7 +195,7 @@ function filterSideMenu(q) {
 // بينفع في الرئيسية وشاشات الرحلات (اللي فيها شريط بحث). شريط البحث بيفضل ثابت تحت الهيدر بمسافة GAP،
 // ولما يوصل للمسافة دي الهيدر بيبدأ يختفي وشريط البحث بيطلع مكانه، ولما ترجع لفوق الهيدر بيرجع.
 (function () {
-    const GAP = 14;
+    const GAP = 6;   // المسافة بين الهيدر وشريط البحث وهو ثابت (قريب جداً من غير ما يلزق)
     let ticking = false;
     function update() {
         ticking = false;
@@ -209,7 +209,7 @@ function filterSideMenu(q) {
             return;
         }
         const h = bar.offsetHeight;
-        const hide = sentinel.getBoundingClientRect().top <= h + GAP;
+        const hide = (window.scrollY || document.documentElement.scrollTop || 0) > 2 && sentinel.getBoundingClientRect().top <= h + GAP;
         bar.classList.toggle('topbar-hidden', hide);
         root.style.setProperty('--search-top', hide ? '.5rem' : (h + GAP) + 'px');
     }
