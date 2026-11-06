@@ -1493,3 +1493,8 @@ html:has(#appContainer .app-topbar) .app-topbar.topbar-hidden { transform: trans
 
 /* الشاشات اللي فيها شريط بحث: مسافة أكبر بين الهيدر والبحث وهما في مكانهم، عشان البحث يقرّب من الهيدر وهو بينزل قبل ما الهيدر يختفي */
 .app-topbar.has-search { margin-bottom: 2.75rem; }
+
+/* =====================================================================
+   من غير تخانة (bold) في كل الموقع
+   ===================================================================== */
+html, html *, html *::before, html *::after { font-weight: 400 !important; font-synthesis: none; }
