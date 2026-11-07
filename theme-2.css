@@ -962,3 +962,8 @@ html .auth-hero .brand .logo-img { height: 2rem !important; width: auto !importa
 html .auth-hero .brand .brand-chip { padding: .3rem .5rem; border-radius: .8rem; display: inline-flex; align-items: center; }
 /* لوجو شاشة البداية فقط (الكبير) */
 .splash-logo.logo-tile { width: auto; height: auto; background: #f6f1e7; }
+
+/* مربع اللوجو الكريمي (brand-chip): مكرر هنا عشان يظهر حتى لو theme.css مش متحمّل */
+.brand-chip { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f6f1e7; border-radius: .65rem; padding: .22rem .4rem; }
+.logo-img { height: 1.45rem; }
+html .auth-hero .brand .brand-chip { background: #f6f1e7; padding: .3rem .5rem; border-radius: .8rem; }
