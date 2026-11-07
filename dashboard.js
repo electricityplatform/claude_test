@@ -100,7 +100,7 @@ function partitionMeta(name) {
     if (n.includes('بحث بالكاميرا')) return { action: `alert(${jsArg('جارِ فتح الكاميرا للمسح الضوئي...')})`, icon: 'camera', desc: '' };
     if (n.includes('تنبيهات الصيانة')) return { action: 'startMaintenanceAlertsFlow()', icon: 'bell', desc: 'ملاحظات تركيب قطعة الغيار', img: 'maintenance-alerts.jpg' };
     if (n.includes('التوافقات')) return { action: 'startCompatFlow()', icon: 'link', desc: 'توافق الموديلات فى قطع الغيار', img: 'compat.jpg' };
-    if (n.includes('شراء قطع الغيار')) return { action: 'startBuyFlow()', icon: 'cart', desc: 'قارن أسعار التجار لكل قطعة', feature: true, img: 'buy-parts.jpg' };
+    if (n.includes('شراء قطع الغيار')) return { action: 'startBuyFlow()', icon: 'cart', desc: '', feature: true, img: 'buy-parts.jpg' };
     if (n.includes('قطع الغيار')) return { action: 'renderPartsScreen()', icon: 'cog', desc: '' };
     if (n.includes('الماركات')) return { action: 'renderBrandsScreen()', icon: 'tag', desc: '' };
     if (n.includes('الموديلات')) return { action: "renderModelsScreen('Samsung')", icon: 'device', desc: '' };
