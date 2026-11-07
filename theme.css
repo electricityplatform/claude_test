@@ -1646,7 +1646,7 @@ html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input)
 .auth-card .line-field input { font-size: 1.1rem; }
 
 /* =====================================================================
-   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Almwaheb 3
+   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Arial
    - الظلال الذهبية كانت لسه ظاهرة في الوضع الداكن (قواعد !important أعلى من إصدار 6)، اتشالت من مصدرها فوق.
    - الشريطين (العلوي والسفلي) والقائمة الجانبية بيستخدموا متغير واحد --bar-bg، فلونهم دايماً واحد في الوضعين.
    ===================================================================== */
@@ -1687,8 +1687,8 @@ html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !import
 /* ---------- عمود profile_photo_url في شيت المستخدمين: عرض محدود والباقي ... ---------- */
 #editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- الخط: Almwaheb 3 (معرّف في style.css). الأحجام معاد ضبطها لأن Katibeh كان صغير والخط ده بحجم عادي ---------- */
-body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif; }
+/* ---------- الخط: Arial ---------- */
+body, button, input, select, textarea { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; }
 #appContainer .text-xs { font-size: .85rem !important; line-height: 1.5 !important; }
 #appContainer .text-sm { font-size: 1rem !important; line-height: 1.5 !important; }
 #appContainer .text-base { font-size: 1.1rem !important; line-height: 1.5 !important; }
@@ -1707,6 +1707,9 @@ body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex San
 #appContainer .input, #appContainer .select, #appContainer .textarea, #appContainer .input > input { font-size: 1rem; }
 #appContainer .dash-card.compact h3 { font-size: 1.2rem !important; }
 #appContainer .dash-card h3 { font-size: 1.25rem; }
+/* الاسم على سطرين: العربي فوق والإنجليزي تحته */
+.dash-card .lbl-ar { display:block; font-size:1.05rem; font-weight:700; line-height:1.4; }
+.dash-card .lbl-en { display:block; font-size:.85rem; font-weight:400; line-height:1.3; opacity:.85; direction:ltr; unicode-bidi:isolate; }
 .home-intro h2 { font-size: 1.05rem; }
 .home-intro p { font-size: .95rem; }
 .home-step { font-size: .85rem; }
@@ -1827,8 +1830,7 @@ html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #64594
 
 /* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
 .auth-card .line-field input[type="password"] {
-    font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif !important;
     letter-spacing: .25em;
 }
-html:not(.dark) .auth-card .line-field input[type="password"] { color: #f5f1e6 !important; -webkit-text-fill-color: #f5f1e6 !important; caret-color: #f5f1e6; }
-.auth-card .line-field input:-webkit-aut
+html:not(.dark) .auth-card .line-field input[type="password"] { co
