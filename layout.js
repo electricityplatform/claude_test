@@ -1,1204 +1,217 @@
-/* =====================================================================
-   تقسيمة الشاشة الرئيسية: صفوف (كارت كامل أو اتنين جنب بعض)
-   ===================================================================== */
-#partitionsContainer .dash-row { display: grid; gap: .75rem; margin-bottom: .75rem; }
-#partitionsContainer .dash-row.two { grid-template-columns: 1fr 1fr; }
-#partitionsContainer .dash-row .dash-card { min-width: 0; }
-#partitionsContainer .dash-row.one .dash-card { padding: 1.1rem 1.2rem; }
-#appContainer .dash-card.compact { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: .55rem; padding: .9rem .6rem; min-height: 6.6rem; }
-#appContainer .dash-card.compact h3 { font-size: .95rem; line-height: 1.3; }
-
-/* الماركات وقطع الغيار: نفس تقسيمة الأقسام (اتنين جنب بعض) */
-.dash-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding-bottom: .75rem; }
-.dash-grid2 > .dash-card { min-width: 0; }
-.dash-grid2 > .dash-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
-
-/* الكمبيوتر: الصفوف والكروت تملى عرض الشاشة كله، والكروت والخطوط أكبر */
-@media (min-width: 900px) {
-    #partitionsContainer .dash-row { gap: 1.1rem; margin-bottom: 1.1rem; }
-    #appContainer .dash-card.compact { min-height: 10rem; gap: .9rem; padding: 1.3rem .9rem; border-radius: var(--r); }
-    #appContainer .dash-card.compact .dash-ico { width: 4.2rem; height: 4.2rem; }
-    #appContainer .dash-card.compact .dash-ico svg { width: 2.1rem; height: 2.1rem; }
-    #appContainer .dash-card.compact h3 { font-size: 1.3rem; }
-    #partitionsContainer .dash-row.one .dash-card { padding: 1.7rem 2rem; gap: 1.5rem; border-radius: var(--r); }
-    #partitionsContainer .dash-row.one .dash-ico { width: 4.4rem; height: 4.4rem; }
-    #partitionsContainer .dash-row.one .dash-ico svg { width: 2.2rem; height: 2.2rem; }
-    #partitionsContainer .dash-row.one .dash-card h3 { font-size: 1.8rem; }
-    #partitionsContainer .dash-row.one .dash-card p { font-size: 1.1rem; }
-    .dash-grid2 { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1.1rem; padding-bottom: 1.1rem; }
-    .dash-grid2 > .dash-card:last-child:nth-child(odd) { grid-column: auto; }
-}
-
-/* الهيدر: القائمة يمين، اللوجو + اسم الشركة في النص، الصورة الشخصية شمال بنفس حجم زر القائمة */
-.topbar-brand { letter-spacing: .3em; font-weight: 500; font-size: .95rem; white-space: nowrap; }
-.app-topbar .topbar-center .logo-img { height: 1.6rem; }
-.app-topbar .user-avatar-btn, .topbar-user-spacer { display: block; width: 2.4rem; height: 2.4rem; }
-.app-topbar .user-avatar-btn .avatar,
-.app-topbar .user-avatar-btn .avatar > *,
-.app-topbar .user-avatar-btn .w-9,
-.app-topbar .user-avatar-btn img { width: 2.4rem !important; height: 2.4rem !important; }
-.app-topbar .user-avatar-btn img { object-fit: cover; border-radius: 9999px; }
-@media (min-width: 900px) { .topbar-brand { font-size: 1.25rem; } .app-topbar .topbar-center .logo-img { height: 1.9rem; } }
-
-/* =====================================================================
-   هيرو الشاشة الرئيسية (hero.js)
-   ===================================================================== */
-:root { --shop-cream: #fbf8f1; }   /* كريمي التندة ولوحة العرض (أخف من كريمي خلفية اللوجو #f6f1e7) */
-.hero { touch-action:pan-y pinch-zoom; --h-gold:#9a741f; --h-cream:#f6f1e7; position:relative; height:17.5rem; margin-bottom:1rem; overflow:hidden; isolation:isolate; color:#2c261c; background:var(--shop-cream); border:1px solid rgba(201,169,98,.5); box-shadow:0 .4rem 1.1rem rgba(60,48,30,.12); }
-@keyframes heroOrb { to { transform:translate(2rem,1.5rem) scale(1.2); } }
-.hero-bg { display:none; position:absolute; inset:0; z-index:-1; opacity:.5; background-image:radial-gradient(rgba(232,201,122,.2) 1px,transparent 1px); background-size:1.4rem 1.4rem; -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%); }
-
-.hero-slide { position:absolute; inset:0 0 1.9rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; padding:1rem 1rem 0; text-align:center; opacity:0; visibility:hidden; transform:translateY(.6rem); transition:opacity .6s, transform .6s, visibility .6s; }
-.hero-slide.active { opacity:1; visibility:visible; transform:none; }
-.hero-slide:not(.active) * { animation-play-state:paused !important; }
-.hero-kicker { font-size:.8rem; color:var(--h-gold); }
-.hero-cap { font-size:.9rem; color:var(--h-gold); font-weight:600; }
-.hero-brand { font-weight:500; letter-spacing:.3em; font-size:1.05rem; }
-.hero-tag { font-size:.85rem; opacity:.85; }
-
-/* 1) تركيب اللوجو */
-.hero-stage { background:var(--h-cream); border-radius:var(--r); padding:.7rem .9rem; box-shadow:0 .5rem 1.2rem rgba(0,0,0,.3); animation:heroFloat 4s ease-in-out infinite; }
-@keyframes heroFloat { 50% { transform:translateY(-.25rem); } }
-.hero-assemble { position:relative; width:8.6rem; aspect-ratio:627/450; }
-.hp { position:absolute; display:block; height:auto; user-select:none; -webkit-user-drag:none; }
-.hp-line { left:0; top:91.78%; width:100%; }
-.hp-back { left:3.67%; top:.22%; width:32.54%; }
-.hp-screen { left:24.4%; top:28.44%; width:38.92%; }
-.hp-board { left:46.41%; top:64.67%; width:50.08%; }
-.hero-slide.active .hp-line { animation:hpLine .8s .1s both cubic-bezier(.2,.8,.2,1); }
-.hero-slide.active .hp-back { animation:hpDrop .8s .35s both cubic-bezier(.2,.8,.2,1); }
-.hero-slide.active .hp-screen { animation:hpRight .8s .75s both cubic-bezier(.2,.8,.2,1); }
-.hero-slide.active .hp-board { animation:hpLeft .8s 1.15s both cubic-bezier(.2,.8,.2,1); }
-@keyframes hpLine { from { transform:scaleX(0); opacity:0; } }
-@keyframes hpDrop { from { transform:translateY(-70%); opacity:0; } }
-@keyframes hpRight { from { transform:translateX(90%); opacity:0; } }
-@keyframes hpLeft { from { transform:translateX(-90%); opacity:0; } }
-
-/* 2) معرض شاشات بيلف */
-.hero-stage3d { position:relative; width:100%; height:10.4em; font-size:1rem; display:flex; align-items:center; justify-content:center; perspective:55em; perspective-origin:50% 30%; }
-.hero-stage3d::after { content:""; position:absolute; bottom:.1em; left:50%; width:12em; height:1.6em; margin-left:-6em; border-radius:50%; background:radial-gradient(rgba(232,201,122,.32),transparent 70%); }
-.hero-ring { position:relative; width:4.4em; height:7.4em; margin-bottom:1em; transform-style:preserve-3d; animation:heroSpin 22s linear infinite; }
-@keyframes heroSpin { from { transform:rotateX(-5deg) rotateY(0deg); } to { transform:rotateX(-5deg) rotateY(-360deg); } }
-.hero-panel { color:#f6f1e7; position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5em; border-radius:.9em; border:.12em solid rgba(232,201,122,.7); background:linear-gradient(160deg,#4a3f2c,#1f1a12); box-shadow:inset 0 0 1.2em rgba(232,201,122,.15), 0 0 1.4em rgba(232,201,122,.12); transform:rotateY(calc(var(--i) * 45deg)) translateZ(5.6em); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
-.hero-panel::before { content:""; position:absolute; bottom:-1.35em; left:50%; width:2.2em; height:.3em; margin-left:-1.1em; border-radius:1em; background:#c9a24d; }
-.hero-panel::after { content:""; position:absolute; bottom:-1.1em; left:50%; width:.3em; height:1.1em; margin-left:-.15em; background:linear-gradient(#c9a24d,#6d5a30); z-index:-1; }
-.hp-notch { position:absolute; top:.45em; width:1.2em; height:.2em; border-radius:1em; background:rgba(246,241,231,.5); }
-.hp-ico { width:2.4em; height:2.4em; border-radius:50%; display:grid; place-items:center; background:linear-gradient(135deg,#f3dc9b,#c9a24d); color:#1a150d; flex-shrink:0; }
-.hero-panel .hp-ico svg { width:1.2em; height:1.2em; }
-.hp-label { font-size:.68em; line-height:1.25; padding:0 .3em; font-weight:600; }
-
-/* 3) الأرقام */
-.hero-stats { display:flex; gap:1.2rem; justify-content:center; }
-.hero-stat { display:flex; flex-direction:column; align-items:center; min-width:4.2rem; }
-.hero-stat b { font-size:2.3rem; font-weight:800; line-height:1.15; background:linear-gradient(180deg,#d9b45a,#8a6a1f); -webkit-background-clip:text; background-clip:text; color:transparent; }
-.hero-stat span { font-size:.85rem; opacity:.85; }
-.hero-slide.active .hero-stat { animation:heroPop .6s both; animation-delay:calc(var(--d) * 140ms); }
-@keyframes heroPop { from { transform:translateY(.8rem) scale(.85); opacity:0; } }
-
-/* 4) الخدمات */
-.hero-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; width:100%; max-width:30rem; }
-.hero-tile { color:#2c261c; display:flex; flex-direction:column; align-items:center; gap:.4rem; padding:.7rem .3rem; border-radius:var(--r); background:rgba(201,169,98,.14); border:1px solid rgba(201,162,77,.5); font-size:.7rem; line-height:1.25; }
-.hero-tile .hp-ico { width:2.4rem; height:2.4rem; }
-.hero-slide.active .hero-tile { animation:heroPop .55s both; animation-delay:calc(var(--d) * 150ms); }
-
-/* النقط */
-.hero-dots { position:absolute; bottom:.65rem; left:0; right:0; display:flex; justify-content:center; gap:.4rem; }
-.hero-dot { position:relative; width:.45rem; height:.45rem; padding:0; border:0; border-radius:var(--r); background:rgba(60,48,30,.22); transition:width .3s, background .3s; }
-.hero-dot::before { content:""; position:absolute; inset:-.6rem -.25rem; }
-.hero-dot.active { width:1.3rem; background:var(--h-gold); }
-
-@media (min-width: 900px) {
-    .hero { height:22rem; border-radius:var(--r); }
-    .hero-slide { inset:0 0 2.2rem; gap:.8rem; }
-    .hero-kicker { font-size:1rem; }
-    .hero-cap { font-size:1.15rem; }
-    .hero-brand { font-size:1.5rem; }
-    .hero-tag { font-size:1.05rem; }
-    .hero-assemble { width:11rem; }
-    .hero-stage3d { font-size:1.45rem; }
-    .hero-stats { gap:3rem; }
-    .hero-stat b { font-size:3.4rem; }
-    .hero-stat span { font-size:1.05rem; }
-    .hero-tiles { max-width:46rem; gap:1rem; }
-    .hero-tile { font-size:.95rem; padding:1.1rem .5rem; }
-    .hero-tile .hp-ico { width:3.2rem; height:3.2rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .hero *, .hero::before, .hero::after { animation:none !important; }
-}
-
-
-/* =====================================================================
-   تمرير عادي للصفحة كلها (زي المواقع العادية): الهيدر والشريط السفلي لازقين (sticky)،
-   والتحديث بالسحب من فوق بيتعمل بالمتصفح نفسه. بيشتغل بس على الشاشات اللي فيها هيدر.
-   ===================================================================== */
-html:has(#appContainer .app-topbar) { height:auto !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior-y:contain !important; }
-html:has(#appContainer .app-topbar) body { height:auto !important; min-height:100%; overflow:visible !important; overscroll-behavior-y:contain !important; }
-html:has(#appContainer .app-topbar) main { height:auto !important; min-height:100dvh; overflow-x:clip !important; overflow-y:visible !important; }
-html:has(#appContainer .app-topbar) #appContainer { flex:1 0 auto !important; min-height:0; overflow-x:clip !important; overflow-y:visible !important; }
-html:has(#appContainer .app-topbar) #appContainer > .overflow-y-auto,
-html:has(#appContainer .app-topbar) #appContainer > .home-scroll { flex:none !important; overflow:visible !important; }
-html:has(#appContainer .app-topbar) .app-topbar { position:sticky; top:0; z-index:40; }
-html:has(#appContainer .app-topbar) .bottom-nav { position:sticky; bottom:0; z-index:40; }
-
-
-/* =====================================================================
-   كروت الأقسام اللي ليها صورة خلفية (partitionMeta → img)
-   الصورة جاية من المتغير --card-img على الكارت، وفوقها تظليل غامق عشان النص يبان.
-   ===================================================================== */
-html:not(.dark) #appContainer .dash-card.has-img,
-html.dark #appContainer .dash-card.has-img {
-    background-color: #26211c !important;
-    background-image:
-        linear-gradient(to top, rgba(14, 11, 8, .8) 0%, rgba(14, 11, 8, .45) 26%, rgba(14, 11, 8, 0) 52%),
-        var(--card-img) !important;
-    background-size: cover !important;
-    background-position: center !important;
-    color: #fff !important;
-    border: 1px solid rgba(255, 255, 255, .14) !important;
-}
-html:not(.dark) #appContainer .dash-card.has-img:hover,
-html.dark #appContainer .dash-card.has-img:hover { background-color: #26211c !important; }
-html:not(.dark) #appContainer .dash-card.has-img::before,
-html.dark #appContainer .dash-card.has-img::before { background: none; }
-#appContainer .dash-card.has-img h3,
-#appContainer .dash-card.has-img p { text-shadow: 0 1px 6px rgba(0, 0, 0, .65); }
-
-/* الكارت الكبير (شراء قطع الغيار): أطول، والنص تحت */
-#partitionsContainer .dash-row.one .dash-card.has-img { min-height: 9.5rem; align-items: flex-end; }
-/* الكروت الصغيرة اللي جنب بعض: أطول، والأيقونة فوق والاسم تحت */
-#appContainer .dash-card.compact.has-img { min-height: 8.5rem; justify-content: flex-end; }
-@media (min-width: 900px) {
-    #partitionsContainer .dash-row.one .dash-card.has-img { min-height: 14rem; }
-    #appContainer .dash-card.compact.has-img { min-height: 13rem; }
-}
-
-
-/* =====================================================================
-   الشاشة الرئيسية: من غير الدايرة الصفراء (أيقونة القسم) على الكروت
-   ===================================================================== */
-#partitionsContainer .dash-card .dash-ico { display: none; }
-
-
-/* =====================================================================
-   خلفية الصفحة (الوضع الفاتح): أبيض بدل الكريمي. الوضع الداكن زي ما هو.
-   ===================================================================== */
-html:not(.dark) body.bg-base-100 {
-    background-color: #ffffff;
-    background-image: none;
-}
-
-
-/* =====================================================================
-   الوضع الفاتح فقط: من غير ظلال خالص (الوضع الداكن بظلاله): لا على الكروت ولا الهيرو ولا الشريطين ولا الأزرار ولا النصوص.
-   الاستثناء الوحيد: حلقة التركيز على الحقول وخلايا الشيت (عشان تعرف انت واقف فين وانت بتكتب).
-   ===================================================================== */
-html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
-html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
-html:not(.dark) *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
-    box-shadow: none !important;
-    text-shadow: none !important;
-}
-
-
-/* =====================================================================
-   من غير شريط التمرير (اللي بيظهر وانت بتتحرك لفوق وتحت) في كل الصفحات والقائمة الجانبية.
-   التمرير نفسه شغال عادي. الاستثناء: الجداول العريضة (.overflow-auto / .overflow-x-auto) عشان شريطها الأفقي يفضل ظاهر.
-   ===================================================================== */
-html, html :not(.overflow-auto):not(.overflow-x-auto) { scrollbar-width: none !important; }
-html :not(.overflow-auto):not(.overflow-x-auto)::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
-html::-webkit-scrollbar { display: none !important; }
-
-
-/* دائرية موحّدة لكل الموقع = دائرية مربع اللوجو (مربع الترحيب) 0.6rem؛ غيّر --r بس */
-:root { --r: 0.6rem; }
-
-/* =====================================================================
-   حواف أقل دائرية: دائرية خفيفة بس (بتيجي آخر حاجة عشان تغلب على اللي فوقها)
-   عشان ترجّع الدوائر القديمة: امسح البلوك ده كله.
-   ===================================================================== */
-[data-theme="electricity-light"], [data-theme="electricity-dark"] {
-    --rounded-box: var(--r); --rounded-btn: var(--r); --rounded-badge: var(--r); --tab-radius: var(--r);
-}
-
-/* كلاسات Tailwind المستعملة في الشاشات */
-.rounded-3xl { border-radius: var(--r) !important; }
-.rounded-2xl { border-radius: var(--r) !important; }
-.rounded-xl  { border-radius: var(--r) !important; }
-.rounded-lg  { border-radius: var(--r) !important; }
-
-/* البطاقات والأقسام */
-.dash-card, .dash-card.feature,
-#appContainer .dash-card.compact,
-#partitionsContainer .dash-row.one .dash-card,
-.home-intro,
-#appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) { border-radius: var(--r) !important; }
-@media (min-width: 900px) {
-    #appContainer .dash-card.compact,
-    #partitionsContainer .dash-row.one .dash-card,
-    .hero { border-radius: var(--r) !important; }
-}
-.dash-ico { border-radius: var(--r); }
-.dash-card.compact .dash-ico, #partitionsContainer .dash-row.one .dash-ico { border-radius: var(--r); }
-
-/* الهيرو والشرايح */
-.hero { border-radius: var(--r); }
-.hero-stage { border-radius: var(--r); }
-.hero-tile { border-radius: var(--r); }
-.hero-panel { border-radius: 0.45em; }
-.hp-ico { border-radius: var(--r); }
-.hero-dot { border-radius: var(--r); }
-
-/* الشريط العلوي والسفلي */
-.app-topbar { border-radius: 0 0 var(--r) var(--r); }
-.bottom-nav { border-radius: var(--r) var(--r) 0 0; }
-.bottom-nav-item { border-radius: var(--r); }
-
-/* القائمة الجانبية */
-#sideMenu { border-radius: var(--r) 0 0 var(--r); }
-.side-item, .side-search { border-radius: var(--r); }
-
-/* الدخول والافتتاح */
-.auth-card { border-radius: var(--r) var(--r) 0 0; }
-.auth-foot { border-radius: 0; }
-.auth-hero .brand { border-radius: var(--r); }
-.auth-avatar { border-radius: var(--r); }
-.splash-logo, .splash-logo.logo-tile { border-radius: var(--r); }
-.intro-skip { border-radius: var(--r); }
-.onb-dot { border-radius: var(--r); }
-
-/* اللوجو والشرايح الصغيرة */
-.brand-chip, .auth-hero .brand .brand-chip { border-radius: var(--r); }
-.home-step { border-radius: var(--r); }
-.home-step b { border-radius: var(--r); }
-
-/* الأزرار والحقول والنوافذ */
-.btn { border-radius: var(--r); }
-.btn-circle { border-radius: 9999px; }
-html .input, html .select, html .textarea { border-radius: var(--r); }
-.badge { border-radius: var(--r); }
-.modal-box { border-radius: var(--r); }
-.photo-sheet-card { border-radius: var(--r) var(--r) 0 0; }
-@media (min-width: 640px) { .photo-sheet-card { border-radius: var(--r); } }
-.conn-banner { border-radius: var(--r); }
-.conn-banner button { border-radius: var(--r); }
-.skeleton { border-radius: var(--r); }
-
-
-/* =====================================================================
-   قسم التليفون ثلاثي الأبعاد في الشاشة الرئيسية (phone3d.js)
-   ===================================================================== */
-.phone-stage { position: relative; margin: 0 0 1rem; padding: 0; overflow: hidden; isolation: isolate; border-radius: var(--r); border: 0; box-shadow: none; }
-.phone-stage::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; border: 1px solid rgba(201, 169, 98, .5);
-    -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0) 80%); mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0) 80%); }   /* الإطار بيخفّ لحد ما يختفي من تحت */
-.phone-stage-cap { position: relative; text-align: center; font-size: .85rem; font-weight: 700; color: #5b4a2a; margin: 0; padding: .1rem .75rem .75rem; }
-.hero-phone { overflow: hidden; position: relative; width: 100%; height: 26rem; direction: ltr; touch-action: pan-y pinch-zoom; }
-.hero-phone canvas { display: block; width: 100%; height: 100%; }
-.phone-stage.p3-open { overflow: visible; z-index: 30; }
-.phone-stage.p3-open .hero-phone { overflow: visible; }
-
-.hp3-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.hp3-lines line { stroke: rgba(107, 85, 48, .9); stroke-width: 1; transition: opacity .25s; }
-.hp3-chip, .hp3-collapse {
-    position: absolute; padding: .22rem .65rem; border-radius: var(--r);
-    background: rgba(26, 21, 13, .88); border: 1px solid rgba(232, 201, 122, .5);
-    color: #f6f1e7; font-size: .68rem; font-weight: 700; line-height: 1.3; white-space: nowrap;
-    opacity: 0; pointer-events: none; transition: opacity .25s, background .2s;
-}
-.hp3-chip { transform: translateX(-50%); }
-.hp3-collapse { left: 0; top: 50%; transform: translateY(-50%); }
-.hp3-chip.show, .hp3-collapse.show { opacity: 1; pointer-events: auto; }
-.hp3-chip.active { background: linear-gradient(180deg, #ecd9a6, #c9a962); color: #1a150d; border-color: transparent; }
-.hp3-fail { padding: 2rem 1rem; text-align: center; font-size: .8rem; opacity: .8; }
-@media (min-width: 900px) {
-    .phone-stage { border-radius: var(--r); }
-    .phone-stage-cap { font-size: 1.1rem; padding-bottom: 1rem; }
-    .hero-phone { height: 32rem; }
-    .hp3-chip, .hp3-collapse { font-size: .85rem; padding: .3rem .8rem; }
-}
-
-
-/* =====================================================================
-   الصورة الشخصية: مربعة بحواف دايرية خفيفة (زي باقي التصاميم) بدل الدايرة
-   ===================================================================== */
-.user-avatar-btn,
-.user-avatar-btn .avatar,
-.user-avatar-btn .avatar > *,
-.user-avatar-btn img,
-.user-avatar-btn [class*="rounded"],
-.app-topbar .user-avatar-btn img { border-radius: var(--r) !important; }
-.photo-preview,
-.photo-preview img,
-.photo-sheet .avatar,
-.photo-sheet .avatar > *,
-.photo-sheet [class*="rounded-full"] { border-radius: var(--r) !important; }
-
-/* =====================================================================
-   خانة البحث: من غير المستطيل الأسود اللي بيظهر جواها لما تدوس عليها
-   (كان إطار التركيز بتاع الصفحة بيترسم حوالين خانة الكتابة الداخلية)
-   ===================================================================== */
-#appContainer .input > input,
-#appContainer .input > input:focus,
-#appContainer .input > input:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    background-color: transparent !important;
-}
-
-/* الهيدر + البحث في الشاشة الرئيسية: بيتمرروا ويختفوا مع النزول (من غير تندة) */
-/* الهيدر ثابت فوق في كل الشاشات (حتى اللي فيها بحث) */
-
-/* =====================================================================
-   لوحة الترحيب + لوحة التليفون: لوحتين منفصلتين (بمسافة بينهم) بس لونهم متكمّل:
-   غامق فوق في لوحة الترحيب، بيفتح لحد آخرها (--panel-mid)، ولوحة التليفون بتبدأ بنفس اللون وتكمّل فتح لحد الكريمي.
-   ===================================================================== */
-.hero { color: #f6f1e7; background: linear-gradient(180deg, var(--panel-dark) 0%, var(--panel-mid) 100%); }
-.hero-kicker, .hero-cap { color: #ecd9a6; }
-.hero-tag { opacity: .92; }
-.hero-stat b { background: linear-gradient(180deg, #f6e3ae, #d9b45a); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.hero-tile { color: #f6f1e7; background: rgba(246, 241, 231, .1); border-color: rgba(232, 201, 122, .55); }
-.hero-dot { background: rgba(246, 241, 231, .32); }
-.hero-dot.active { background: #ecd9a6; }
-/* لوحة التليفون: من غير خلفية ولا إطار (المجسم فوق خلفية الصفحة مباشرة) */
-.phone-stage { background: none; }
-.phone-stage::after { display: none; }
-html.dark .phone-stage-cap { color: #ecd9a6; }
-html.dark .hp3-lines line { stroke: rgba(236, 217, 166, .75); }
-
-.hero { border-radius: var(--r); }
-@media (min-width: 900px) { .hero, .phone-stage { border-radius: var(--r); } }
-
-/* =====================================================================
-   ألوان اللوحات (الترحيب + التليفون + شاشات الترحيب/الدخول) = نفس درجة لون الشريط العلوي والسفلي الأصلي.
-   الشرايط والأقسام والبحث رجعت لألوانها الأصلية بالكامل (--dark-bar و--dark-surface و--dark-edge زي ما كانت).
-   ===================================================================== */
-:root {
-    --panel-dark: #26211c;     /* طرف الشريط الأصلي الأغمق */
-    --panel-mid: #3a332b;      /* طرف الشريط الأصلي الأفتح */
-    --panel-light: #f6f1e7;
-    --hero-grad: linear-gradient(180deg, var(--panel-dark) 0%, var(--panel-mid) 100%);
-}
-html.dark { --panel-dark: #111113; --panel-mid: #1b1b1e; }
-
-/* =====================================================================
-   الترحيب: شاشات الافتتاح (Splash / التعريف / الترحيب / الدخول) وبطاقة "أهلاً بك" في الرئيسية
-   بنفس لون لوحة الترحيب وتدرّجها. (من غير أي تعديل في welcome.js)
-   ===================================================================== */
-html:is(.dark, :not(.dark)) .teal-floral,
-html:is(.dark, :not(.dark)) .auth-screen,
-html:is(.dark, :not(.dark)) .auth-screen.intro-screen,
-html:is(.dark, :not(.dark)) .splash-overlay {
-    background-color: var(--panel-dark);
-    background-image: var(--hero-grad);
-}
-html:is(.dark, :not(.dark)) .home-intro {
-    background: var(--hero-grad);
-    border: 1px solid var(--dark-edge);
-    box-shadow: 0 .4rem 1.1rem rgba(60, 48, 30, .22);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-}
-html:is(.dark, :not(.dark)) .home-intro h2 { color: #ecd9a6 !important; }
-html:is(.dark, :not(.dark)) .home-intro p { color: rgba(246, 241, 231, .85) !important; }
-html:is(.dark, :not(.dark)) .home-step { background: rgba(246, 241, 231, .12); border-color: rgba(236, 217, 166, .4); color: #f6f1e7; }
-
-/* بطاقة شاشات الترحيب/الدخول (.auth-card): كانت كريمي وهي اللي مسيطرة على الشاشة، فاللون ماكانش باين.
-   بقت بنفس تدرّج لوحة الترحيب ونصوصها فاتحة. */
-html:is(.dark, :not(.dark)) .auth-card {
-    color-scheme: dark;
-    --p: 80% 0.1 85;      --pc: 20% 0.02 70;
-    --s: 28% 0.02 70;     --sc: 92% 0.01 85;
-    --n: 36% 0.02 70;     --nc: 96% 0.006 85;
-    --b1: 25% 0.016 70;   --b2: 21% 0.016 70;   --b3: 31% 0.02 70;   --bc: 93% 0.02 88;
-    --field-bg: rgba(255, 255, 255, .1);
-    --field-border: rgba(236, 217, 166, .45);
-    color: #f6f1e7;
-    background: var(--hero-grad);
-    border-top: 1px solid var(--dark-edge);
-    box-shadow: 0 -.4rem 1.4rem rgba(0, 0, 0, .28);
-}
-html:is(.dark, :not(.dark)) .auth-card h1 { color: #ecd9a6 !important; }
-html:is(.dark, :not(.dark)) .auth-card p { color: rgba(246, 241, 231, .85) !important; }
-html:is(.dark, :not(.dark)) .auth-card .auth-foot { color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .btn-outline { border-color: rgba(236, 217, 166, .6); color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .onb-dot { background: rgba(246, 241, 231, .3); }
-html:is(.dark, :not(.dark)) .onb-dot.active { background: #ecd9a6; }
-
-
-/* =====================================================================
-   شاشة تسجيل الدخول: ألوان بس (من غير تكبير)
-   ===================================================================== */
-html:is(.dark, :not(.dark)) .auth-card .line-field { border-bottom: 1.5px solid rgba(236, 217, 166, .75); color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .line-field input { color: #f6f1e7 !important; -webkit-text-fill-color: #f6f1e7; }
-html:is(.dark, :not(.dark)) .auth-card .line-field input::placeholder { color: rgba(236, 217, 166, .9) !important; opacity: 1; }
-html:is(.dark, :not(.dark)) .auth-card .line-field svg { color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .line-field button { color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .label-text { color: #ecd9a6 !important; }
-html:is(.dark, :not(.dark)) .auth-card .checkbox { border-color: #ecd9a6; }
-html:is(.dark, :not(.dark)) .auth-card .btn-primary { font-weight: 700; color: #1a150d !important; background: linear-gradient(145deg, #ecd9a6, #c9a962) !important; border-color: #c9a962 !important; }
-html:is(.dark, :not(.dark)) .auth-card .btn-ghost { color: #ecd9a6 !important; opacity: 1; }
-html:is(.dark, :not(.dark)) .auth-card .auth-foot { color: #ecd9a6 !important; background: rgba(0, 0, 0, .3) !important; }
-
-/* =====================================================================
-   الوضع الداكن: رجوع الظلال بلمسة ذهبية خفيفة
-   ===================================================================== */
-html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    box-shadow: none !important;
-}
-html.dark .bottom-nav {
-    box-shadow: none !important;
-}
-
-/* =====================================================================
-   شريط البحث: منفصل عن الهيدر، وبيفضل ثابت فوق لما تنزل في الصفحة (الهيدر بيختفي زي ما هو)
-   ===================================================================== */
-.app-search-bar {
-    position: sticky;
-    top: var(--search-top, calc(var(--topbar-h, 3.5rem) + 6px));   /* تحت الهيدر بمسافة واضحة؛ الجافاسكريبت بيغيّرها لما الهيدر يختفي */
-    transition: top .3s ease;
-    z-index: 39;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    margin: 0 0 .75rem;
-    padding: .6rem .6rem;
-    background: var(--dark-bar);
-    border: 1px solid var(--dark-edge);
-    border-radius: var(--r);
-}
-
-/* =====================================================================
-   الشريط السفلي (4 أزرار) + صورة الحساب
-   ===================================================================== */
-/* الأيقونة 2.5rem لكن الـ padding الرأسي اتقلّل (.45 → .15) عشان ارتفاع الشريط يفضل زي ما كان (≈3.2rem) */
-.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .15rem .3rem; }
-.bottom-nav .bottom-nav-item svg { width: 2.5rem; height: 2.5rem; }
-.bottom-nav .user-avatar-btn .avatar,
-.bottom-nav .user-avatar-btn .avatar > *,
-.bottom-nav .user-avatar-btn .w-9,
-.bottom-nav .user-avatar-btn img { width: 2.5rem !important; height: 2.5rem !important; object-fit: cover; }
-.bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn img { border-radius: var(--r) !important; }
-.user-avatar-lg .avatar,
-.user-avatar-lg .avatar > *,
-.user-avatar-lg .w-9,
-.user-avatar-lg img { width: 6.5rem !important; height: 6.5rem !important; }
-.user-avatar-lg img { object-fit: cover; }
-.user-avatar-lg .avatar, .user-avatar-lg .avatar > *, .user-avatar-lg img { border-radius: var(--r) !important; }
-.user-avatar-lg .avatar span { font-size: 2.4rem; }
-
-
-/* =====================================================================
-   الإصدار 5
-   ===================================================================== */
-
-/* ---------- الوضع الفاتح: من غير لمعان (تدرجات/لمعات/زجاج) في كل الموقع ---------- */
-html:not(.dark) .dash-card::before,
-html:not(.dark) .dash-card.feature::before { background: none !important; }
-html:not(.dark) .dash-card:not(.has-img),
-html:not(.dark) .dash-card.feature:not(.has-img) { background-image: none !important; background-color: #3d352c !important; }
-html:not(.dark) .dash-card:not(.has-img):hover,
-html:not(.dark) .dash-card.feature:not(.has-img):hover { background-color: #463d33 !important; }
-html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) { background-image: none !important; background-color: #3d352c; }
-html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-image: none !important; background-color: #4a4136; }
-html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, .app-search-bar) { background: #2f2a24; }
-html:not(.dark) :is(.hero, .home-intro, .auth-card, .auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-image: none !important; background-color: #2f2a24 !important; }
-html:not(.dark) .btn-primary:not(.btn-outline) { background-image: none !important; }
-html:not(.dark) .auth-card .btn-primary { background: #d9bb77 !important; }
-html:not(.dark) .app-topbar .bg-primary,
-html:not(.dark) .dash-ico,
-html:not(.dark) .dash-card .dash-ico,
-html:not(.dark) .dash-card.feature .dash-ico,
-html:not(.dark) .home-step b,
-html:not(.dark) .ptr-indicator { background: #d9bb77; }
-html:not(.dark) .hero-tile, html:not(.dark) .home-step { background: rgba(255, 255, 255, .1); }
-html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature { -webkit-backdrop-filter: none; backdrop-filter: none; }
-
-/* ---------- الوضع الفاتح: كل الكتابة فوق الأسطح الغامقة بيضا (ولوحة الدخول والترحيب) ---------- */
-html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card, .home-intro, .hero, .auth-card,
-                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    --bc: 100% 0 0;
-    color: #fff;
-}
-html:not(.dark) .dash-card, html:not(.dark) .dash-card.feature { color: #fff !important; }
-html:not(.dark) :is(.dash-card, .home-intro, .hero, .auth-card,
-                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) :is(h1, h2, h3, h4, p, label, .label-text, .text-primary, .hero-kicker, .hero-cap, .hero-tag) { color: #fff !important; }
-html:not(.dark) .hero, html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #fff; }
-html:not(.dark) .home-step { color: #fff; }
-html:not(.dark) .auth-card :is(.line-field, .line-field svg, .line-field button, .auth-foot, .btn-outline, .btn-ghost) { color: #fff !important; }
-html:not(.dark) .auth-card .btn-outline { border-color: rgba(255, 255, 255, .6); }
-html:not(.dark) .auth-card .btn-primary { color: #1a150d !important; }
-html:not(.dark) .auth-card .line-field { border-bottom-color: rgba(255, 255, 255, .75); }
-html:not(.dark) .auth-card .line-field input { color: #fff !important; -webkit-text-fill-color: #fff; }
-html:not(.dark) .auth-card .checkbox { border-color: #fff; }
-html:not(.dark) :is(.auth-card, .app-search-bar, #appContainer .app-search-bar) input::placeholder { color: #fff !important; opacity: .85; }
-html:not(.dark) .app-search-bar input { color: #fff; }
-/* الشريط السفلي: أبيض */
-html:not(.dark) .bottom-nav .bottom-nav-item { color: #fff !important; }
-html:not(.dark) .bottom-nav .bottom-nav-item:hover,
-html:not(.dark) .bottom-nav .bottom-nav-item:active { color: #fff !important; background: rgba(255, 255, 255, .14); }
-html:not(.dark) .topbar-brand { color: #fff; }
-
-/* ---------- الوضع الداكن: اللمعان ذهبي ---------- */
-html.dark {
-    --dark-surface:
-        radial-gradient(240px 140px at 0% 0%, rgba(226, 169, 59, .2), transparent 70%),
-        linear-gradient(145deg, #202023, #151517);
-}
-html.dark .dash-card::before, html.dark .dash-card.feature::before {
-    background: linear-gradient(135deg, rgba(226, 169, 59, .14), rgba(226, 169, 59, 0) 45%);
-}
-html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    box-shadow: none !important;
-}
-html.dark .bottom-nav {
-    box-shadow: none !important;
-}
-html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
-    background-image:
-        radial-gradient(240px 140px at 0% 0%, rgba(226, 169, 59, .3), transparent 70%),
-        linear-gradient(145deg, #27272b, #19191c);
-}
-
-/* ---------- الهيدر بيختفي لما شريط البحث يوصله (layout.js بيضيف topbar-hidden) ---------- */
-.app-topbar { transition: transform .3s ease; }
-html:has(#appContainer .app-topbar) .app-topbar.topbar-hidden { transform: translateY(-130%); pointer-events: none; }
-.search-sentinel { height: 0; flex: none; margin: 0; padding: 0; pointer-events: none; }
-
-/* الشاشات اللي فيها شريط بحث: مسافة أكبر بين الهيدر والبحث وهما في مكانهم، عشان البحث يقرّب من الهيدر وهو بينزل قبل ما الهيدر يختفي */
-.app-topbar.has-search { margin-bottom: 2.75rem; }
-
-/* =====================================================================
-   من غير تخانة (bold) في كل الموقع
-   ===================================================================== */
-html, html *, html *::before, html *::after { font-weight: 400 !important; font-synthesis: none; }
-
-/* =====================================================================
-   الإصدار 6: أسود لامع في الوضعين (من غير ذهبي ومن غير ظلال) + خطوط أكبر
-   ===================================================================== */
-:root {
-    --gloss: linear-gradient(180deg, #3b3b40 0%, #1a1a1d 46%, #070708 54%, #121214 100%);
-    --gloss-hover: linear-gradient(180deg, #4a4a50 0%, #222226 46%, #0b0b0d 54%, #18181b 100%);
-    --gloss-white: linear-gradient(180deg, #ffffff 0%, #d6d6da 100%);
-    --panel-dark: #0a0a0b;
-    --panel-mid: #1c1c1f;
-    --hero-grad: var(--gloss);
-}
-html.dark, html:not(.dark) {
-    --gold-1: #ffffff; --gold-2: #e4e4e7; --gold-3: #bdbdc2;
-    --gold-grad: var(--gloss-white);
-    --amber: #ffffff;
-    --dark-edge: rgba(255, 255, 255, .14);
-}
-
-/* ---------- ألوان الثيم على الأسطح السودا (محايدة، من غير ذهبي) ---------- */
-html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card, .home-intro, .hero, .auth-card,
-                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    --p: 96% 0 0; --pc: 14% 0 0;
-    --b1: 13% 0 0; --b2: 10% 0 0; --b3: 19% 0 0; --bc: 100% 0 0;
-    color: #fff;
-}
-/* الصفحة نفسها */
-html:not(.dark) #appContainer { --p: 20% 0 0; --pc: 98% 0 0; }
-html.dark #appContainer { --p: 96% 0 0; --pc: 14% 0 0; }
-
-/* ---------- الأسطح: أسود لامع ---------- */
-html:is(.dark, :not(.dark)) .dash-card:not(.has-img),
-html:is(.dark, :not(.dark)) .dash-card.feature:not(.has-img) {
-    background-color: #0a0a0b !important;
-    background-image: var(--gloss) !important;
-    border: 1px solid rgba(255, 255, 255, .14) !important;
-    color: #fff !important;
-}
-html:is(.dark, :not(.dark)) .dash-card:not(.has-img):hover,
-html:is(.dark, :not(.dark)) .dash-card.feature:not(.has-img):hover {
-    background-color: #0b0b0d !important;
-    background-image: var(--gloss-hover) !important;
-}
-html:is(.dark, :not(.dark)) .dash-card::before,
-html:is(.dark, :not(.dark)) .dash-card.feature::before { background: none !important; }
-html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) {
-    background-color: #0a0a0b !important;
-    background-image: var(--gloss) !important;
-    border-color: rgba(255, 255, 255, .14) !important;
-}
-html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
-    background-color: #0b0b0d !important;
-    background-image: var(--gloss-hover) !important;
-}
-html:is(.dark, :not(.dark)) #appContainer :is(.rounded-2xl, .rounded-3xl).border.border-primary\/60:is(.bg-base-100, .bg-base-200) { border-color: #fff !important; }
-html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar) {
-    background: var(--gloss) !important;
-    background-color: #0a0a0b !important;
-    border-color: rgba(255, 255, 255, .14) !important;
-}
-html:is(.dark, :not(.dark)) :is(.hero, .home-intro, .auth-card, .auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) {
-    background-image: var(--gloss) !important;
-    background-color: #0a0a0b !important;
-}
-html:is(.dark, :not(.dark)) .home-intro { border-color: rgba(255, 255, 255, .14); }
-html:is(.dark, :not(.dark)) #sideMenu { background-color: #0a0a0b !important; background-image: var(--gloss) !important; }
-
-/* ---------- الأزرار والأيقونات: من غير ذهبي ---------- */
-html:not(.dark) #appContainer .btn-primary:not(.btn-outline) {
-    background: var(--gloss) !important; background-color: #0a0a0b !important;
-    border-color: rgba(255, 255, 255, .2) !important; color: #fff !important;
-}
-html:is(.dark, :not(.dark)) :is(.dash-card, .home-intro, .hero, #appContainer .app-topbar, .modal-box, .photo-sheet-card,
-                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) .btn-primary:not(.btn-outline),
-html:is(.dark, :not(.dark)) .auth-card .btn-primary,
-html.dark #appContainer .btn-primary:not(.btn-outline) {
-    background: var(--gloss-white) !important; background-color: #e4e4e7 !important;
-    border-color: rgba(255, 255, 255, .5) !important; color: #0a0a0b !important;
-}
-html:is(.dark, :not(.dark)) .auth-card .btn-outline { border-color: rgba(255, 255, 255, .6); color: #fff !important; }
-html:is(.dark, :not(.dark)) .dash-ico,
-html:is(.dark, :not(.dark)) .dash-card .dash-ico,
-html:is(.dark, :not(.dark)) .dash-card.feature .dash-ico {
-    background: var(--gloss-white) !important; color: #0a0a0b !important; border: none !important;
-}
-html:is(.dark, :not(.dark)) :is(.app-topbar .bg-primary, .home-step b, .ptr-indicator) { background: var(--gloss-white) !important; color: #0a0a0b !important; }
-html:is(.dark, :not(.dark)) .hero-stat b { background: linear-gradient(180deg, #ffffff, #bdbdc2); -webkit-background-clip: text; background-clip: text; color: transparent; }
-html:is(.dark, :not(.dark)) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile, .home-step) { color: #fff; }
-html:is(.dark, :not(.dark)) .hero-tile, html:is(.dark, :not(.dark)) .home-step { border-color: rgba(255, 255, 255, .3); }
-html:is(.dark, :not(.dark)) .hero-dot.active, html:is(.dark, :not(.dark)) .onb-dot.active { background: #fff; }
-html:is(.dark, :not(.dark)) .hp3-chip.active { background: var(--gloss-white); color: #0a0a0b; }
-html.dark .bottom-nav .bottom-nav-item:hover, html.dark .bottom-nav .bottom-nav-item:active { color: #fff !important; background: rgba(255, 255, 255, .12); }
-html.dark .bottom-nav .bottom-nav-item { color: #fff !important; }
-html.dark #appContainer :focus-visible { outline-color: #fff; }
-html.dark ::selection { background: rgba(255, 255, 255, .3); }
-
-/* ---------- شاشات الدخول والترحيب: كتابة بيضا في الوضعين ---------- */
-html:is(.dark, :not(.dark)) .auth-card :is(h1, p, label, .label-text, .line-field, .line-field svg, .line-field button, .auth-foot, .btn-ghost) { color: #fff !important; }
-html:is(.dark, :not(.dark)) .auth-card .line-field { border-bottom-color: rgba(255, 255, 255, .75); }
-html:is(.dark, :not(.dark)) .auth-card .line-field input { color: #fff !important; -webkit-text-fill-color: #fff; }
-html:is(.dark, :not(.dark)) .auth-card .line-field input::placeholder { color: #fff !important; opacity: .85; }
-html:is(.dark, :not(.dark)) .auth-card .checkbox { border-color: #fff; }
-html:is(.dark, :not(.dark)) .auth-card .auth-foot { background: rgba(255, 255, 255, .08) !important; }
-html:is(.dark, :not(.dark)) .home-intro :is(h2, p) { color: #fff !important; }
-html:is(.dark, :not(.dark)) .auth-avatar { background: var(--gloss-white); color: #0a0a0b; }
-html.dark :is(.app-search-bar, #appContainer .app-search-bar) input::placeholder { color: #fff !important; opacity: .85; }
-html.dark .app-search-bar input { color: #fff; }
-
-/* ---------- الوضع الداكن: من غير ظلال ---------- */
-html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea),
-html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::before,
-html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input):not(select):not(textarea)::after {
-    box-shadow: none !important;
-    text-shadow: none !important;
-}
-
-/* ---------- الخطوط أكبر (Katibeh صغير بطبيعته فكنت بتظهر صغيرة جوه الكروت) ---------- */
-#appContainer .text-xs { font-size: 1rem !important; line-height: 1.5 !important; }
-#appContainer .text-sm { font-size: 1.2rem !important; line-height: 1.5 !important; }
-#appContainer .text-base { font-size: 1.35rem !important; line-height: 1.5 !important; }
-#appContainer .text-lg { font-size: 1.55rem !important; line-height: 1.45 !important; }
-#appContainer .text-xl { font-size: 1.75rem !important; line-height: 1.4 !important; }
-#appContainer .text-2xl { font-size: 2rem !important; line-height: 1.35 !important; }
-@media (min-width: 640px) {
-    #appContainer .sm\:text-base { font-size: 1.35rem !important; }
-    #appContainer .sm\:text-lg { font-size: 1.55rem !important; }
-}
-#appContainer .btn { font-size: 1.15rem; }
-#appContainer .btn-sm { font-size: 1.1rem; }
-#appContainer .badge { font-size: 1.05rem; }
-#appContainer .badge-lg { font-size: 1.2rem; }
-#appContainer .label-text { font-size: 1.15rem; }
-#appContainer .input, #appContainer .select, #appContainer .textarea, #appContainer .input > input { font-size: 1.2rem; }
-#appContainer .dash-card.compact h3 { font-size: 1.4rem !important; line-height: 1.35; }
-#appContainer .dash-card h3 { font-size: 1.5rem; }
-.home-intro h2 { font-size: 1.2rem; }
-.home-intro p { font-size: 1.05rem; }
-.home-step { font-size: 1rem; }
-.hero-kicker { font-size: 1.05rem; }
-.hero-cap { font-size: 1.15rem; }
-.hero-tag { font-size: 1.1rem; }
-.hero-tile { font-size: .95rem; }
-.hero-stat span { font-size: 1.1rem; }
-.hp-label { font-size: .8em; }
-.phone-stage-cap { font-size: 1.1rem; }
-.hp3-chip, .hp3-collapse { font-size: .9rem; }
-.auth-card h1 { font-size: 1.6rem; }
-.auth-card .line-field input { font-size: 1.1rem; }
-
-/* =====================================================================
-   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Cairo (عربي) وAmiri (إنجليزي)
-   - الظلال الذهبية كانت لسه ظاهرة في الوضع الداكن (قواعد !important أعلى من إصدار 6)، اتشالت من مصدرها فوق.
-   - الشريطين (العلوي والسفلي) والقائمة الجانبية بيستخدموا متغير واحد --bar-bg، فلونهم دايماً واحد في الوضعين.
-   ===================================================================== */
-:root { --bar-bg: #0a0a0b; --bar-solid: #0a0a0b; }
-html.dark, html.dark #appContainer { --p: 96% 0 0; --pc: 14% 0 0; }
-html.dark { --amber: #ffffff; }
-
-/* ---------- الشريطين: لون واحد ثابت في الوضعين ومع أي تغيير ---------- */
-html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu) {
-    background-color: var(--bar-bg) !important;
-    background-image: var(--gloss) !important;
-    border-color: rgba(255, 255, 255, .14) !important;
-    color: #fff;
-}
-html:is(.dark, :not(.dark)) .bottom-nav .bottom-nav-item,
-html:is(.dark, :not(.dark)) .topbar-brand { color: #fff !important; }
-
-/* ---------- حدود الكروت ولوحة العرض: محايدة بدل الذهبي ---------- */
-.phone-stage::after { border-color: rgba(255, 255, 255, .22); }
-.hero { border-color: rgba(255, 255, 255, .14); }
-html:is(.dark, :not(.dark)) :is(.dash-card, .dash-card.feature, .home-intro, .hero, .phone-stage, .modal-box, .photo-sheet-card,
-                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) { border-color: rgba(255, 255, 255, .14) !important; }
-.hero-panel { border-color: rgba(255, 255, 255, .3); background: var(--gloss); }
-.hero-panel::before { background: #bdbdc2; }
-.hero-panel::after { background: linear-gradient(#bdbdc2, #4a4a50); }
-.hp-ico { background: var(--gloss-white); color: #0a0a0b; }
-
-/* ---------- حلقة التركيز: محايدة ---------- */
-html:not(.dark) .input:focus, html:not(.dark) .select:focus, html:not(.dark) .textarea:focus { border-color: #27272a; box-shadow: none; }
-html.dark .input:focus, html.dark .select:focus, html.dark .textarea:focus { border-color: #fff; box-shadow: none; }
-html:not(.dark) .excel-input:focus { background-color: #f1f1f3 !important; box-shadow: inset 0 0 0 2px #27272a !important; }
-html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !important; box-shadow: inset 0 0 0 2px #fff !important; }
-.line-field:focus-within { border-bottom-color: currentColor; }
-
-/* ---------- الوضع الفاتح: من غير التظليل الأسود الخفيف جوه كروت الصور ---------- */
-/* (اتشال السطر اللي كان بيلغي التظليل السفلي في الوضع الفاتح، فالتظليل رجع من بلوك كروت الصور) */
-
-/* ---------- عمود profile_photo_url في شيت المستخدمين: عرض محدود والباقي ... ---------- */
-#editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* ---------- الخط: الإنجليزي Amiri والعربي Cairo (من Google Fonts في index.html) ---------- */
-body, button, input, select, textarea { font-family: 'Amiri', 'Cairo', sans-serif; font-weight: 700; }
-/* بولد في الموقع كله */
-body *:not(svg):not(svg *) { font-weight: 700 !important; }
-#appContainer .text-xs { font-size: .85rem !important; line-height: 1.5 !important; }
-#appContainer .text-sm { font-size: 1rem !important; line-height: 1.5 !important; }
-#appContainer .text-base { font-size: 1.1rem !important; line-height: 1.5 !important; }
-#appContainer .text-lg { font-size: 1.25rem !important; line-height: 1.45 !important; }
-#appContainer .text-xl { font-size: 1.45rem !important; line-height: 1.4 !important; }
-#appContainer .text-2xl { font-size: 1.75rem !important; line-height: 1.35 !important; }
-@media (min-width: 640px) {
-    #appContainer .sm\:text-base { font-size: 1.1rem !important; }
-    #appContainer .sm\:text-lg { font-size: 1.25rem !important; }
-}
-#appContainer .btn { font-size: 1rem; }
-#appContainer .btn-sm { font-size: .95rem; }
-#appContainer .badge { font-size: .9rem; }
-#appContainer .badge-lg { font-size: 1rem; }
-#appContainer .label-text { font-size: 1rem; }
-#appContainer .input, #appContainer .select, #appContainer .textarea, #appContainer .input > input { font-size: 1rem; }
-#appContainer .dash-card.compact h3 { font-size: 1.2rem !important; }
-#appContainer .dash-card h3 { font-size: 1.25rem; }
-/* الاسم على سطرين: العربي فوق والإنجليزي تحته */
-.dash-card .lbl-ar { display:block; font-size:1.05rem; line-height:1.5; }
-.dash-card .lbl-en { display:block; font-size:.95rem; line-height:1.3; opacity:.85; direction:ltr; unicode-bidi:isolate; }
-.home-intro h2 { font-size: 1.05rem; }
-.home-intro p { font-size: .95rem; }
-.home-step { font-size: .85rem; }
-.hero-kicker { font-size: .95rem; }
-.hero-cap, .hero-tag, .hero-stat span { font-size: 1rem; }
-.hero-tile { font-size: .85rem; }
-.hp-label { font-size: .75em; }
-.phone-stage-cap { font-size: 1rem; }
-.hp3-chip, .hp3-collapse { font-size: .85rem; }
-.auth-card h1 { font-size: 1.5rem; }
-.auth-card .line-field input { font-size: 1rem; }
-
-/* =====================================================================
-   الإصدار 8: الوضع الفاتح - كريمي اللوجو (#f6f1e7 = لون شريحة اللوجو brand-chip) بدل الأسود
-   (اسم المتغير --mustard قديم وبقى كريمي.) لتغييره: غيّر --mustard و --mustard-hover و --ink هنا بس.
-   كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
-   ===================================================================== */
-html:not(.dark) {
-    --mustard: #3a332b;          /* بني غامق: لون الشريطين والكروت (هوية الصورة) */
-    --mustard-hover: #463d33;
-    --ink: #fff;                 /* نص أبيض على الأسطح البني */
-    --bar-bg: var(--mustard);
-    --bar-solid: #2e2923;        /* لون شريط المتصفح = بداية تدرج الشريطين */
-}
-html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
-                    .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
-                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    background-color: var(--mustard) !important;
-    background-image: var(--gloss) !important;   /* نفس تدرج السبلاش والهيرو */
-    border-color: rgba(245, 241, 230, .14) !important;
-    --p: 94% .02 85; --pc: 20% .02 70;
-    --b1: 25% .016 70; --b2: 21% .016 70; --b3: 31% .02 70; --bc: 94% .01 85;
-    color: var(--ink) !important;
-}
-html:not(.dark) :is(.dash-card:not(.has-img), .dash-card.feature:not(.has-img)):hover,
-html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-color: var(--mustard-hover) !important; background-image: var(--gloss-hover) !important; }
-html:not(.dark) :is(.dash-card:not(.has-img), .home-intro, .auth-card,
-                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) :is(h1, h2, h3, h4, p, label, .label-text, .text-primary) { color: var(--ink) !important; }
-html:not(.dark) .bottom-nav .bottom-nav-item,
-html:not(.dark) .topbar-brand { color: var(--ink) !important; }
-html:not(.dark) .bottom-nav .bottom-nav-item:hover, html:not(.dark) .bottom-nav .bottom-nav-item:active { color: var(--ink) !important; background: rgba(245, 241, 230, .12); }
-html:not(.dark) .app-search-bar input { color: var(--ink); }
-html:not(.dark) :is(.auth-card, .app-search-bar, #appContainer .app-search-bar) input::placeholder { color: var(--ink) !important; opacity: .6; }
-html:not(.dark) .auth-card :is(.line-field, .line-field svg, .line-field button, .auth-foot, .btn-ghost) { color: var(--ink) !important; }
-html:not(.dark) .auth-card .line-field { border-bottom-color: rgba(245, 241, 230, .6); }
-html:not(.dark) .auth-card .line-field input { color: var(--ink) !important; -webkit-text-fill-color: var(--ink); }
-html:not(.dark) .auth-card .line-field input::placeholder { color: var(--ink) !important; opacity: .6; }
-html:not(.dark) .auth-card .checkbox { border-color: var(--ink); }
-html:not(.dark) .auth-card .auth-foot { background: rgba(245, 241, 230, .08) !important; }
-html:not(.dark) .auth-card .btn-outline { border-color: rgba(245, 241, 230, .6); color: var(--ink) !important; }
-html:not(.dark) :is(.auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-color: #2e2923 !important; background-image: var(--gloss) !important; }
-/* الأزرار الأساسية في الصفحة (برا الأسطح الصفرا) */
-html:not(.dark) #appContainer .btn-primary:not(.btn-outline) { background: var(--gloss) !important; background-color: var(--mustard) !important; border-color: rgba(245, 241, 230, .14) !important; color: var(--ink) !important; }
-
-/* =====================================================================
-   رجوع الظل على كروت الأقسام اللي ليها صورة (الوضعين): تظليل سفلي + ظل خفيف للنص عشان اسم القسم يبان
-   (الـ ID بيخلي القاعدة تغلب على "من غير ظلال" العامة)
-   ===================================================================== */
-html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img {
-    background-image:
-        linear-gradient(to top, rgba(14, 11, 8, .85) 0%, rgba(14, 11, 8, .5) 28%, rgba(14, 11, 8, 0) 58%),
-        var(--card-img) !important;
-}
-html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img :is(h3, p, span, svg) {
-    color: #fff !important;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, .75) !important;
-}
-
-/* =====================================================================
-   الشريط اللي تحت الشريط السفلي (منطقة أزرار/إيماءات النظام): كان بياخد لون خلفية الـ html الغامق (#26211c).
-   في الوضع الفاتح بقى دهبي زي الشريط السفلي. (الوضع الداكن زي ما هو)
-   ===================================================================== */
-html:not(.dark):root[data-theme] { background-color: #645947; }   /* = نهاية التدرج، فشريط الإيماءات يكمّل الشريط السفلي */
-
-/* =====================================================================
-   الإصدار 9: الوضع الفاتح - هوية البني الغامق (رخام بني بيفتح للبرونز + نص كريمي) زي شاشة الافتتاح
-   - الأسطح (الشريطين، الكروت، البحث) = بني #3a332b (--mustard فوق في الإصدار 8)
-   - الهيرو وشاشات الافتتاح والدخول واللوحات = تدرج --gloss (غامق فوق ← برونز تحت)
-   - خلفية الصفحة بيضا زي ما هي. الوضع الداكن ما اتغيّرش.
-   ===================================================================== */
-html:not(.dark) {
-    --gloss: radial-gradient(120% 60% at 100% 0%, rgba(122, 108, 84, .55), transparent 60%),
-             linear-gradient(180deg, #2e2923 0%, #352e26 40%, #54493c 80%, #645947 100%);
-    --gloss-hover: radial-gradient(120% 60% at 100% 0%, rgba(140, 125, 98, .55), transparent 60%),
-                   linear-gradient(180deg, #3a332b 0%, #41392f 40%, #5f5446 80%, #70644f 100%);
-    --gloss-white: linear-gradient(180deg, #f5f1e6 0%, #d9c7a6 100%);
-    --gold-grad: var(--gloss-white);
-    --panel-dark: #2e2923;
-    --panel-mid: #54493c;
-}
-html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #fff; }
-html:not(.dark) .hero-stat b { background: linear-gradient(180deg, #f5f1e6, #d2b98f); -webkit-background-clip: text; background-clip: text; color: transparent; }
-html:not(.dark) .hero-tile { border-color: rgba(217, 199, 166, .4); }
-html:not(.dark) .hero-dot.active, html:not(.dark) .onb-dot.active { background: #f5f1e6; }
-html:not(.dark) .hero-panel::before { background: #d9c7a6; }
-html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #645947); }
-
-/* =====================================================================
-   الإصدار 10: تعديلات الدخول والترحيب والحساب (الوضع الفاتح + الداكن حسب الحالة)
-   ===================================================================== */
-
-/* ---------- لوحة تسجيل الدخول والترحيب: خطوط أكبر ---------- */
-.auth-card h1 { font-size: 2rem; }
-.auth-card .line-field input { font-size: 1.45rem; }
-.auth-card .line-field svg { width: 1.7rem; height: 1.7rem; }
-.auth-card .label-text { font-size: 1.2rem; }
-.auth-card .checkbox { width: 1.6rem; height: 1.6rem; }
-.auth-card .btn { font-size: 1.3rem; min-height: 3.4rem; height: auto; }
-.auth-card .auth-foot { font-size: 1.1rem; }
-@media (min-width: 900px) {
-    .auth-card h1 { font-size: 2.6rem; }
-    .auth-card .line-field input { font-size: 1.8rem; }
-    .auth-card .line-field svg { width: 2rem; height: 2rem; }
-    .auth-card .label-text { font-size: 1.4rem; }
-    .auth-card .btn { font-size: 1.5rem; min-height: 3.8rem; }
-    .auth-card .auth-foot { font-size: 1.3rem; }
-}
-
-/* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
-.auth-card .line-field input[type="password"] {
-    font-family: 'Amiri', 'Cairo', sans-serif;
-}
-
-
-/* =====================================================================
-   حجم الموقع 75%: بيتظبط من index.html
-   ===================================================================== */
-/* (الحجم بقى بالـ viewport في index.html، مش بالـ font-size) */
-
-/* خط خانات الدخول موحّد (رقم الهاتف ورمز المرور) */
-input, button, select, textarea { font-family: inherit; }
-.auth-card .line-field input,
-.auth-card .line-field input[type="password"],
-.auth-card .line-field input[type="text"] {
-    font-family: 'Amiri', 'Cairo', sans-serif !important;
-    font-weight: 700;
-    font-size: 1.4rem;
-    letter-spacing: normal;
-}
-@media (min-width: 900px) {
-    .auth-card .line-field input,
-    .auth-card .line-field input[type="password"],
-    .auth-card .line-field input[type="text"] { font-size: 1.9rem; }
-}
-.auth-card .line-field input::placeholder { font-family: inherit; font-weight: 700; }
-
-/* أيقونة لوحات الترحيب والدخول: جوه البطاقة وماتتقصش */
-.auth-card { padding-top: 1.75rem; }
-.auth-card .auth-avatar { margin: 0 auto .75rem; flex-shrink: 0; }
-
-/* كل بطاقات القوائم (مركز البيانات وغيره) بنفس حجم بطاقات القائمة وحسابي */
-#appContainer .list-card,
-#appContainer #dataCenterContainer > div[onclick] {
-    min-height: 5.9rem;
-    padding: 1.4rem 1.2rem !important;
-    font-size: 1.125rem !important;
-    line-height: 1.5;
-}
-#appContainer .list-card > svg,
-#appContainer #dataCenterContainer > div[onclick] > svg { width: 1.25rem; height: 1.25rem; }
-
-/* لوجو شاشة البداية (Splash): الأحجام هنا، والتناسب (حواف/دائرية) في قسم "مربع اللوجو الموحّد" آخر الملف */
-.splash-logo.logo-tile { --lh: 5.4rem; }
-.splash-brand { font-size: 1.66rem; }   /* = 0.308 × ارتفاع الرسمة (--lh): عرض الكلمة ~ 1.7× عرض المربع الكريمي زي ما كان معتمد */
-/* وضع المتصفح (موقع الكمبيوتر، عرض 900px فأكتر): نفس نسبة وضع الهاتف للشاشة (لوجو ~23% وكلمة ~40% من العرض) */
-@media (min-width: 900px) {
-    .splash-logo.logo-tile { --lh: 10rem; }
-    .splash-brand { font-size: 3.08rem; }   /* نفس النسبة: 0.308 × 6.7rem */
-}
-
-/* شعار الدخول/الترحيب: اللوجو وكلمة ELECTRICITY بس، من غير إطار ولا خلفية حوالين الاتنين */
-html .auth-hero .brand {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-}
-
-/* ثبات أحجام اللوجو (مستقلة عن theme.css): لوجو الهيدر في الدخول/الترحيب بحجمه الطبيعي */
-.logo-img { display: block; width: auto; object-fit: contain; }
-html .auth-hero .brand .logo-img { height: 2rem !important; width: auto !important; max-width: none !important; }
-@media (min-width: 900px) { html .auth-hero .brand .logo-img { height: 2.6rem !important; } }
-html .auth-hero .brand .brand-chip { padding: .3rem .5rem; border-radius: var(--r); display: inline-flex; align-items: center; }
-/* لوجو شاشة البداية فقط (الكبير) */
-.splash-logo.logo-tile { width: auto; height: auto; background: #f6f1e7; }
-
-/* مربع اللوجو الكريمي (brand-chip): مكرر هنا عشان يظهر حتى لو theme.css مش متحمّل */
-.brand-chip { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f6f1e7; border-radius: var(--r); padding: .22rem .4rem; }
-.logo-img { height: 1.45rem; }
-html .auth-hero .brand .brand-chip { background: #f6f1e7; padding: .3rem .5rem; border-radius: var(--r); }
-
-/* لوجو لوحة الترحيب (جوه الدايرة/المربع الكريمي): كبير يملا المربع */
-
-/* أزرار البحث بالصوت والكاميرا: من غير أي حركة/تكبير/تصغير وقت اللمس ولا انتقالات */
-.app-search-bar .btn { transition: none !important; animation: none !important; transform: none !important; }
-.app-search-bar { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-
-/* =====================================================================
-   مربع اللوجو الموحّد: كل مكان فيه شعار الشركة بنفس تناسب مربع الترحيب (hero-stage)
-   --lh = ارتفاع رسمة اللوجو. الحواف الكريمي حوالين الرسمة = 11.35% (فوق/تحت) و14.6% (يمين/شمال) من ارتفاعها،
-   ودرجة دائرية الحواف = 0.6rem ثابتة (var(--r)) زي باقي الموقع. غيّر --lh بس وكل حاجة بتتناسب.
-   ===================================================================== */
-html .brand-chip,
-html .auth-hero .brand .brand-chip,
-html .splash-logo.logo-tile,
-html .auth-avatar.welcome-logo {
-    --lh: 1.45rem;
-    background: #f6f1e7;
-    padding: calc(var(--lh) * .1135) calc(var(--lh) * .146) !important;
-    border-radius: calc(var(--lh) * .0973) !important;   /* = 0.6rem ÷ ارتفاع رسمة الهيرو (6.165rem): نفس نسبة دائرية الهيرو في كل حجم */
-    width: auto; height: auto;
-}
-html .brand-chip .logo-img,
-html .auth-hero .brand .brand-chip .logo-img,
-html .splash-logo.logo-tile .logo-img,
-html .auth-avatar.welcome-logo .logo-img { height: var(--lh) !important; width: auto !important; max-width: none !important; }
-
-html .app-topbar .brand-chip { --lh: 1.6rem; }
-html .auth-hero .brand .brand-chip { --lh: 2rem; }
-html .splash-logo.logo-tile { --lh: 5.4rem; }
-html .auth-avatar.welcome-logo { --lh: 3rem; border: 0; box-shadow: 0 .5rem 1.2rem rgba(0,0,0,.3); }
-@media (min-width: 900px) {
-    html .app-topbar .brand-chip { --lh: 1.9rem; }
-    html .auth-hero .brand .brand-chip { --lh: 2.6rem; }
-    html .splash-logo.logo-tile { --lh: 10rem; }
-}
-
-/* كل كلاسات الدائرية في Tailwind/DaisyUI على نفس القيمة (الدوائر الكاملة rounded-full زي ما هي) */
-.rounded, .rounded-sm, .rounded-md, .rounded-box, .rounded-btn, .rounded-badge { border-radius: var(--r) !important; }
-
-/* =====================================================================
-   توحيد نسب الكلمة (ELECTRICITY) للوجو في كل الأماكن
-   - تحت اللوجو (الهيرو + السبلاش): حجم الكلمة = 0.308 × ارتفاع رسمة اللوجو (--word-k) زي السبلاش
-   - جنب اللوجو (الهيدر + الدخول + القائمة الجانبية): الكلمة أصغر شوية من اللوجو، حجمها = 0.95 × ارتفاع الرسمة
-     (يعني ارتفاع حروفها حوالي 65% من ارتفاع الرسمة) (--word-side-k)
-   - الهيرو: الكريمي والدائرية بنفس نسب باقي اللوجوهات (--hero-lh = ارتفاع رسمة لوجو الهيرو، 8.6rem ÷ 1.3933)
-   لتغيير أي نسبة: غيّر المتغير بس.
-   ===================================================================== */
-:root { --word-k: .308; --word-side-k: .95; }
-
-.hero { --hero-lh: 6.172rem; height: 18.5rem; }
-.hero-stage {
-    padding: calc(var(--hero-lh) * .1135) calc(var(--hero-lh) * .146);
-    border-radius: calc(var(--hero-lh) * .0973);
-}
-.hero-brand { font-size: calc(var(--hero-lh) * var(--word-k)); line-height: 1.2; }
-@media (min-width: 900px) {
-    .hero { --hero-lh: 7.895rem; height: 23rem; }   /* 11rem ÷ 1.3933 */
-    .hero-brand { font-size: calc(var(--hero-lh) * var(--word-k)); }
-}
-
-/* جنب اللوجو: الأرقام هنا = ارتفاع رسمة اللوجو (--lh) في نفس المكان (فوق في قسم "مربع اللوجو الموحّد") */
-html .topbar-brand { font-size: calc(1.6rem * var(--word-side-k)); }
-html .auth-hero .brand { font-size: calc(2rem * var(--word-side-k)); }
-html .side-brand { font-size: calc(1.45rem * var(--word-side-k)); }
-@media (min-width: 900px) {
-    html .topbar-brand { font-size: calc(1.9rem * var(--word-side-k)); }
-    html .auth-hero .brand { font-size: calc(2.6rem * var(--word-side-k)); }
-}
-
-/* =====================================================================
-   شاشة الترحيب: "أهلًا بك في" فوق، وتحتها الشعار (الكلمة + مربع اللوجو) بنفس شكل شعار الهيدر وتباعد حروفه
-   ===================================================================== */
-.welcome-brand { display: flex; align-items: center; justify-content: center; gap: .6rem; letter-spacing: .3em; color: inherit; margin: 0 auto 1rem; font-size: calc(1.5rem * var(--word-side-k)); }
-html .welcome-brand .brand-chip { --lh: 1.5rem; }
-@media (min-width: 900px) {
-    .welcome-brand { font-size: calc(2rem * var(--word-side-k)); }
-    html .welcome-brand .brand-chip { --lh: 2rem; }
-}
-
-/* =====================================================================
-   شاشة الترحيب: أزرار (دخول / الدخول كزائر) أكبر
-   ===================================================================== */
-#appContainer .auth-card .welcome-btn { width: 20rem; max-width: 100%; min-height: 4.4rem; height: auto; font-size: 1.6rem; }
-@media (min-width: 900px) { #appContainer .auth-card .welcome-btn { width: 26rem; min-height: 5rem; font-size: 2rem; } }
-
-/* =====================================================================
-   شاشة تسجيل الدخول: الخانات + تذكرني + زر دخول + الدخول كزائر أكبر
-   ===================================================================== */
-#appContainer #loginFormContainer .line-field { padding: 1rem .5rem; gap: 1rem; }
-#appContainer #loginFormContainer .line-field input,
-#appContainer #loginFormContainer .line-field input[type="password"],
-#appContainer #loginFormContainer .line-field input[type="text"] { font-size: 1.8rem; }
-#appContainer #loginFormContainer .line-field svg { width: 1.7rem; height: 1.7rem; }   /* = حجم مربع تذكرني */
-#appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.15rem; }   /* الكلمات العربي (رقم الهاتف / رمز المرور) أصغر من الأرقام */
-#appContainer #loginFormContainer .label-text { font-size: 1.25rem !important; line-height: 1.4 !important; }   /* تذكرني (!important لأن كلاس text-xs عليها بيفرض .85rem !important) */
-#appContainer #loginFormContainer label.label { padding-inline: .5rem; }   /* نفس مسافة صف رمز المرور، فمربع تذكرني يتحاذى مع علامة العين */
-#appContainer #loginFormContainer .checkbox { width: 1.7rem; height: 1.7rem; }   /* نفس حجم أيقونات الخانات، فبيتحاذى مع علامة العين */
-#appContainer #loginFormContainer .btn-primary { width: 13rem; min-height: 3.6rem; height: auto; font-size: 1.4rem; }
-#appContainer #loginFormContainer .btn-ghost { min-height: 2.8rem; height: auto; font-size: 1.25rem; }
-@media (min-width: 900px) {
-    #appContainer #loginFormContainer .line-field input,
-    #appContainer #loginFormContainer .line-field input[type="password"],
-    #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 2.2rem; }
-    #appContainer #loginFormContainer .line-field svg { width: 2rem; height: 2rem; }
-    #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.5rem; }
-    #appContainer #loginFormContainer .label-text { font-size: 1.5rem !important; }
-    #appContainer #loginFormContainer .checkbox { width: 2rem; height: 2rem; }
-    #appContainer #loginFormContainer .btn-primary { width: 16rem; min-height: 4.2rem; font-size: 1.7rem; }
-    #appContainer #loginFormContainer .btn-ghost { min-height: 3.2rem; font-size: 1.45rem; }
-}
-
-/* =====================================================================
-   الصفحة مكبّرة (utils.js بيضيف is-zoomed): نفك قفل التمرير الرأسي عشان تقدر تحرّك الصفحة لفوق وتحت
-   ===================================================================== */
-html.is-zoomed, html.is-zoomed body { overscroll-behavior: auto !important; }
-html.is-zoomed:has(.auth-screen) { overflow-y: auto !important; }
-
-/* =====================================================================
-   توحيد الألوان (الوضع الفاتح): بدل الأزرق/التيل القديم
-   - أي كتابة على خلفية فاتحة/بيضا = بني الموقع (#3a332b)
-   - أي كتابة على خلفية الموقع البني الذهبي (الشريطين، الكروت، شريط البحث...) = أبيض (مضبوطة فوق في قواعد الأسطح)
-   - ألوان الثيم هنا مكتوبة تاني عشان الموقع ما يرجعش للتيل لو theme.css ما اتحمّلش
-   ===================================================================== */
-[data-theme="electricity-light"] {
-    --p: 33% 0.025 70;   --pc: 98% 0.008 85;
-    --s: 84% 0.012 70;   --sc: 26% 0.02 70;
-    --a: 78% 0.1 85;     --ac: 28% 0.04 80;
-    --n: 31% 0.022 70;   --nc: 97% 0.006 85;
-    --b1: 99% 0.004 85;  --b2: 96% 0.007 85;  --b3: 91% 0.01 70;  --bc: 27% 0.022 70;
-}
-html:not(.dark) #appContainer { --p: 30% 0.03 70; --pc: 98% 0.008 85; --bc: 27% 0.03 70; color: oklch(var(--bc)); }
-
-/* الشاشات القديمة (text-gray-* / text-blue-* / border-gray-*): بنربطها بألوان المنطقة (بني على الأبيض، أبيض على الأسطح البني) */
-html:not(.dark) #appContainer :is(.text-gray-900, .text-gray-800, .text-slate-800) { color: oklch(var(--bc)); }
-html:not(.dark) #appContainer .text-gray-700 { color: oklch(var(--bc) / .9); }
-html:not(.dark) #appContainer .text-gray-600 { color: oklch(var(--bc) / .75); }
-html:not(.dark) #appContainer :is(.text-gray-500, .text-slate-500) { color: oklch(var(--bc) / .6); }
-html:not(.dark) #appContainer :is(.text-gray-400, .text-slate-400) { color: oklch(var(--bc) / .5); }
-html:not(.dark) #appContainer :is(.text-blue-600, .text-blue-700) { color: oklch(var(--p)); }
-html:not(.dark) #appContainer :is(.border-gray-100, .border-gray-200) { border-color: oklch(var(--b3)); }
-html:not(.dark) #appContainer :is(.border-gray-300, .border-slate-300) { border-color: oklch(var(--bc) / .25); }
-
-/* لافتة "فيه تحديث جديد" / "عاد الاتصال": بني الموقع بدل التيل */
-.conn-banner.online { background: #3a332b; color: #fff; }
-
-/* شيت الإكسل (الوضع الفاتح): ألوان بني/كريمي بدل التيل */
-html:not(.dark) #editableUsersTable th, html:not(.dark) #editableUsersTable td { border-color: #ddd2ba; }
-html:not(.dark) #editableUsersTable th { background-color: #efe6d1; color: #3a332b; }
-html:not(.dark) .excel-input { color: #3a332b; }
-html:not(.dark) .excel-input:focus { background-color: #f6f1e7 !important; box-shadow: inset 0 0 0 2px #3a332b !important; }
-html:not(.dark) .drag-handle { background-color: #3a332b; }
-
-/* خانة البحث (الخانة الجوّانية بتاعة "ابحث"): أفتح من شريط البحث، والكلمة والأيقونة والكتابة بيضا */
-html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input {
-    background-color: rgba(255, 255, 255, .22) !important;
-    background-image: none !important;
-    border-color: rgba(255, 255, 255, .3) !important;
-}
-html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input { color: #fff !important; -webkit-text-fill-color: #fff; }
-html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input::placeholder { color: #fff !important; opacity: 1 !important; }
-html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input svg { color: #fff; opacity: .9; }
-
-/* =====================================================================
-   نافذة تأكيد الخروج: تأكيد خروج = زي زر "دخول" (أسود/بني لامع)، وإلغاء = زي زر "الدخول كزائر" (كريمي)
-   ===================================================================== */
-/* مهم: السيلكتور هنا أقوى (specificity) من قاعدة أزرار الـ modal-box العامة اللي بتخلّي الزر كريمي، عشان البني يكسب */
-html:is(.dark, :not(.dark)) body #logoutConfirmModal.modal.modal-open .modal-box .btn.btn-primary:not(.btn-outline) {
-    background: var(--gloss) !important;
-    background-color: #3a332b !important;
-    border-color: rgba(245, 241, 230, .14) !important;
-    color: #fff !important;
-}
-html:is(.dark, :not(.dark)) body #logoutConfirmModal.modal.modal-open .modal-box .btn.btn-primary:not(.btn-outline):hover {
-    background: var(--gloss-hover) !important;
-    background-color: #463d33 !important;
-}
-html:is(.dark, :not(.dark)) #logoutConfirmModal .modal-box .btn-outline.btn-primary {
-    background: var(--gloss-white) !important;
-    background-color: #e9dfca !important;
-    border-color: rgba(245, 241, 230, .6) !important;
-    color: #2b2621 !important;
-}
-
-/* كارت تأكيد الخروج: أكبر (العرض والـ padding والعنوان والأزرار) */
-html #logoutConfirmModal .modal-box { max-width: 26rem !important; width: 90%; padding: 2.25rem 1.75rem 2rem; }
-html #logoutConfirmModal .modal-box h3 { font-size: 1.6rem; line-height: 1.4; margin-bottom: 2rem; }
-html #logoutConfirmModal .modal-box .btn { min-height: 3.6rem; height: auto; font-size: 1.2rem; }
-html #logoutConfirmModal .modal-box .flex { gap: 1rem; }
-
-/* صورة "تذكرني" داخل دايرة الأفاتار في شاشة الدخول */
-.auth-avatar > img.remembered-photo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-
-/* =====================================================================
-   عارض الصورة الشخصية (ملء الشاشة، خلفية سودا) + قائمة التعديل (الكاميرا / المعرض)
-   ===================================================================== */
-.photo-viewer { position: fixed; inset: 0; z-index: 90; background: #000; color: #fff; display: flex; flex-direction: column; }
-.photo-viewer-bar { display: flex; align-items: center; gap: .5rem; padding: calc(.9rem + env(safe-area-inset-top)) 1rem .9rem; }
-.photo-viewer-title { flex: 1; text-align: start; font-size: 1.25rem; font-weight: 700; color: #fff; }
-.photo-viewer-btn { width: 2.9rem; height: 2.9rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: #fff; background: transparent; }
-.photo-viewer-btn:active { background: rgba(255, 255, 255, .16); }
-.photo-viewer-btn svg { width: 1.7rem; height: 1.7rem; }
-.photo-viewer-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding-bottom: env(safe-area-inset-bottom); }
-.photo-viewer-img { width: 100%; max-width: 40rem; display: flex; align-items: center; justify-content: center; }
-.photo-viewer-img img { display: block; width: 100%; max-height: 100%; object-fit: contain; }
-.photo-viewer-img span { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; background: #3a332b; color: #fff; font-size: 7rem; font-weight: 700; }
-
-.photo-edit-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); display: flex; align-items: flex-end; justify-content: center; }
-.photo-edit-card { width: 100%; max-width: 34rem; background: #fcfbf7; color: #2b2621; border-radius: 1.75rem 1.75rem 0 0; padding: .75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); animation: sheetUp .25s ease; }
-.photo-edit-handle { width: 2.75rem; height: .3rem; border-radius: 9999px; background: #bdb8ad; margin: 0 auto .9rem; }
-.photo-edit-head { display: flex; align-items: center; gap: .5rem; }
-.photo-edit-head h3 { flex: 1; text-align: center; font-size: 1.3rem; font-weight: 700; color: #2b2621 !important; }
-.photo-edit-iconbtn { width: 2.9rem; height: 2.9rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: #2b2621; background: transparent; }
-.photo-edit-iconbtn svg { width: 1.6rem; height: 1.6rem; }
-.photo-edit-iconbtn:active { background: rgba(0, 0, 0, .07); }
-.photo-edit-iconbtn.armed { color: #b91c1c; background: rgba(185, 28, 28, .12); }
-.photo-edit-hidden { visibility: hidden; pointer-events: none; }
-.photo-edit-card .photo-status { margin: .35rem 0 .25rem; }
-.photo-edit-row { display: flex; align-items: center; gap: 1.25rem; width: 100%; padding: 1.1rem .5rem; font-size: 1.2rem; text-align: start; color: #2b2621; background: transparent; border-radius: .75rem; }
-.photo-edit-row svg { width: 1.8rem; height: 1.8rem; color: #5b554b; flex-shrink: 0; }
-.photo-edit-row:active { background: rgba(0, 0, 0, .06); }
-.photo-edit-row:disabled, .photo-edit-iconbtn:disabled { opacity: .5; }
+// ================= الهيدر العلوي (DaisyUI navbar) =================
+// showSearch: يظهر البحث (كتابة / صوت / كاميرا) فقط داخل رحلة "شراء قطع الغيار"
+function getHeaderTemplate(showSearch = false) {
+    const headerHtml = `
+        <header class="app-topbar flex-shrink-0${showSearch ? ' has-search' : ''}">
+            <div class="navbar min-h-0 p-0 gap-3">
+                <div class="flex flex-1 min-w-0 items-center justify-center gap-2.5 topbar-center">
+                    <span class="topbar-brand">ELECTRICITY</span>
+                    <span class="brand-chip">${logoImg()}</span>
+                </div>
+            </div>
+        </header>
+    `;
+    // showSearch === true: البحث شريط منفصل تحت الهيدر (بيفضل ثابت فوق وانت بتنزل)
+    // showSearch === 'home': الهيدر بس (والبحث بيتحط في الرئيسية تحت مجسم التليفون)
+    renderBottomNav();   // الشريط السفلي (الرئيسية / القائمة / الإعدادات / حسابي)
+    return showSearch === true ? headerHtml + getSearchBarHtml() : headerHtml;
+}
+
+// ================= شريط البحث (كتابة / صوت / كاميرا) =================
+function getSearchBarHtml() {
+    return `
+            <div class="search-sentinel" aria-hidden="true"></div>
+            <div class="app-search-bar">
+                <label class="input input-bordered flex items-center gap-2 flex-1 min-w-0 bg-base-100">
+                    ${uiIcon('search', 'w-4 h-4 opacity-60')}
+                    <input type="text" class="grow w-0 min-w-0" placeholder="ابحث" aria-label="ابحث">
+                </label>
+                <button type="button" onclick="alert('جارِ الاستماع للصوت...فعل ميكروفون المتصفح')" class="btn btn-outline btn-square" title="بحث صوتي" aria-label="بحث صوتي">
+                    ${uiIcon('mic', 'w-5 h-5')}
+                </button>
+                <button type="button" onclick="alert('جارِ فتح الكاميرا للمسح الضوئي...')" class="btn btn-outline btn-square" title="بحث بالكاميرا" aria-label="بحث بالكاميرا">
+                    ${uiIcon('camera', 'w-5 h-5')}
+                </button>
+            </div>
+    `;
+}
+
+// ================= أيقونة عنصر القائمة الجانبية =================
+function menuIconFor(item) {
+    if (item.includes('البيانات الشخصية')) return 'user';
+    if (item.includes('المستخدمين')) return 'users';
+    if (item.includes('مركز البيانات')) return 'database';
+    if (item.includes('الإعدادات')) return 'cog';
+    if (item.includes('المنتجات')) return 'tag';
+    if (item.includes('خروج')) return 'logout';
+    return 'bolt';
+}
+
+// ================= القائمة الجانبية الديناميكية (DaisyUI menu) =================
+// القائمة الجانبية القديمة اتلغت (القائمة بقت صفحة من الشريط السفلي). الدالة فاضية عشان الشاشات القديمة بتناديها.
+function loadDynamicMenuIntoSidebar() {}
+
+// ================= صفحة القائمة =================
+// البيانات الشخصية + الإعدادات العامة + تسجيل الخروج اتنقلوا للشريط السفلي، فهنا مجرد تنبيه.
+async function renderMenuScreen() {
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex items-center mb-4 flex-shrink-0">
+            <h2 class="text-sm sm:text-base font-bold text-base-content">القائمة</h2>
+        </div>
+        <div id="menuPageContent" class="flex-1 p-1">
+            <div class="text-center text-base-content/50 text-sm py-8"><span class="loading loading-dots loading-sm"></span></div>
+        </div>
+    `;
+    const box = document.getElementById('menuPageContent');
+
+    try {
+        const { data, error } = await supabaseClient.rpc('get_main_menu', { p_user_id: currentUserId });
+        if (error) {
+            box.innerHTML = `<div class="text-center text-error text-sm py-4">تعذر تحميل القائمة</div>`;
+            return;
+        }
+
+        let menuItems = [];
+        if (Array.isArray(data)) {
+            menuItems = data;
+        } else if (typeof data === 'string') {
+            try { menuItems = JSON.parse(data); } catch (e) {}
+        }
+
+        if (!menuItems || menuItems.length === 0) {
+            box.innerHTML = `<div class="text-center text-base-content/50 text-sm py-4">لا توجد عناصر متاحة</div>`;
+            return;
+        }
+
+        box.innerHTML = `<div class="flex flex-col gap-3 pb-4">` + menuItems.map(item => {
+            let clickAction = `alert(${jsArg(item)})`;
+            if (item.includes('بيانات المستخدمين')) {
+                clickAction = "renderUserProfilesScreen()";
+            } else if (item.includes('مركز البيانات')) {
+                clickAction = "renderDataCenterScreen()";
+            } else if (item.includes('مركز العمليات')) {
+                clickAction = "renderOperationCenterScreen()";
+            } else if (item.includes('المنتجات المعروضة للبيع')) {
+                clickAction = "renderMyProductsScreen()";
+            }
+            return menuListCardHtml(item, clickAction);
+        }).join('') + `</div>`;
+    } catch (err) {
+        box.innerHTML = `<div class="text-center text-error text-sm py-4">خطأ في الاتصال</div>`;
+    }
+}
+
+// ================= الإعدادات (من الشريط السفلي) =================
+function openSettingsScreen() {
+    if (typeof renderGeneralSettingsScreen === 'function') renderGeneralSettingsScreen();
+    else alert('الإعدادات العامة');
+}
+
+// ================= صفحة حسابي: الصورة + البيانات الشخصية + تسجيل الخروج =================
+function openAccountScreen() {
+    if (!currentUserId) { renderLoginScreen(); return; }   // الزائر: يروح لشاشة الدخول
+    renderAccountScreen();
+}
+
+function renderAccountScreen() {
+    // نفس كارت قوائم مركز البيانات بالظبط (menuListCardHtml): نفس الحجم والخط، من غير أيقونة
+    const card = (icon, label, action) => menuListCardHtml(label, action);
+    const avatar = typeof profileAvatarHtml === 'function'
+        ? profileAvatarHtml()
+        : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${escapeHtmlValue(String(currentUserName || '').trim().charAt(0))}</span></div></div>`;
+
+    document.getElementById('appContainer').innerHTML = `
+        ${getHeaderTemplate()}
+        <div class="flex-1 p-1 flex flex-col items-center gap-4 pt-2">
+            <button type="button" class="user-avatar-btn user-avatar-lg" onclick="openProfilePhotoSheet()" aria-label="عرض الصورة الشخصية">${avatar}</button>
+            <div class="text-center">
+                <div class="font-bold text-lg acct-name" dir="auto">${escapeHtmlValue(currentUserName)}</div>
+                ${currentUserRole ? `<div class="text-sm acct-meta text-base-content/70" dir="auto">${escapeHtmlValue(currentUserRole)}</div>` : ''}
+                ${currentUserPhone ? `<div class="text-sm acct-meta text-base-content/70" dir="ltr">${escapeHtmlValue(currentUserPhone)}</div>` : ''}
+            </div>
+            <div class="w-full flex flex-col gap-3 pb-4">
+                ${card('user', 'البيانات الشخصية', 'renderPersonalProfileScreen()')}
+                ${card('cog', 'الإعدادات العامة', 'openSettingsScreen()')}
+                ${card('logout', 'تسجيل خروج', 'logoutUser()')}
+            </div>
+        </div>
+    `;
+}
+
+// ================= الشريط السفلي: الرئيسية | القائمة | حسابي (الإعدادات جوه حسابي) =================
+function renderBottomNav() {
+    const nav = document.querySelector('.bottom-nav');
+    if (!nav) return;
+    const loggedIn = !!(currentUserId && currentUserName);
+    const avatar = loggedIn
+        ? (typeof profileAvatarHtml === 'function' ? profileAvatarHtml() : uiIcon('user', 'w-6 h-6'))
+        : ((typeof rememberedAvatarHtml === 'function' && rememberedAvatarHtml()) || uiIcon('user', 'w-6 h-6'));   // مفيش حد داخل: صورة "تذكرني" لو موجودة
+    nav.innerHTML = `
+        <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        </button>
+        <button type="button" onclick="renderMenuScreen()" class="bottom-nav-item" aria-label="القائمة">
+            ${uiIcon('menu', 'w-6 h-6')}
+        </button>
+        <button type="button" onclick="openAccountScreen()" class="bottom-nav-item" aria-label="حسابي">
+            <span class="user-avatar-btn">${avatar}</span>
+        </button>
+    `;}
+function filterSideMenu(q) {
+    q = (q || '').trim();
+    document.querySelectorAll('#sidebarContent .side-item').forEach(el => {
+        el.style.display = !q || (el.dataset.label || '').includes(q) ? '' : 'none';
+    });
+}
+
+
+// ================= ارتفاع الهيدر الثابت (عشان شريط البحث يتعلق تحته مباشرة) =================
+(function () {
+    function syncTopbarHeight() {
+        const bar = document.querySelector('#appContainer .app-topbar');
+        if (bar) document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight + 'px');
+    }
+    const host = document.getElementById('appContainer');
+    if (host) new MutationObserver(syncTopbarHeight).observe(host, { childList: true });
+    window.addEventListener('resize', syncTopbarHeight);
+    window.addEventListener('load', syncTopbarHeight);
+    syncTopbarHeight();
+})();
+
+
+// ================= الهيدر يختفي لما شريط البحث يوصله (بمسافة واضحة بينهم) =================
+// بينفع في الرئيسية وشاشات الرحلات (اللي فيها شريط بحث). شريط البحث بيفضل ثابت تحت الهيدر بمسافة GAP،
+// ولما يوصل للمسافة دي الهيدر بيبدأ يختفي وشريط البحث بيطلع مكانه، ولما ترجع لفوق الهيدر بيرجع.
+(function () {
+    const GAP = 6;   // المسافة بين الهيدر وشريط البحث وهو ثابت (قريب جداً من غير ما يلزق)
+    let ticking = false;
+    function update() {
+        ticking = false;
+        const bar = document.querySelector('#appContainer .app-topbar');
+        if (!bar) return;
+        const sentinel = document.querySelector('#appContainer .search-sentinel');
+        const root = document.documentElement;
+        if (!sentinel) {
+            bar.classList.remove('topbar-hidden');
+            root.style.removeProperty('--search-top');
+            return;
+        }
+        const h = bar.offsetHeight;
+        // هستريسيس: الهيدر يختفي عند h+GAP، ومايرجعش إلا لما نبعد عن الحد ده بـ 24px (عشان الشريط والأزرار ما يرعشوش عند الحد)
+        const wasHidden = bar.classList.contains('topbar-hidden');
+        const top = sentinel.getBoundingClientRect().top;
+        const scrolled = (window.scrollY || document.documentElement.scrollTop || 0) > 2;
+        const hide = scrolled && (wasHidden ? top <= h + GAP + 24 : top <= h + GAP);
+        bar.classList.toggle('topbar-hidden', hide);
+        root.style.setProperty('--search-top', hide ? '.5rem' : (h + GAP) + 'px');
+    }
+    function schedule() {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }
+    window.addEventListener('scroll', schedule, { passive: true, capture: true });
+    window.addEventListener('resize', schedule);
+    const host = document.getElementById('appContainer');
+    if (host) new MutationObserver(schedule).observe(host, { childList: true });
+    schedule();
+})();
