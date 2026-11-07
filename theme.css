@@ -1061,8 +1061,8 @@ html.dark:root[data-theme] { background-color: #111113; }
    تمرير عادي للصفحة كلها (زي المواقع العادية): الهيدر والشريط السفلي لازقين (sticky)،
    والتحديث بالسحب من فوق بيتعمل بالمتصفح نفسه. بيشتغل بس على الشاشات اللي فيها هيدر.
    ===================================================================== */
-html:has(#appContainer .app-topbar) { height:auto !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior-y:auto !important; }
-html:has(#appContainer .app-topbar) body { height:auto !important; min-height:100%; overflow:visible !important; overscroll-behavior-y:auto !important; }
+html:has(#appContainer .app-topbar) { height:auto !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior-y:contain !important; }
+html:has(#appContainer .app-topbar) body { height:auto !important; min-height:100%; overflow:visible !important; overscroll-behavior-y:contain !important; }
 html:has(#appContainer .app-topbar) main { height:auto !important; min-height:100dvh; overflow-x:clip !important; overflow-y:visible !important; }
 html:has(#appContainer .app-topbar) #appContainer { flex:1 0 auto !important; min-height:0; overflow-x:clip !important; overflow-y:visible !important; }
 html:has(#appContainer .app-topbar) #appContainer > .overflow-y-auto,
@@ -1832,4 +1832,4 @@ html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #64594
 
 /* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
 .auth-card .line-field input[type="password"] {
-    font-family: Arial, sans-seri
+    font-family: Arial, san
