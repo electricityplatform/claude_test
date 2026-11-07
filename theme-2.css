@@ -1074,9 +1074,9 @@ html .welcome-brand .brand-chip { --lh: 1.5rem; }
 #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 1.8rem; }
 #appContainer #loginFormContainer .line-field svg { width: 2.2rem; height: 2.2rem; }
 #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.15rem; }   /* الكلمات العربي (رقم الهاتف / رمز المرور) أصغر من الأرقام */
-#appContainer #loginFormContainer .label-text { font-size: 1.5rem !important; line-height: 1.4 !important; }   /* تذكرني (!important لأن كلاس text-xs عليها بيفرض .85rem !important) */
+#appContainer #loginFormContainer .label-text { font-size: 1.25rem !important; line-height: 1.4 !important; }   /* تذكرني (!important لأن كلاس text-xs عليها بيفرض .85rem !important) */
 #appContainer #loginFormContainer label.label { padding-inline: .5rem; }   /* نفس مسافة صف رمز المرور، فمربع تذكرني يتحاذى مع علامة العين */
-#appContainer #loginFormContainer .checkbox { width: 2.2rem; height: 2.2rem; }   /* = حجم علامة العين */
+#appContainer #loginFormContainer .checkbox { width: 1.7rem; height: 1.7rem; margin-inline-start: .25rem; }   /* مركزه على نفس خط علامة العين (2.2rem) */
 #appContainer #loginFormContainer .btn-primary { width: 15rem; min-height: 4.4rem; height: auto; font-size: 1.7rem; }
 #appContainer #loginFormContainer .btn-ghost { min-height: 3.4rem; height: auto; font-size: 1.5rem; }
 @media (min-width: 900px) {
@@ -1085,8 +1085,8 @@ html .welcome-brand .brand-chip { --lh: 1.5rem; }
     #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 2.2rem; }
     #appContainer #loginFormContainer .line-field svg { width: 2.5rem; height: 2.5rem; }
     #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.5rem; }
-    #appContainer #loginFormContainer .label-text { font-size: 1.8rem !important; }
-    #appContainer #loginFormContainer .checkbox { width: 2.5rem; height: 2.5rem; }
+    #appContainer #loginFormContainer .label-text { font-size: 1.5rem !important; }
+    #appContainer #loginFormContainer .checkbox { width: 2rem; height: 2rem; margin-inline-start: .25rem; }
     #appContainer #loginFormContainer .btn-primary { width: 19rem; min-height: 5rem; font-size: 2rem; }
     #appContainer #loginFormContainer .btn-ghost { min-height: 3.8rem; font-size: 1.7rem; }
 }
@@ -1141,3 +1141,19 @@ html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input {
 html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input { color: #fff !important; -webkit-text-fill-color: #fff; }
 html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input::placeholder { color: #fff !important; opacity: 1 !important; }
 html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input svg { color: #fff; opacity: .9; }
+
+/* =====================================================================
+   نافذة تأكيد الخروج: تأكيد خروج = زي زر "دخول" (أسود/بني لامع)، وإلغاء = زي زر "الدخول كزائر" (كريمي)
+   ===================================================================== */
+html:is(.dark, :not(.dark)) #logoutConfirmModal .modal-box .btn-primary:not(.btn-outline) {
+    background: var(--gloss) !important;
+    background-color: #3a332b !important;
+    border-color: rgba(245, 241, 230, .14) !important;
+    color: #f5f1e6 !important;
+}
+html:is(.dark, :not(.dark)) #logoutConfirmModal .modal-box .btn-outline.btn-primary {
+    background: var(--gloss-white) !important;
+    background-color: #e9dfca !important;
+    border-color: rgba(245, 241, 230, .6) !important;
+    color: #2b2621 !important;
+}
