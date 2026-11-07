@@ -11,8 +11,8 @@ function renderLoginScreen() {
                 <h1 class="text-center font-bold text-lg text-primary mb-4">تسجيل الدخول</h1>
                 <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)" class="flex flex-col gap-2" autocomplete="off">
                     <div class="line-field">
-                        ${uiIcon('device', 'w-5 h-5')}
                         <input type="text" id="loginPhone" required inputmode="tel" autocomplete="off" placeholder="رقم الهاتف" oninput="syncRememberedLogin()" dir="ltr">
+                        ${uiIcon('device', 'w-5 h-5')}
                     </div>
                     <div class="line-field">
                         <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" aria-label="إظهار أو إخفاء رمز المرور">${eye}</button>
