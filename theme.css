@@ -1720,16 +1720,16 @@ body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex San
 .auth-card .line-field input { font-size: 1rem; }
 
 /* =====================================================================
-   الإصدار 8: الوضع الفاتح - أصفر السرير (mustard) بدل الأسود
-   اللون متاخد من صورة السرير. لتغييره: غيّر --mustard و --mustard-hover و --ink هنا بس.
+   الإصدار 8: الوضع الفاتح - كريمي اللوجو (#f6f1e7 = لون شريحة اللوجو brand-chip) بدل الأسود
+   (اسم المتغير --mustard قديم وبقى كريمي.) لتغييره: غيّر --mustard و --mustard-hover و --ink هنا بس.
    كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
    ===================================================================== */
 html:not(.dark) {
-    --mustard: #c9961f;
-    --mustard-hover: #d6a62c;
+    --mustard: #f6f1e7;
+    --mustard-hover: #ece4d2;
     --ink: #24190a;
     --bar-bg: var(--mustard);
-    --bar-solid: #c9961f;
+    --bar-solid: #f6f1e7;
 }
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
                     .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
