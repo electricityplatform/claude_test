@@ -96,10 +96,10 @@ async function renderMenuScreen() {
                 clickAction = "renderMyProductsScreen()";
             }
             return `
-                <button type="button" onclick="${clickAction}" class="dash-card feature teal-floral">
+                <button type="button" onclick="${clickAction}" class="dash-card feature teal-floral row-card">
                     <div class="dash-ico">${uiIcon(menuIconFor(item), 'w-6 h-6')}</div>
                     <div class="flex-1 min-w-0 relative">
-                        <h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(item)}</h3>
+                        <h3 class="font-bold" dir="auto">${escapeHtmlValue(item)}</h3>
                     </div>
                     ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
                 </button>`;
@@ -123,9 +123,9 @@ function openAccountScreen() {
 
 function renderAccountScreen() {
     const card = (icon, label, action) => `
-        <button type="button" onclick="${action}" class="dash-card feature teal-floral">
+        <button type="button" onclick="${action}" class="dash-card feature teal-floral row-card">
             <div class="dash-ico">${uiIcon(icon, 'w-6 h-6')}</div>
-            <div class="flex-1 min-w-0 relative"><h3 class="font-bold text-lg" dir="auto">${label}</h3></div>
+            <div class="flex-1 min-w-0 relative"><h3 class="font-bold" dir="auto">${label}</h3></div>
             ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
         </button>`;
     const avatar = typeof profileAvatarHtml === 'function'
