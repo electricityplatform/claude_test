@@ -50,7 +50,7 @@ function renderOnboardingScreen(done, index = 0) {
         <div class="auth-screen">
             <button type="button" class="intro-skip" onclick="finishOnboarding()">تخطي</button>
             <div class="auth-hero teal-floral">
-                <div class="brand"><span class="brand-chip">${logoImg()}</span><span>ELECTRICITY</span></div>
+                <div class="brand"><span>ELECTRICITY</span><span class="brand-chip">${logoImg()}</span></div>
             </div>
             <div class="auth-card">
                 <div class="auth-avatar">${uiIcon(s.icon, 'w-9 h-9')}</div>
@@ -85,12 +85,12 @@ function renderWelcomeScreen() {
     document.getElementById('appContainer').innerHTML = `
         <div class="auth-screen">
             <div class="auth-hero teal-floral">
-                <div class="brand"><span class="brand-chip">${logoImg()}</span><span>ELECTRICITY</span></div>
+                <div class="brand"><span>ELECTRICITY</span><span class="brand-chip">${logoImg()}</span></div>
             </div>
             <div class="auth-card">
-                <div class="auth-avatar">${uiIcon('bolt', 'w-9 h-9')}</div>
+                <div class="auth-avatar welcome-logo">${logoImg()}</div>
                 <h1 class="text-center font-bold text-lg text-primary mb-2">أهلاً بك في Electricity</h1>
-                <p class="text-center text-sm text-base-content/70 mb-6 px-2">منصتك لقطع غيار الهواتف: أسعار التجار، التوافقات، وملاحظات التركيب.</p>
+                <div class="mb-6"></div>
                 <div class="flex flex-col items-center gap-3">
                     <button type="button" class="btn btn-primary w-64" onclick="showLoginFromWelcome()">دخول</button>
                     <button type="button" class="btn btn-outline btn-primary w-64" onclick="loginAsVisitor()">الدخول كزائر</button>
@@ -130,7 +130,6 @@ function homeIntroHtml() {
     return `
         <div id="homeIntro" class="home-intro">
             <h2 class="font-bold text-base text-primary">أهلاً بك في Electricity</h2>
-            <p class="text-sm text-base-content/70 mt-1">منصتك لقطع غيار الهواتف: قارن أسعار التجار، وتعرّف على التوافقات، وراجع ملاحظات التركيب.</p>
             <div class="home-steps">
                 <span class="home-step"><b>١</b>اختر الماركة</span>
                 <span class="home-step"><b>٢</b>اختر الموديل</span>
