@@ -91,12 +91,7 @@ async function fetchAndDisplayDataCenterMenu() {
                     clickAction = "renderAlertsBrandsScreen()";
                 }
 
-                return `
-                    <div onclick="${clickAction}" class="w-full ${style.bg} border ${style.border} p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all text-sm sm:text-base group">
-                        <span class="font-bold text-base-content" dir="auto">${item}</span>
-                        <svg class="w-5 h-5 ${style.icon} flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </div>
-                `;
+                return menuListCardHtml(item, clickAction);
             }).join('');
         } else {
             dataCenterContainer.innerHTML = `<div class="text-center text-base-content/60 py-12 bg-base-200 rounded-2xl border border-base-300"><p class="font-semibold">لا توجد عناصر متاحة أو ليس لديك صلاحية العرض</p></div>`;
