@@ -122,7 +122,7 @@ function logoutUser() {
         <div class="modal-box max-w-xs text-center">
             <h3 class="font-bold text-lg mb-5">تأكيد الخروج</h3>
             <div class="flex gap-3 justify-center">
-                <button type="button" class="btn btn-error text-white flex-1" onclick="confirmLogout()">تأكيد خروج</button>
+                <button type="button" class="btn btn-site flex-1" onclick="confirmLogout()">تأكيد خروج</button>
                 <button type="button" class="btn btn-ghost flex-1" onclick="closeLogoutConfirm()">إلغاء</button>
             </div>
         </div>
