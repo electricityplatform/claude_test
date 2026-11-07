@@ -95,14 +95,7 @@ async function renderMenuScreen() {
             } else if (item.includes('المنتجات المعروضة للبيع')) {
                 clickAction = "renderMyProductsScreen()";
             }
-            return `
-                <button type="button" onclick="${clickAction}" class="dash-card feature teal-floral">
-                    <div class="dash-ico">${uiIcon(menuIconFor(item), 'w-6 h-6')}</div>
-                    <div class="flex-1 min-w-0 relative">
-                        <h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(item)}</h3>
-                    </div>
-                    ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
-                </button>`;
+            return menuListCardHtml(item, clickAction);
         }).join('') + `</div>`;
     } catch (err) {
         box.innerHTML = `<div class="text-center text-error text-sm py-4">خطأ في الاتصال</div>`;
