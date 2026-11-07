@@ -1048,3 +1048,13 @@ html .side-brand { font-size: calc(1.45rem * var(--word-side-k)); }
     html .topbar-brand { font-size: calc(1.9rem * var(--word-side-k)); }
     html .auth-hero .brand { font-size: calc(2.6rem * var(--word-side-k)); }
 }
+
+/* =====================================================================
+   شاشة الترحيب: "أهلًا بك في" فوق، وتحتها الشعار (الكلمة + مربع اللوجو) بنفس شكل شعار الهيدر وتباعد حروفه
+   ===================================================================== */
+.welcome-brand { display: flex; align-items: center; justify-content: center; gap: .6rem; letter-spacing: .3em; color: inherit; margin: 0 auto 1rem; font-size: calc(2rem * var(--word-side-k)); }
+html .welcome-brand .brand-chip { --lh: 2rem; }
+@media (min-width: 900px) {
+    .welcome-brand { font-size: calc(2.6rem * var(--word-side-k)); }
+    html .welcome-brand .brand-chip { --lh: 2.6rem; }
+}
