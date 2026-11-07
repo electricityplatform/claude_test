@@ -463,3 +463,18 @@ function emptyTableRowHtml(colspan, message) {
         }
     });
 })();
+
+
+// ================= علامة "الصفحة مكبّرة" =================
+// لما الصفحة تتكبّر (Pinch zoom) بنضيف كلاس is-zoomed على html، والـ CSS بيستخدمه عشان يفك قفل التمرير الرأسي
+// (شاشات الدخول والترحيب فيها overscroll-behavior-y:none و overflow:hidden، وده كان بيمنع تحريك الصفحة المكبّرة لفوق وتحت).
+(function trackZoom() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    function update() { root.classList.toggle('is-zoomed', vv.width < root.clientWidth - 1); }
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+    update();
+})();
