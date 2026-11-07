@@ -231,7 +231,8 @@ function emptyTableRowHtml(colspan, message) {
 
     document.addEventListener('touchstart', function (e) {
         pulling = false;
-        if (!isStandalone) return;
+        // شاشات الدخول/الترحيب الصفحة فيها مبتتحركش، فالمتصفح ما بيحدّثش بالسحب: بنفعّله بإيدينا هناك
+        if (!isStandalone && !document.querySelector('#appContainer .auth-screen')) return;
         if (e.touches.length !== 1) return;
         const t = e.target;
         if (t.closest && t.closest('input, textarea, select, #sideMenu')) return;
