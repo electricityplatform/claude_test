@@ -1682,7 +1682,7 @@ html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !import
 .line-field:focus-within { border-bottom-color: currentColor; }
 
 /* ---------- الوضع الفاتح: من غير التظليل الأسود الخفيف جوه كروت الصور ---------- */
-html:not(.dark) #appContainer .dash-card.has-img { background-image: var(--card-img) !important; }
+/* (اتشال السطر اللي كان بيلغي التظليل السفلي في الوضع الفاتح، فالتظليل رجع من بلوك كروت الصور) */
 
 /* ---------- عمود profile_photo_url في شيت المستخدمين: عرض محدود والباقي ... ---------- */
 #editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1725,11 +1725,11 @@ body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex San
    كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
    ===================================================================== */
 html:not(.dark) {
-    --mustard: #f6f1e7;
-    --mustard-hover: #ece4d2;
+    --mustard: #e7c983;          /* أصفر مينا ساعة رولكس (شمبانيا ذهبي) */
+    --mustard-hover: #dcbb70;
     --ink: #24190a;
     --bar-bg: var(--mustard);
-    --bar-solid: #f6f1e7;
+    --bar-solid: #e7c983;
 }
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
                     .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
@@ -1760,3 +1760,17 @@ html:not(.dark) .auth-card .btn-outline { border-color: rgba(36, 25, 10, .6); co
 html:not(.dark) :is(.auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-color: var(--mustard) !important; background-image: none !important; }
 /* الأزرار الأساسية في الصفحة (برا الأسطح الصفرا) */
 html:not(.dark) #appContainer .btn-primary:not(.btn-outline) { background: var(--mustard) !important; background-color: var(--mustard) !important; border-color: rgba(36, 25, 10, .28) !important; color: var(--ink) !important; }
+
+/* =====================================================================
+   رجوع الظل على كروت الأقسام اللي ليها صورة (الوضعين): تظليل سفلي + ظل خفيف للنص عشان اسم القسم يبان
+   (الـ ID بيخلي القاعدة تغلب على "من غير ظلال" العامة)
+   ===================================================================== */
+html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img {
+    background-image:
+        linear-gradient(to top, rgba(14, 11, 8, .85) 0%, rgba(14, 11, 8, .5) 28%, rgba(14, 11, 8, 0) 58%),
+        var(--card-img) !important;
+}
+html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img :is(h3, p, span, svg) {
+    color: #fff !important;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .75) !important;
+}
