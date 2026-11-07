@@ -1729,20 +1729,20 @@ html:not(.dark) {
     --mustard-hover: #463d33;
     --ink: #f5f1e6;              /* نص كريمي على الأسطح البني */
     --bar-bg: var(--mustard);
-    --bar-solid: #3a332b;
+    --bar-solid: #2e2923;        /* لون شريط المتصفح = بداية تدرج الشريطين */
 }
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
                     .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
                     #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
     background-color: var(--mustard) !important;
-    background-image: none !important;
+    background-image: var(--gloss) !important;   /* نفس تدرج السبلاش والهيرو */
     border-color: rgba(245, 241, 230, .14) !important;
     --p: 94% .02 85; --pc: 20% .02 70;
     --b1: 25% .016 70; --b2: 21% .016 70; --b3: 31% .02 70; --bc: 94% .01 85;
     color: var(--ink) !important;
 }
 html:not(.dark) :is(.dash-card:not(.has-img), .dash-card.feature:not(.has-img)):hover,
-html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-color: var(--mustard-hover) !important; background-image: none !important; }
+html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-color: var(--mustard-hover) !important; background-image: var(--gloss-hover) !important; }
 html:not(.dark) :is(.dash-card:not(.has-img), .home-intro, .auth-card,
                     #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) :is(h1, h2, h3, h4, p, label, .label-text, .text-primary) { color: var(--ink) !important; }
 html:not(.dark) .bottom-nav .bottom-nav-item,
@@ -1759,7 +1759,7 @@ html:not(.dark) .auth-card .auth-foot { background: rgba(245, 241, 230, .08) !im
 html:not(.dark) .auth-card .btn-outline { border-color: rgba(245, 241, 230, .6); color: var(--ink) !important; }
 html:not(.dark) :is(.auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-color: #2e2923 !important; background-image: var(--gloss) !important; }
 /* الأزرار الأساسية في الصفحة (برا الأسطح الصفرا) */
-html:not(.dark) #appContainer .btn-primary:not(.btn-outline) { background: var(--mustard) !important; background-color: var(--mustard) !important; border-color: rgba(245, 241, 230, .14) !important; color: var(--ink) !important; }
+html:not(.dark) #appContainer .btn-primary:not(.btn-outline) { background: var(--gloss) !important; background-color: var(--mustard) !important; border-color: rgba(245, 241, 230, .14) !important; color: var(--ink) !important; }
 
 /* =====================================================================
    رجوع الظل على كروت الأقسام اللي ليها صورة (الوضعين): تظليل سفلي + ظل خفيف للنص عشان اسم القسم يبان
@@ -1779,7 +1779,7 @@ html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img :is(h3, p, span, sv
    الشريط اللي تحت الشريط السفلي (منطقة أزرار/إيماءات النظام): كان بياخد لون خلفية الـ html الغامق (#26211c).
    في الوضع الفاتح بقى دهبي زي الشريط السفلي. (الوضع الداكن زي ما هو)
    ===================================================================== */
-html:not(.dark):root[data-theme] { background-color: var(--mustard); }
+html:not(.dark):root[data-theme] { background-color: #645947; }   /* = نهاية التدرج، فشريط الإيماءات يكمّل الشريط السفلي */
 
 /* =====================================================================
    الإصدار 9: الوضع الفاتح - هوية البني الغامق (رخام بني بيفتح للبرونز + نص كريمي) زي شاشة الافتتاح
@@ -1803,3 +1803,32 @@ html:not(.dark) .hero-tile { border-color: rgba(217, 199, 166, .4); }
 html:not(.dark) .hero-dot.active, html:not(.dark) .onb-dot.active { background: #f5f1e6; }
 html:not(.dark) .hero-panel::before { background: #d9c7a6; }
 html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #645947); }
+
+/* =====================================================================
+   الإصدار 10: تعديلات الدخول والترحيب والحساب (الوضع الفاتح + الداكن حسب الحالة)
+   ===================================================================== */
+
+/* ---------- لوحة تسجيل الدخول والترحيب: خطوط أكبر ---------- */
+.auth-card h1 { font-size: 2rem; }
+.auth-card .line-field input { font-size: 1.45rem; }
+.auth-card .line-field svg { width: 1.7rem; height: 1.7rem; }
+.auth-card .label-text { font-size: 1.2rem; }
+.auth-card .checkbox { width: 1.6rem; height: 1.6rem; }
+.auth-card .btn { font-size: 1.3rem; min-height: 3.4rem; height: auto; }
+.auth-card .auth-foot { font-size: 1.1rem; }
+@media (min-width: 900px) {
+    .auth-card h1 { font-size: 2.6rem; }
+    .auth-card .line-field input { font-size: 1.8rem; }
+    .auth-card .line-field svg { width: 2rem; height: 2rem; }
+    .auth-card .label-text { font-size: 1.4rem; }
+    .auth-card .btn { font-size: 1.5rem; min-height: 3.8rem; }
+    .auth-card .auth-foot { font-size: 1.3rem; }
+}
+
+/* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
+.auth-card .line-field input[type="password"] {
+    font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
+    letter-spacing: .25em;
+}
+html:not(.dark) .auth-card .line-field input[type="password"] { color: #f5f1e6 !important; -webkit-text-fill-color: #f5f1e6 !important; caret-color: #f5f1e6; }
+.auth-card .line-field input:-webkit-aut
