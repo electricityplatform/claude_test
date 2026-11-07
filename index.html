@@ -49,7 +49,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // ربط ألوان DaisyUI بـ Tailwind: تقدر تكتب bg-primary / text-base-content/60 ... في أي ملف.
-        // وكمان blue-* القديمة اتحوّلت للون العلامة، فالشاشات اللي مش مرفوعة هنا بتتوحّد معاها.
+        // وكمان blue-* القديمة اتحوّلت لدرجات البني (لون الموقع)، فالشاشات اللي مش مرفوعة هنا بتتوحّد معاها.
         const dz = (v) => `oklch(var(${v}) / <alpha-value>)`;
         tailwind.config = {
             theme: {
@@ -63,8 +63,8 @@
                         info: dz('--in'), success: dz('--su'), warning: dz('--wa'), error: dz('--er'),
                         'info-content': dz('--inc'), 'success-content': dz('--suc'), 'warning-content': dz('--wac'), 'error-content': dz('--erc'),
                         blue: {
-                            50: '#E8F7F8', 100: '#CDEEF0', 200: '#A3E0E4', 300: '#6FCBD2', 400: '#3DB0B9',
-                            500: '#1A97A2', 600: '#027F8A', 700: '#05707A', 800: '#085C64', 900: '#0B4850'
+                            50: '#F6F2EA', 100: '#EBE3D5', 200: '#D9CBB1', 300: '#BFA987', 400: '#9C8461',
+                            500: '#7A664A', 600: '#5E4E3A', 700: '#4A3E30', 800: '#3A332B', 900: '#2B2621'
                         }
                     },
                     fontFamily: { sans: ['Amiri', 'Cairo', 'sans-serif'] }
@@ -79,7 +79,7 @@
     <!-- التنسيقات -->
     <link rel="stylesheet" href="style.css?v=20261107-12">
     <link rel="stylesheet" href="theme.css?v=20261107-35">
-    <link rel="stylesheet" href="theme-2.css?v=20261107-52">
+    <link rel="stylesheet" href="theme-2.css?v=20261107-54">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
@@ -114,7 +114,7 @@
 
     <!-- ملفات الجافاسكريبت (الترتيب مهم) -->
     <script src="config.js?v=20261101-1"></script>
-    <script src="utils.js?v=20261107-7"></script>
+    <script src="utils.js?v=20261107-8"></script>
     <script src="layout.js?v=20261107-5"></script>
     <script src="auth.js?v=20261107-6"></script>
     <script src="dashboard.js?v=20261107-4"></script>
