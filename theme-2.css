@@ -1072,23 +1072,23 @@ html .welcome-brand .brand-chip { --lh: 1.5rem; }
 #appContainer #loginFormContainer .line-field input,
 #appContainer #loginFormContainer .line-field input[type="password"],
 #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 1.8rem; }
-#appContainer #loginFormContainer .line-field svg { width: 2.2rem; height: 2.2rem; }
+#appContainer #loginFormContainer .line-field svg { width: 1.7rem; height: 1.7rem; }   /* = حجم مربع تذكرني */
 #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.15rem; }   /* الكلمات العربي (رقم الهاتف / رمز المرور) أصغر من الأرقام */
 #appContainer #loginFormContainer .label-text { font-size: 1.25rem !important; line-height: 1.4 !important; }   /* تذكرني (!important لأن كلاس text-xs عليها بيفرض .85rem !important) */
 #appContainer #loginFormContainer label.label { padding-inline: .5rem; }   /* نفس مسافة صف رمز المرور، فمربع تذكرني يتحاذى مع علامة العين */
-#appContainer #loginFormContainer .checkbox { width: 1.7rem; height: 1.7rem; margin-inline-start: .25rem; }   /* مركزه على نفس خط علامة العين (2.2rem) */
-#appContainer #loginFormContainer .btn-primary { width: 15rem; min-height: 4.4rem; height: auto; font-size: 1.7rem; }
-#appContainer #loginFormContainer .btn-ghost { min-height: 3.4rem; height: auto; font-size: 1.5rem; }
+#appContainer #loginFormContainer .checkbox { width: 1.7rem; height: 1.7rem; }   /* نفس حجم أيقونات الخانات، فبيتحاذى مع علامة العين */
+#appContainer #loginFormContainer .btn-primary { width: 13rem; min-height: 3.6rem; height: auto; font-size: 1.4rem; }
+#appContainer #loginFormContainer .btn-ghost { min-height: 2.8rem; height: auto; font-size: 1.25rem; }
 @media (min-width: 900px) {
     #appContainer #loginFormContainer .line-field input,
     #appContainer #loginFormContainer .line-field input[type="password"],
     #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 2.2rem; }
-    #appContainer #loginFormContainer .line-field svg { width: 2.5rem; height: 2.5rem; }
+    #appContainer #loginFormContainer .line-field svg { width: 2rem; height: 2rem; }
     #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.5rem; }
     #appContainer #loginFormContainer .label-text { font-size: 1.5rem !important; }
-    #appContainer #loginFormContainer .checkbox { width: 2rem; height: 2rem; margin-inline-start: .25rem; }
-    #appContainer #loginFormContainer .btn-primary { width: 19rem; min-height: 5rem; font-size: 2rem; }
-    #appContainer #loginFormContainer .btn-ghost { min-height: 3.8rem; font-size: 1.7rem; }
+    #appContainer #loginFormContainer .checkbox { width: 2rem; height: 2rem; }
+    #appContainer #loginFormContainer .btn-primary { width: 16rem; min-height: 4.2rem; font-size: 1.7rem; }
+    #appContainer #loginFormContainer .btn-ghost { min-height: 3.2rem; font-size: 1.45rem; }
 }
 
 /* =====================================================================
