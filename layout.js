@@ -115,12 +115,8 @@ function openAccountScreen() {
 }
 
 function renderAccountScreen() {
-    const card = (icon, label, action) => `
-        <button type="button" onclick="${action}" class="dash-card feature teal-floral">
-            <div class="dash-ico">${uiIcon(icon, 'w-6 h-6')}</div>
-            <div class="flex-1 min-w-0 relative"><h3 class="font-bold text-lg" dir="auto">${label}</h3></div>
-            ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
-        </button>`;
+    // نفس كارت قوائم مركز البيانات بالظبط (menuListCardHtml): نفس الحجم والخط، من غير أيقونة
+    const card = (icon, label, action) => menuListCardHtml(label, action);
     const avatar = typeof profileAvatarHtml === 'function'
         ? profileAvatarHtml()
         : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${escapeHtmlValue(String(currentUserName || '').trim().charAt(0))}</span></div></div>`;
