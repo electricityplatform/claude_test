@@ -93,7 +93,6 @@ function renderWelcomeScreen() {
                 <div class="mb-6"></div>
                 <div class="flex flex-col items-center gap-3">
                     <button type="button" class="btn btn-primary w-64 welcome-btn" onclick="showLoginFromWelcome()">دخول</button>
-                    <button type="button" class="btn btn-outline btn-primary w-64 welcome-btn" onclick="loginAsVisitor()">الدخول كزائر</button>
                 </div>
                 <div class="auth-foot" onclick="alert('شاشة إنشاء حساب')">ليس لديك حساب؟ إنشاء حساب</div>
             </div>
