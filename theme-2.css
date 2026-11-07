@@ -470,7 +470,8 @@ html.dark .bottom-nav {
 /* =====================================================================
    الشريط السفلي (4 أزرار) + صورة الحساب
    ===================================================================== */
-.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .5rem .3rem; }
+/* الأيقونة 2.5rem لكن الـ padding الرأسي اتقلّل (.45 → .15) عشان ارتفاع الشريط يفضل زي ما كان (≈3.2rem) */
+.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .15rem .3rem; }
 .bottom-nav .bottom-nav-item svg { width: 2.5rem; height: 2.5rem; }
 .bottom-nav .user-avatar-btn .avatar,
 .bottom-nav .user-avatar-btn .avatar > *,
