@@ -1725,11 +1725,11 @@ body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex San
    كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
    ===================================================================== */
 html:not(.dark) {
-    --mustard: #e7c983;          /* أصفر مينا ساعة رولكس (شمبانيا ذهبي) */
-    --mustard-hover: #dcbb70;
+    --mustard: #d9a93a;          /* دهبي */
+    --mustard-hover: #cc9b2c;
     --ink: #24190a;
     --bar-bg: var(--mustard);
-    --bar-solid: #e7c983;
+    --bar-solid: #d9a93a;
 }
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
                     .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
@@ -1774,3 +1774,9 @@ html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img :is(h3, p, span, sv
     color: #fff !important;
     text-shadow: 0 1px 6px rgba(0, 0, 0, .75) !important;
 }
+
+/* =====================================================================
+   الشريط اللي تحت الشريط السفلي (منطقة أزرار/إيماءات النظام): كان بياخد لون خلفية الـ html الغامق (#26211c).
+   في الوضع الفاتح بقى دهبي زي الشريط السفلي. (الوضع الداكن زي ما هو)
+   ===================================================================== */
+html:not(.dark):root[data-theme] { background-color: var(--mustard); }
