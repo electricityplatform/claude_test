@@ -806,7 +806,7 @@ body *:not(svg):not(svg *) { font-weight: 700 !important; }
 html:not(.dark) {
     --mustard: #3a332b;          /* بني غامق: لون الشريطين والكروت (هوية الصورة) */
     --mustard-hover: #463d33;
-    --ink: #f5f1e6;              /* نص كريمي على الأسطح البني */
+    --ink: #fff;                 /* نص أبيض على الأسطح البني */
     --bar-bg: var(--mustard);
     --bar-solid: #2e2923;        /* لون شريط المتصفح = بداية تدرج الشريطين */
 }
@@ -876,7 +876,7 @@ html:not(.dark) {
     --panel-dark: #2e2923;
     --panel-mid: #54493c;
 }
-html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #f5f1e6; }
+html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #fff; }
 html:not(.dark) .hero-stat b { background: linear-gradient(180deg, #f5f1e6, #d2b98f); -webkit-background-clip: text; background-clip: text; color: transparent; }
 html:not(.dark) .hero-tile { border-color: rgba(217, 199, 166, .4); }
 html:not(.dark) .hero-dot.active, html:not(.dark) .onb-dot.active { background: #f5f1e6; }
@@ -1145,11 +1145,16 @@ html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input svg { color: #f
 /* =====================================================================
    نافذة تأكيد الخروج: تأكيد خروج = زي زر "دخول" (أسود/بني لامع)، وإلغاء = زي زر "الدخول كزائر" (كريمي)
    ===================================================================== */
-html:is(.dark, :not(.dark)) #logoutConfirmModal .modal-box .btn-primary:not(.btn-outline) {
+/* مهم: السيلكتور هنا أقوى (specificity) من قاعدة أزرار الـ modal-box العامة اللي بتخلّي الزر كريمي، عشان البني يكسب */
+html:is(.dark, :not(.dark)) body #logoutConfirmModal.modal.modal-open .modal-box .btn.btn-primary:not(.btn-outline) {
     background: var(--gloss) !important;
     background-color: #3a332b !important;
     border-color: rgba(245, 241, 230, .14) !important;
-    color: #f5f1e6 !important;
+    color: #fff !important;
+}
+html:is(.dark, :not(.dark)) body #logoutConfirmModal.modal.modal-open .modal-box .btn.btn-primary:not(.btn-outline):hover {
+    background: var(--gloss-hover) !important;
+    background-color: #463d33 !important;
 }
 html:is(.dark, :not(.dark)) #logoutConfirmModal .modal-box .btn-outline.btn-primary {
     background: var(--gloss-white) !important;
