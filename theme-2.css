@@ -210,73 +210,76 @@ html :not(.overflow-auto):not(.overflow-x-auto)::-webkit-scrollbar { display: no
 html::-webkit-scrollbar { display: none !important; }
 
 
+/* دائرية موحّدة لكل الموقع = دائرية مربع اللوجو (مربع الترحيب) 0.6rem؛ غيّر --r بس */
+:root { --r: 0.6rem; }
+
 /* =====================================================================
    حواف أقل دائرية: دائرية خفيفة بس (بتيجي آخر حاجة عشان تغلب على اللي فوقها)
    عشان ترجّع الدوائر القديمة: امسح البلوك ده كله.
    ===================================================================== */
 [data-theme="electricity-light"], [data-theme="electricity-dark"] {
-    --rounded-box: 0.6rem; --rounded-btn: 0.5rem; --rounded-badge: 0.4rem; --tab-radius: 0.4rem;
+    --rounded-box: var(--r); --rounded-btn: var(--r); --rounded-badge: var(--r); --tab-radius: var(--r);
 }
 
 /* كلاسات Tailwind المستعملة في الشاشات */
-.rounded-3xl { border-radius: 0.75rem !important; }
-.rounded-2xl { border-radius: 0.65rem !important; }
-.rounded-xl  { border-radius: 0.5rem !important; }
-.rounded-lg  { border-radius: 0.4rem !important; }
+.rounded-3xl { border-radius: var(--r) !important; }
+.rounded-2xl { border-radius: var(--r) !important; }
+.rounded-xl  { border-radius: var(--r) !important; }
+.rounded-lg  { border-radius: var(--r) !important; }
 
 /* البطاقات والأقسام */
 .dash-card, .dash-card.feature,
 #appContainer .dash-card.compact,
 #partitionsContainer .dash-row.one .dash-card,
 .home-intro,
-#appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) { border-radius: 0.75rem !important; }
+#appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200) { border-radius: var(--r) !important; }
 @media (min-width: 900px) {
     #appContainer .dash-card.compact,
     #partitionsContainer .dash-row.one .dash-card,
-    .hero { border-radius: 0.9rem !important; }
+    .hero { border-radius: var(--r) !important; }
 }
-.dash-ico { border-radius: 0.6rem; }
-.dash-card.compact .dash-ico, #partitionsContainer .dash-row.one .dash-ico { border-radius: 0.6rem; }
+.dash-ico { border-radius: var(--r); }
+.dash-card.compact .dash-ico, #partitionsContainer .dash-row.one .dash-ico { border-radius: var(--r); }
 
 /* الهيرو والشرايح */
-.hero { border-radius: 0.9rem; }
-.hero-stage { border-radius: 0.6rem; }
-.hero-tile { border-radius: 0.6rem; }
+.hero { border-radius: var(--r); }
+.hero-stage { border-radius: var(--r); }
+.hero-tile { border-radius: var(--r); }
 .hero-panel { border-radius: 0.45em; }
-.hp-ico { border-radius: 0.5rem; }
+.hp-ico { border-radius: var(--r); }
 .hero-dot { border-radius: 0.3rem; }
 
 /* الشريط العلوي والسفلي */
-.app-topbar { border-radius: 0 0 0.9rem 0.9rem; }
-.bottom-nav { border-radius: 0.9rem 0.9rem 0 0; }
-.bottom-nav-item { border-radius: 0.6rem; }
+.app-topbar { border-radius: 0 0 var(--r) var(--r); }
+.bottom-nav { border-radius: var(--r) var(--r) 0 0; }
+.bottom-nav-item { border-radius: var(--r); }
 
 /* القائمة الجانبية */
-#sideMenu { border-radius: 0.9rem 0 0 0.9rem; }
-.side-item, .side-search { border-radius: 0.6rem; }
+#sideMenu { border-radius: var(--r) 0 0 var(--r); }
+.side-item, .side-search { border-radius: var(--r); }
 
 /* الدخول والافتتاح */
-.auth-card { border-radius: 1rem 1rem 0 0; }
+.auth-card { border-radius: var(--r) var(--r) 0 0; }
 .auth-foot { border-radius: 0; }
-.auth-hero .brand { border-radius: 0.7rem; }
-.auth-avatar { border-radius: 0.9rem; }
-.splash-logo, .splash-logo.logo-tile { border-radius: 0.9rem; }
-.intro-skip { border-radius: 0.5rem; }
-.onb-dot { border-radius: 0.3rem; }
+.auth-hero .brand { border-radius: var(--r); }
+.auth-avatar { border-radius: var(--r); }
+.splash-logo, .splash-logo.logo-tile { border-radius: var(--r); }
+.intro-skip { border-radius: var(--r); }
+.onb-dot { border-radius: var(--r); }
 
 /* اللوجو والشرايح الصغيرة */
-.brand-chip, .auth-hero .brand .brand-chip { border-radius: 0.4rem; }
-.home-step { border-radius: 0.5rem; }
-.home-step b { border-radius: 0.3rem; }
+.brand-chip, .auth-hero .brand .brand-chip { border-radius: var(--r); }
+.home-step { border-radius: var(--r); }
+.home-step b { border-radius: var(--r); }
 
 /* الأزرار والحقول والنوافذ */
-.btn { border-radius: 0.5rem; }
+.btn { border-radius: var(--r); }
 .btn-circle { border-radius: 9999px; }
-html .input, html .select, html .textarea { border-radius: 0.5rem; }
-.badge { border-radius: 0.4rem; }
-.modal-box { border-radius: 0.75rem; }
-.photo-sheet-card { border-radius: 0.9rem 0.9rem 0 0; }
-@media (min-width: 640px) { .photo-sheet-card { border-radius: 0.9rem; } }
+html .input, html .select, html .textarea { border-radius: var(--r); }
+.badge { border-radius: var(--r); }
+.modal-box { border-radius: var(--r); }
+.photo-sheet-card { border-radius: var(--r) var(--r) 0 0; }
+@media (min-width: 640px) { .photo-sheet-card { border-radius: var(--r); } }
 .conn-banner { border-radius: 0.6rem; }
 .conn-banner button { border-radius: 0.4rem; }
 .skeleton { border-radius: 0.6rem; }
