@@ -88,8 +88,8 @@ function renderWelcomeScreen() {
                 <div class="brand"><span>ELECTRICITY</span><span class="brand-chip">${logoImg()}</span></div>
             </div>
             <div class="auth-card">
-                <div class="auth-avatar welcome-logo">${logoImg()}</div>
-                <h1 class="text-center font-bold text-lg text-primary mb-2">أهلًا بك في ELECTRICITY</h1>
+                <h1 class="text-center font-bold text-lg text-primary mb-3">أهلًا بك في</h1>
+                <div class="welcome-brand"><span>ELECTRICITY</span><span class="brand-chip">${logoImg()}</span></div>
                 <div class="mb-6"></div>
                 <div class="flex flex-col items-center gap-3">
                     <button type="button" class="btn btn-primary w-64" onclick="showLoginFromWelcome()">دخول</button>
