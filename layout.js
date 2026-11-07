@@ -209,7 +209,11 @@ function filterSideMenu(q) {
             return;
         }
         const h = bar.offsetHeight;
-        const hide = (window.scrollY || document.documentElement.scrollTop || 0) > 2 && sentinel.getBoundingClientRect().top <= h + GAP;
+        // هستريسيس: الهيدر يختفي عند h+GAP، ومايرجعش إلا لما نبعد عن الحد ده بـ 24px (عشان الشريط والأزرار ما يرعشوش عند الحد)
+        const wasHidden = bar.classList.contains('topbar-hidden');
+        const top = sentinel.getBoundingClientRect().top;
+        const scrolled = (window.scrollY || document.documentElement.scrollTop || 0) > 2;
+        const hide = scrolled && (wasHidden ? top <= h + GAP + 24 : top <= h + GAP);
         bar.classList.toggle('topbar-hidden', hide);
         root.style.setProperty('--search-top', hide ? '.5rem' : (h + GAP) + 'px');
     }
