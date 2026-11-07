@@ -1109,7 +1109,7 @@ html.is-zoomed:has(.auth-screen) { overflow-y: auto !important; }
     --s: 84% 0.012 70;   --sc: 26% 0.02 70;
     --a: 78% 0.1 85;     --ac: 28% 0.04 80;
     --n: 31% 0.022 70;   --nc: 97% 0.006 85;
-    --b1: 99% 0.004 85;  --b2: 96% 0.007 85;  --b3: 91% 0.01 70;  --bc: 27% 0.022 70;
+    --b1: 100% 0 0;  --b2: 96% 0.007 85;  --b3: 91% 0.01 70;  --bc: 27% 0.022 70;
 }
 html:not(.dark) #appContainer { --p: 30% 0.03 70; --pc: 98% 0.008 85; --bc: 27% 0.03 70; color: oklch(var(--bc)); }
 
@@ -1128,9 +1128,9 @@ html:not(.dark) #appContainer :is(.border-gray-300, .border-slate-300) { border-
 
 /* شيت الإكسل (الوضع الفاتح): ألوان بني/كريمي بدل التيل */
 html:not(.dark) #editableUsersTable th, html:not(.dark) #editableUsersTable td { border-color: #ddd2ba; }
-html:not(.dark) #editableUsersTable th { background-color: #efe6d1; color: #3a332b; }
+html:not(.dark) #editableUsersTable th { background-color: #eeeef0; color: #3a332b; }
 html:not(.dark) .excel-input { color: #3a332b; }
-html:not(.dark) .excel-input:focus { background-color: #f6f1e7 !important; box-shadow: inset 0 0 0 2px #3a332b !important; }
+html:not(.dark) .excel-input:focus { background-color: #f3e8c9 !important; box-shadow: inset 0 0 0 2px #3a332b !important; }
 html:not(.dark) .drag-handle { background-color: #3a332b; }
 
 /* خانة البحث (الخانة الجوّانية بتاعة "ابحث"): أفتح من شريط البحث، والكلمة والأيقونة والكتابة بيضا */
@@ -1188,7 +1188,7 @@ html #logoutConfirmModal .modal-box .flex { gap: 1rem; }
 .photo-viewer-img span { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; background: #3a332b; color: #fff; font-size: 7rem; font-weight: 700; }
 
 .photo-edit-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); display: flex; align-items: flex-end; justify-content: center; }
-.photo-edit-card { width: 100%; max-width: 34rem; background: #fcfbf7; color: #2b2621; border-radius: 1.75rem 1.75rem 0 0; padding: .75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); animation: sheetUp .25s ease; }
+.photo-edit-card { width: 100%; max-width: 34rem; background: #ffffff; color: #2b2621; border-radius: 1.75rem 1.75rem 0 0; padding: .75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); animation: sheetUp .25s ease; }
 .photo-edit-handle { width: 2.75rem; height: .3rem; border-radius: 9999px; background: #bdb8ad; margin: 0 auto .9rem; }
 .photo-edit-head { display: flex; align-items: center; gap: .5rem; }
 .photo-edit-head h3 { flex: 1; text-align: center; font-size: 1.3rem; font-weight: 700; color: #2b2621 !important; }
@@ -1202,3 +1202,9 @@ html #logoutConfirmModal .modal-box .flex { gap: 1rem; }
 .photo-edit-row svg { width: 1.8rem; height: 1.8rem; color: #5b554b; flex-shrink: 0; }
 .photo-edit-row:active { background: rgba(0, 0, 0, .06); }
 .photo-edit-row:disabled, .photo-edit-iconbtn:disabled { opacity: .5; }
+
+
+/* أبيض صافي (الوضع الفاتح): خلفية الصفحة + كارت تأكيد الخروج + كارت تغيير الصورة. اللوجو ما اتلمسش */
+html:not(.dark), html:not(.dark) body { background-color: #ffffff; }
+html:not(.dark) #logoutConfirmModal .modal-box, html:not(.dark) .photo-edit-card, html:not(.dark) .photo-sheet-card { background-color: #ffffff; }
+html:not(.dark) #editableUsersTable, html:not(.dark) #editableUsersTable td { background-color: #ffffff; }
