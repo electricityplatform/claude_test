@@ -1725,11 +1725,11 @@ body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex San
    كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
    ===================================================================== */
 html:not(.dark) {
-    --mustard: #d9a93a;          /* دهبي */
-    --mustard-hover: #cc9b2c;
+    --mustard: #a08566;          /* برونز (من الصورة المرجعية) */
+    --mustard-hover: #94795b;
     --ink: #24190a;
     --bar-bg: var(--mustard);
-    --bar-solid: #d9a93a;
+    --bar-solid: #a08566;
 }
 html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
                     .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
@@ -1780,3 +1780,24 @@ html:is(.dark, :not(.dark)) #appContainer .dash-card.has-img :is(h3, p, span, sv
    في الوضع الفاتح بقى دهبي زي الشريط السفلي. (الوضع الداكن زي ما هو)
    ===================================================================== */
 html:not(.dark):root[data-theme] { background-color: var(--mustard); }
+
+/* =====================================================================
+   الإصدار 9: الوضع الفاتح - طابع الصورة المرجعية (رخام أسود + برونز + كريمي فاتح)
+   - الأسطح (الشريطين، الكروت، البحث، الدخول) = برونز #a08566 (--mustard فوق في الإصدار 8)
+   - الهيرو واللوحات اللامعة = رخام داكن بيفتح للبرونز (--gloss) بنصوص كريمي #e5dbcb
+   - خلفية الصفحة بيضا زي ما هي. الوضع الداكن ما اتغيّرش.
+   ===================================================================== */
+html:not(.dark) {
+    --gloss: linear-gradient(180deg, #6a5640 0%, #3a3027 46%, #0f0d0a 54%, #2a241d 100%);
+    --gloss-hover: linear-gradient(180deg, #7c664d 0%, #493d31 46%, #171310 54%, #312a22 100%);
+    --gloss-white: linear-gradient(180deg, #e5dbcb 0%, #c9ad88 100%);
+    --gold-grad: var(--gloss-white);
+    --panel-dark: #0f0d0a;
+    --panel-mid: #2a241d;
+}
+html:not(.dark) :is(.hero-kicker, .hero-cap, .hero-tag, .hero-tile) { color: #e5dbcb; }
+html:not(.dark) .hero-stat b { background: linear-gradient(180deg, #f3e8d4, #c9ab82); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html:not(.dark) .hero-tile { border-color: rgba(201, 171, 130, .45); }
+html:not(.dark) .hero-dot.active, html:not(.dark) .onb-dot.active { background: #d9c3a0; }
+html:not(.dark) .hero-panel::before { background: #c9ad88; }
+html:not(.dark) .hero-panel::after { background: linear-gradient(#c9ad88, #6a5640); }
