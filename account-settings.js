@@ -95,7 +95,7 @@ function updateProfileAvatars() {
     const preview = document.getElementById('photoPreview');
     if (preview) preview.innerHTML = photoPreviewInner();
     const delBtn = document.getElementById('photoDeleteBtn');
-    if (delBtn) delBtn.classList.toggle('hidden', !currentUserPhotoUrl);
+    if (delBtn) delBtn.classList.toggle('photo-edit-hidden', !currentUserPhotoUrl);
 }
 
 // بيجيب رابط الصورة من السيرفر (بعد الدخول أو استرجاع الجلسة)
@@ -116,10 +116,24 @@ async function loadProfilePhoto() {
 function resetProfilePhoto() {
     currentUserPhotoUrl = '';
     _photoLoadFailed = false;
-    closeProfilePhotoSheet();
+    closeProfilePhotoSheet(true);
 }
 
-// ---------- النافذة ----------
+// ---------- العارض (ملء الشاشة) + قائمة التعديل ----------
+const PHOTO_ICON_PATHS = {
+    back:    'M14 5l7 7m0 0l-7 7m7-7H3',
+    close:   'M6 18L18 6M6 6l12 12',
+    pencil:  'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z',
+    trash:   'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+    camera:  'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z',
+    gallery: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+};
+
+function photoSvg(name) {
+    return '<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="' +
+        PHOTO_ICON_PATHS[name] + '"></path></svg>';
+}
+
 function photoPreviewInner() {
     if (currentUserPhotoUrl && !_photoLoadFailed) {
         return '<img src="' + escapeHtmlValue(currentUserPhotoUrl) + '" alt="">';
@@ -136,37 +150,69 @@ function setPhotoStatus(text, kind) {
 
 function setPhotoBusy(busy) {
     _photoBusy = busy;
-    ['photoPickBtn', 'photoDeleteBtn', 'photoCloseBtn'].forEach(function (id) {
+    ['photoCameraBtn', 'photoGalleryBtn', 'photoDeleteBtn', 'photoEditCloseBtn'].forEach(function (id) {
         const b = document.getElementById(id);
         if (b) b.disabled = busy;
     });
 }
 
+// الضغط على الصورة الشخصية: يفتح العارض بملء الشاشة (خلفية سودا + سهم رجوع + العنوان + زر القلم)
 function openProfilePhotoSheet() {
     if (!currentUserId || document.getElementById('photoSheet')) return;
-    const sheet = document.createElement('div');
-    sheet.id = 'photoSheet';
-    sheet.className = 'photo-sheet';
-    sheet.setAttribute('onclick', 'if (event.target === this) closeProfilePhotoSheet()');
-    sheet.innerHTML =
-        '<div class="photo-sheet-card" role="dialog" aria-label="الصورة الشخصية">' +
-            '<h3 class="text-center font-bold text-base text-primary">الصورة الشخصية</h3>' +
-            '<div id="photoPreview" class="photo-preview">' + photoPreviewInner() + '</div>' +
-            '<div id="photoStatus" class="photo-status"></div>' +
-            '<input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleProfilePhotoFile(this)">' +
-            '<button type="button" id="photoPickBtn" class="btn btn-primary w-full" onclick="document.getElementById(\'photoFileInput\').click()">' +
-                (currentUserPhotoUrl ? 'تغيير الصورة' : 'اختيار صورة') + '</button>' +
-            '<button type="button" id="photoDeleteBtn" class="btn btn-outline btn-error w-full' + (currentUserPhotoUrl ? '' : ' hidden') + '" onclick="deleteProfilePhoto()">حذف الصورة</button>' +
-            '<button type="button" id="photoCloseBtn" class="btn btn-ghost w-full" onclick="closeProfilePhotoSheet()">إغلاق</button>' +
-        '</div>';
-    document.body.appendChild(sheet);
+    const v = document.createElement('div');
+    v.id = 'photoSheet';
+    v.className = 'photo-viewer';
+    v.setAttribute('dir', 'rtl');
+    v.setAttribute('role', 'dialog');
+    v.setAttribute('aria-label', 'صورة الملف الشخصي');
+    v.innerHTML =
+        '<div class="photo-viewer-bar">' +
+            '<button type="button" class="photo-viewer-btn" onclick="closeProfilePhotoSheet()" aria-label="إغلاق">' + photoSvg('back') + '</button>' +
+            '<div class="photo-viewer-title">صورة الملف الشخصي</div>' +
+            '<button type="button" class="photo-viewer-btn" onclick="openPhotoEditSheet()" aria-label="تعديل الصورة">' + photoSvg('pencil') + '</button>' +
+        '</div>' +
+        '<div class="photo-viewer-stage"><div id="photoPreview" class="photo-viewer-img">' + photoPreviewInner() + '</div></div>';
+    document.body.appendChild(v);
 }
 
-function closeProfilePhotoSheet() {
+// زر القلم: قائمة من تحت فيها الكاميرا والمعرض (وسلة المهملات لو في صورة)
+function openPhotoEditSheet() {
+    const v = document.getElementById('photoSheet');
+    if (!v || document.getElementById('photoEditSheet')) return;
+    const s = document.createElement('div');
+    s.id = 'photoEditSheet';
+    s.className = 'photo-edit-backdrop';
+    s.setAttribute('onclick', 'if (event.target === this) closePhotoEditSheet()');
+    s.innerHTML =
+        '<div class="photo-edit-card" role="dialog" aria-label="صورة الملف الشخصي">' +
+            '<div class="photo-edit-handle"></div>' +
+            '<div class="photo-edit-head">' +
+                '<button type="button" id="photoEditCloseBtn" class="photo-edit-iconbtn" onclick="closePhotoEditSheet()" aria-label="إغلاق">' + photoSvg('close') + '</button>' +
+                '<h3>صورة الملف الشخصي</h3>' +
+                '<button type="button" id="photoDeleteBtn" class="photo-edit-iconbtn' + (currentUserPhotoUrl ? '' : ' photo-edit-hidden') + '" onclick="deleteProfilePhoto()" aria-label="حذف الصورة">' + photoSvg('trash') + '</button>' +
+            '</div>' +
+            '<div id="photoStatus" class="photo-status"></div>' +
+            '<input type="file" id="photoCameraInput" accept="image/*" capture="user" class="hidden" onchange="handleProfilePhotoFile(this)">' +
+            '<input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleProfilePhotoFile(this)">' +
+            '<button type="button" id="photoCameraBtn" class="photo-edit-row" onclick="document.getElementById(\'photoCameraInput\').click()">' + photoSvg('camera') + '<span>الكاميرا</span></button>' +
+            '<button type="button" id="photoGalleryBtn" class="photo-edit-row" onclick="document.getElementById(\'photoFileInput\').click()">' + photoSvg('gallery') + '<span>المعرض</span></button>' +
+        '</div>';
+    v.appendChild(s);
+}
+
+function closePhotoEditSheet() {
     clearTimeout(_photoDeleteTimer);
     _photoDeleteArmed = false;
-    const sheet = document.getElementById('photoSheet');
-    if (sheet) sheet.remove();
+    const s = document.getElementById('photoEditSheet');
+    if (s) s.remove();
+}
+
+// بيقفل أعلى حاجة مفتوحة: قائمة التعديل الأول، وبعدها العارض (زر رجوع الموبايل بيعدّي من هنا). all=true بيقفل الاتنين (عند الخروج).
+function closeProfilePhotoSheet(all) {
+    if (!all && document.getElementById('photoEditSheet')) { closePhotoEditSheet(); return; }
+    closePhotoEditSheet();
+    const v = document.getElementById('photoSheet');
+    if (v) v.remove();
 }
 
 // ---------- معالجة الصورة ----------
@@ -262,9 +308,8 @@ async function handleProfilePhotoFile(input) {
         _photoLoadFailed = false;
         cacheRememberedPhoto();
         updateProfileAvatars();
-        const pick = document.getElementById('photoPickBtn');
-        if (pick) pick.textContent = 'تغيير الصورة';
         setPhotoStatus('تم حفظ الصورة', 'ok');
+        setTimeout(closePhotoEditSheet, 700);
     } catch (err) {
         setPhotoStatus(err.message || 'حدث خطأ', 'error');
     } finally {
@@ -272,18 +317,20 @@ async function handleProfilePhotoFile(input) {
     }
 }
 
-// ---------- حذف (بيطلب ضغطتين للتأكيد) ----------
+// ---------- حذف (بيطلب ضغطتين للتأكيد على سلة المهملات) ----------
 async function deleteProfilePhoto() {
     if (_photoBusy) return;
     const btn = document.getElementById('photoDeleteBtn');
     if (!_photoDeleteArmed) {
         _photoDeleteArmed = true;
-        if (btn) btn.textContent = 'اضغط مرة تانية للتأكيد';
+        if (btn) btn.classList.add('armed');
+        setPhotoStatus('اضغط على سلة المهملات مرة تانية لتأكيد الحذف', 'error');
         clearTimeout(_photoDeleteTimer);
         _photoDeleteTimer = setTimeout(function () {
             _photoDeleteArmed = false;
             const b = document.getElementById('photoDeleteBtn');
-            if (b) b.textContent = 'حذف الصورة';
+            if (b) b.classList.remove('armed');
+            setPhotoStatus('', '');
         }, 4000);
         return;
     }
@@ -297,12 +344,10 @@ async function deleteProfilePhoto() {
         _photoLoadFailed = false;
         cacheRememberedPhoto();
         updateProfileAvatars();
-        if (btn) btn.textContent = 'حذف الصورة';
-        const pick = document.getElementById('photoPickBtn');
-        if (pick) pick.textContent = 'اختيار صورة';
         setPhotoStatus('تم حذف الصورة', 'ok');
+        setTimeout(closePhotoEditSheet, 700);
     } catch (err) {
-        if (btn) btn.textContent = 'حذف الصورة';
+        if (btn) btn.classList.remove('armed');
         setPhotoStatus(err.message || 'حدث خطأ', 'error');
     } finally {
         setPhotoBusy(false);
