@@ -954,3 +954,11 @@ html .auth-hero .brand {
     padding: 0 !important;
     border-radius: 0 !important;
 }
+
+/* ثبات أحجام اللوجو (مستقلة عن theme.css): لوجو الهيدر في الدخول/الترحيب بحجمه الطبيعي */
+.logo-img { display: block; width: auto; object-fit: contain; }
+html .auth-hero .brand .logo-img { height: 2rem !important; width: auto !important; max-width: none !important; }
+@media (min-width: 900px) { html .auth-hero .brand .logo-img { height: 2.6rem !important; } }
+html .auth-hero .brand .brand-chip { padding: .3rem .5rem; border-radius: .8rem; display: inline-flex; align-items: center; }
+/* لوجو شاشة البداية فقط (الكبير) */
+.splash-logo.logo-tile { width: auto; height: auto; background: #f6f1e7; }
