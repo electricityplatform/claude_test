@@ -993,7 +993,7 @@ html .auth-avatar.welcome-logo {
     --lh: 1.45rem;
     background: #f6f1e7;
     padding: calc(var(--lh) * .1135) calc(var(--lh) * .146) !important;
-    border-radius: var(--r) !important;
+    border-radius: calc(var(--lh) * .0973) !important;   /* = 0.6rem ÷ ارتفاع رسمة الهيرو (6.165rem): نفس نسبة دائرية الهيرو في كل حجم */
     width: auto; height: auto;
 }
 html .brand-chip .logo-img,
@@ -1013,3 +1013,33 @@ html .auth-avatar.welcome-logo { --lh: 3rem; border: 0; box-shadow: 0 .5rem 1.2r
 
 /* كل كلاسات الدائرية في Tailwind/DaisyUI على نفس القيمة (الدوائر الكاملة rounded-full زي ما هي) */
 .rounded, .rounded-sm, .rounded-md, .rounded-box, .rounded-btn, .rounded-badge { border-radius: var(--r) !important; }
+
+/* =====================================================================
+   توحيد نسب الكلمة (ELECTRICITY) للوجو في كل الأماكن
+   - تحت اللوجو (الهيرو + السبلاش): حجم الكلمة = 0.308 × ارتفاع رسمة اللوجو (--word-k) زي السبلاش
+   - جنب اللوجو (الهيدر + الدخول + القائمة الجانبية): الكلمة أصغر شوية من اللوجو، حجمها = 0.95 × ارتفاع الرسمة
+     (يعني ارتفاع حروفها حوالي 65% من ارتفاع الرسمة) (--word-side-k)
+   - الهيرو: الكريمي والدائرية بنفس نسب باقي اللوجوهات (--hero-lh = ارتفاع رسمة لوجو الهيرو، 8.6rem ÷ 1.3933)
+   لتغيير أي نسبة: غيّر المتغير بس.
+   ===================================================================== */
+:root { --word-k: .308; --word-side-k: .95; }
+
+.hero { --hero-lh: 6.172rem; height: 18.5rem; }
+.hero-stage {
+    padding: calc(var(--hero-lh) * .1135) calc(var(--hero-lh) * .146);
+    border-radius: calc(var(--hero-lh) * .0973);
+}
+.hero-brand { font-size: calc(var(--hero-lh) * var(--word-k)); line-height: 1.2; }
+@media (min-width: 900px) {
+    .hero { --hero-lh: 7.895rem; height: 23rem; }   /* 11rem ÷ 1.3933 */
+    .hero-brand { font-size: calc(var(--hero-lh) * var(--word-k)); }
+}
+
+/* جنب اللوجو: الأرقام هنا = ارتفاع رسمة اللوجو (--lh) في نفس المكان (فوق في قسم "مربع اللوجو الموحّد") */
+html .topbar-brand { font-size: calc(1.6rem * var(--word-side-k)); }
+html .auth-hero .brand { font-size: calc(2rem * var(--word-side-k)); }
+html .side-brand { font-size: calc(1.45rem * var(--word-side-k)); }
+@media (min-width: 900px) {
+    html .topbar-brand { font-size: calc(1.9rem * var(--word-side-k)); }
+    html .auth-hero .brand { font-size: calc(2.6rem * var(--word-side-k)); }
+}
