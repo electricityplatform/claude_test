@@ -38,7 +38,9 @@
     <!-- الخطوط -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Amiri للحروف والأرقام الإنجليزية بس (text=)، والعربي بيرجع لـ Cairo -->
+    <link href="https://fonts.googleapis.com/css?family=Amiri:700&text=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&display=swap" rel="stylesheet">
 
     <!-- DaisyUI: مكتبة المكوّنات (أزرار، كروت، قوائم، تابات، ثيمات) -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css">
@@ -64,7 +66,7 @@
                             500: '#1A97A2', 600: '#027F8A', 700: '#05707A', 800: '#085C64', 900: '#0B4850'
                         }
                     },
-                    fontFamily: { sans: ['Amiri', '"Times New Roman"', 'serif'] }
+                    fontFamily: { sans: ['Amiri', 'Cairo', 'Arial', 'sans-serif'] }
                 }
             }
         };
@@ -74,8 +76,8 @@
     <!-- SheetJS للتصدير إلى XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- التنسيقات -->
-    <link rel="stylesheet" href="style.css?v=20261107-8">
-    <link rel="stylesheet" href="theme.css?v=20261107-18">
+    <link rel="stylesheet" href="style.css?v=20261107-9">
+    <link rel="stylesheet" href="theme.css?v=20261107-19">
 </head>
 <body class="h-[100dvh] bg-base-100 text-base-content flex items-center justify-center overflow-hidden">
 
