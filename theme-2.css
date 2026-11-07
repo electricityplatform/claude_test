@@ -943,11 +943,11 @@ input, button, select, textarea { font-family: inherit; }
 .splash-logo.logo-tile { padding: 1rem 1.3rem; border-radius: .9rem; }
 .splash-logo.logo-tile .logo-img { height: 3.6rem; }
 .splash-brand { font-size: 1.4rem; }
-/* وضع المتصفح (موقع الكمبيوتر، عرض 900px فأكتر) فقط: 3 أضعاف الأصلي */
+/* وضع المتصفح (موقع الكمبيوتر، عرض 900px فأكتر): نفس نسبة وضع الهاتف للشاشة (لوجو ~23% وكلمة ~40% من العرض) */
 @media (min-width: 900px) {
-    .splash-logo.logo-tile { padding: 3rem 3.9rem; border-radius: 2.7rem; }
-    .splash-logo.logo-tile .logo-img { height: 10.8rem; }
-    .splash-brand { font-size: 2.4rem; }
+    .splash-logo.logo-tile { padding: 1.86rem 2.42rem; border-radius: 1.7rem; }
+    .splash-logo.logo-tile .logo-img { height: 6.7rem; }
+    .splash-brand { font-size: 2.6rem; }
 }
 
 /* شعار الدخول/الترحيب: اللوجو وكلمة ELECTRICITY بس، من غير إطار ولا خلفية حوالين الاتنين */
