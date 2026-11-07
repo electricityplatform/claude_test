@@ -470,12 +470,12 @@ html.dark .bottom-nav {
 /* =====================================================================
    الشريط السفلي (4 أزرار) + صورة الحساب
    ===================================================================== */
-.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .45rem .3rem; }
-.bottom-nav .bottom-nav-item svg { width: 1.9rem; height: 1.9rem; }
+.bottom-nav .bottom-nav-item { flex: 1 1 0; min-width: 0; padding: .5rem .3rem; }
+.bottom-nav .bottom-nav-item svg { width: 2.5rem; height: 2.5rem; }
 .bottom-nav .user-avatar-btn .avatar,
 .bottom-nav .user-avatar-btn .avatar > *,
 .bottom-nav .user-avatar-btn .w-9,
-.bottom-nav .user-avatar-btn img { width: 1.9rem !important; height: 1.9rem !important; object-fit: cover; }
+.bottom-nav .user-avatar-btn img { width: 2.5rem !important; height: 2.5rem !important; object-fit: cover; }
 .bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn img { border-radius: var(--r) !important; }
 .user-avatar-lg .avatar,
 .user-avatar-lg .avatar > *,
