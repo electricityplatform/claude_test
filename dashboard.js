@@ -1,3 +1,15 @@
+// يقسم الاسم "عربي - English" لسطرين: العربي فوق والإنجليزي تحته (بيعتمد على وجود حروف عربية مش على الترتيب)
+function bilingualLabelHtml(text) {
+    const str = String(text == null ? '' : text);
+    const parts = str.split(/\s+[-–—]\s+/);
+    if (parts.length < 2) return escapeHtmlValue(str);
+    const hasAr = (s) => /[\u0600-\u06FF]/.test(s);
+    const ar = parts.filter(hasAr).join(' - ').trim();
+    const en = parts.filter((p) => !hasAr(p)).join(' - ').trim();
+    if (!ar || !en) return escapeHtmlValue(str);
+    return `<span class="lbl-ar" dir="rtl">${escapeHtmlValue(ar)}</span><span class="lbl-en" dir="ltr">${escapeHtmlValue(en)}</span>`;
+}
+
 // مسار الرحلة الحالية: 'buy' (شراء قطع الغيار) أو 'alerts' (تنبيهات الصيانة)
 let currentFlow = 'buy'; // 'buy' | 'alerts' | 'compat'
 
@@ -68,7 +80,7 @@ async function renderFlowPartsScreen() {
         container.innerHTML = '<div class="dash-grid2">' + sparePartsList.map(part => `
             <button type="button" onclick="selectFlowPart(${jsArg(part)})" class="dash-card feature teal-floral compact">
                 <div class="dash-ico">${uiIcon('cog', 'w-6 h-6')}</div>
-                <h3 class="font-bold" dir="auto">${escapeHtmlValue(part)}</h3>
+                <h3 class="font-bold">${bilingualLabelHtml(part)}</h3>
             </button>`).join('') + '</div>';
     } else {
         container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد قطع غيار متاحة حالياً</div>`;
@@ -239,7 +251,7 @@ async function renderBrandsScreen(partName = '') {
         container.innerHTML = '<div class="dash-grid2">' + brands.map(brand => `
             <button type="button" onclick="renderModelsScreen(${jsArg(brand)})" class="dash-card feature teal-floral compact">
                 <div class="dash-ico">${uiIcon('device', 'w-6 h-6')}</div>
-                <h3 class="font-bold" dir="auto">${escapeHtmlValue(brand)}</h3>
+                <h3 class="font-bold">${bilingualLabelHtml(brand)}</h3>
             </button>`).join('') + '</div>';
     } else {
         container.innerHTML = `<div class="text-center text-base-content/60 py-6">لا توجد ماركات متاحة حالياً</div>`;
