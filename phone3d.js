@@ -11,8 +11,8 @@ const PHONE_PARTS = [
     ['back',    'غطاء خلفي'],
     ['camera',  'كاميرا']
 ];
-const PHONE_CAP_IDLE = 'لفّ التليفون بصباعك، أو المسه لتفكيكه';
-const PHONE_CAP_OPEN = 'لفّ المجسم بصباعك في كل الاتجاهات، والمس قطعة لتحديدها ومرة تانية لفتح أسعارها';
+const PHONE_CAP_IDLE = 'اضغط لفك الهاتف، واختر قطعة الغيار';
+const PHONE_CAP_OPEN = 'اختر قطعة الغيار';
 const THREE_SRC = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
 
 // صور التليفون: ظهر وواجهة (مفرودين من الصورتين الحقيقيتين).
