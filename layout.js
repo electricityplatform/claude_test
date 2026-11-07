@@ -137,9 +137,9 @@ function renderAccountScreen() {
         <div class="flex-1 p-1 flex flex-col items-center gap-4 pt-2">
             <button type="button" class="user-avatar-btn user-avatar-lg" onclick="openProfilePhotoSheet()" aria-label="تغيير الصورة الشخصية">${avatar}</button>
             <div class="text-center">
-                <div class="font-bold text-lg" dir="auto">${escapeHtmlValue(currentUserName)}</div>
-                ${currentUserRole ? `<div class="text-sm text-base-content/70" dir="auto">${escapeHtmlValue(currentUserRole)}</div>` : ''}
-                ${currentUserPhone ? `<div class="text-sm text-base-content/70" dir="ltr">${escapeHtmlValue(currentUserPhone)}</div>` : ''}
+                <div class="font-bold text-lg acct-name" dir="auto">${escapeHtmlValue(currentUserName)}</div>
+                ${currentUserRole ? `<div class="text-sm acct-meta text-base-content/70" dir="auto">${escapeHtmlValue(currentUserRole)}</div>` : ''}
+                ${currentUserPhone ? `<div class="text-sm acct-meta text-base-content/70" dir="ltr">${escapeHtmlValue(currentUserPhone)}</div>` : ''}
             </div>
             <div class="w-full flex flex-col gap-3 pb-4">
                 ${card('user', 'البيانات الشخصية', 'renderPersonalProfileScreen()')}
