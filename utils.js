@@ -5,6 +5,16 @@ function jsArg(v) {
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ================= كارت قائمة موحّد (نفس حجم وخط كروت حسابي، من غير أيقونة) =================
+// استعمله في أي شاشة قوائم: menuListCardHtml('النص', 'renderXxx()')
+function menuListCardHtml(label, action) {
+    return `
+        <button type="button" onclick="${action}" class="dash-card feature teal-floral menu-list-card">
+            <div class="flex-1 min-w-0 relative"><h3 class="font-bold text-lg" dir="auto">${escapeHtmlValue(label)}</h3></div>
+            ${uiIcon('chevron', 'w-5 h-5 flex-shrink-0 opacity-60 relative')}
+        </button>`;
+}
+
 // ================= الأيقونات (مشتركة بين كل الشاشات) =================
 // استعمالها: uiIcon('bell', 'w-5 h-5') — بترجّع SVG بلون currentColor
 const UI_ICON_PATHS = {
