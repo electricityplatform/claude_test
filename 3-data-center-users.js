@@ -100,6 +100,10 @@ async function loadUsersDataIntoSheetGrid() {
                                     const val = user[col] !== null && user[col] !== undefined ? user[col] : '';
                                     const isId = USERS_SHEET_READONLY_COLS.includes(col);
                                     if (isId) {
+                                        // رابط الصورة الشخصية: للقراءة فقط وبعرض محدود (الباقي ...) والرابط كامل في التلميح
+                                        if (col === 'profile_photo_url') {
+                                            return `<td class="relative"><span class="sheet-photo-url px-2.5 py-2 font-mono text-base-content/60 text-xs" dir="ltr" title="${escapeHtmlValue(val)}">${escapeHtmlValue(val)}</span></td>`;
+                                        }
                                         return sheetReadonlyCellHtml(val);
                                     }
                                     return `
@@ -261,7 +265,7 @@ async function saveUsersDataCenterSheetToDB() {
     }
 }
 let currentUsersSheetColumns = [];
-const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at', 'seller_data_center_created'];
+const USERS_SHEET_READONLY_COLS = ['id', 'created_at', 'last_active_at', 'seller_data_center_created', 'profile_photo_url'];
 // أعمدة افتراضية لشيت المستخدمين لما الجدول يكون فاضي (راجعها وعدّلها لو أعمدة جدول users عندك مختلفة)
 const USERS_SHEET_DEFAULT_COLUMNS = [
     'id', 'created_at', 'last_active_at', 'user_role', 'user_name',
