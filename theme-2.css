@@ -939,15 +939,13 @@ input, button, select, textarea { font-family: inherit; }
 #appContainer .list-card > svg,
 #appContainer #dataCenterContainer > div[onclick] > svg { width: 1.25rem; height: 1.25rem; }
 
-/* لوجو شاشة البداية (Splash): وضع الهاتف = الحجم الطبيعي */
-.splash-logo.logo-tile { padding: 1rem 1.3rem; border-radius: .9rem; }
-.splash-logo.logo-tile .logo-img { height: 3.6rem; }
-.splash-brand { font-size: 1.4rem; }
+/* لوجو شاشة البداية (Splash): الأحجام هنا، والتناسب (حواف/دائرية) في قسم "مربع اللوجو الموحّد" آخر الملف */
+.splash-logo.logo-tile { --lh: 3.6rem; }
+.splash-brand { font-size: 1.11rem; }   /* = 0.308 × ارتفاع الرسمة (--lh): عرض الكلمة ~ 1.7× عرض المربع الكريمي زي ما كان معتمد */
 /* وضع المتصفح (موقع الكمبيوتر، عرض 900px فأكتر): نفس نسبة وضع الهاتف للشاشة (لوجو ~23% وكلمة ~40% من العرض) */
 @media (min-width: 900px) {
-    .splash-logo.logo-tile { padding: 1.86rem 2.42rem; border-radius: 1.7rem; }
-    .splash-logo.logo-tile .logo-img { height: 6.7rem; }
-    .splash-brand { font-size: 2.6rem; }
+    .splash-logo.logo-tile { --lh: 6.7rem; }
+    .splash-brand { font-size: 2.07rem; }   /* نفس النسبة: 0.308 × 6.7rem */
 }
 
 /* شعار الدخول/الترحيب: اللوجو وكلمة ELECTRICITY بس، من غير إطار ولا خلفية حوالين الاتنين */
@@ -975,8 +973,37 @@ html .auth-hero .brand .brand-chip { padding: .3rem .5rem; border-radius: .8rem;
 html .auth-hero .brand .brand-chip { background: #f6f1e7; padding: .3rem .5rem; border-radius: .8rem; }
 
 /* لوجو لوحة الترحيب (جوه الدايرة/المربع الكريمي): كبير يملا المربع */
-.auth-avatar.welcome-logo .logo-img { height: 3.2rem; width: auto; max-width: 100%; }
 
 /* أزرار البحث بالصوت والكاميرا: من غير أي حركة/تكبير/تصغير وقت اللمس ولا انتقالات */
 .app-search-bar .btn { transition: none !important; animation: none !important; transform: none !important; }
 .app-search-bar { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+
+/* =====================================================================
+   مربع اللوجو الموحّد: كل مكان فيه شعار الشركة بنفس تناسب مربع الترحيب (hero-stage)
+   --lh = ارتفاع رسمة اللوجو. الحواف الكريمي حوالين الرسمة = 11.35% (فوق/تحت) و14.6% (يمين/شمال) من ارتفاعها،
+   ودرجة دائرية الحواف = 9.7% من ارتفاعها. غيّر --lh بس وكل حاجة بتتناسب.
+   ===================================================================== */
+html .brand-chip,
+html .auth-hero .brand .brand-chip,
+html .splash-logo.logo-tile,
+html .auth-avatar.welcome-logo {
+    --lh: 1.45rem;
+    background: #f6f1e7;
+    padding: calc(var(--lh) * .1135) calc(var(--lh) * .146) !important;
+    border-radius: calc(var(--lh) * .097) !important;
+    width: auto; height: auto;
+}
+html .brand-chip .logo-img,
+html .auth-hero .brand .brand-chip .logo-img,
+html .splash-logo.logo-tile .logo-img,
+html .auth-avatar.welcome-logo .logo-img { height: var(--lh) !important; width: auto !important; max-width: none !important; }
+
+html .app-topbar .brand-chip { --lh: 1.6rem; }
+html .auth-hero .brand .brand-chip { --lh: 2rem; }
+html .splash-logo.logo-tile { --lh: 3.6rem; }
+html .auth-avatar.welcome-logo { --lh: 3rem; border: 0; box-shadow: 0 .5rem 1.2rem rgba(0,0,0,.3); }
+@media (min-width: 900px) {
+    html .app-topbar .brand-chip { --lh: 1.9rem; }
+    html .auth-hero .brand .brand-chip { --lh: 2.6rem; }
+    html .splash-logo.logo-tile { --lh: 6.7rem; }
+}
