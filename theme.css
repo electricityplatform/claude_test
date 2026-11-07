@@ -72,8 +72,8 @@ html.dark body.bg-base-100 {
 }
 main.bg-base-100 { background: transparent !important; }
 
-::selection { background: rgba(201, 169, 98, .38); }
-* { scrollbar-width: thin; scrollbar-color: rgba(201, 169, 98, .4) transparent; }
+::selection { background: rgba(120, 120, 128, .3); }
+* { scrollbar-width: thin; scrollbar-color: rgba(120, 120, 128, .45) transparent; }
 :focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
 
 /* =====================================================================
@@ -389,7 +389,7 @@ html:not(.dark) .dash-card.feature {
     background-color: #f5f2ec !important;
     background-image: linear-gradient(145deg, #f9f8f5, #ece6db) !important;
     border: 1px solid rgba(255, 255, 255, .6) !important;
-    box-shadow: var(--glass-shadow), var(--glass-inset) !important;
+    box-shadow: none !important;
     color: #27231d !important;
 }
 html:not(.dark) .dash-card.feature {
@@ -675,7 +675,7 @@ html.dark .dash-card, html.dark .dash-card.feature {
     background-color: #3d352c !important;
     background-image: var(--dark-surface) !important;
     border: 1px solid var(--dark-edge) !important;
-    box-shadow: 0 12px 26px rgba(60, 48, 30, .32), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    box-shadow: none !important;
     color: #f3ead2 !important;
 }
 html:not(.dark) .dash-card:hover, html:not(.dark) .dash-card.feature:hover,
@@ -803,13 +803,12 @@ html.dark body.bg-base-100 {
     background-color: #0d0d0f;
     background-image:
         radial-gradient(720px 420px at 85% -8%, rgba(255, 255, 255, .06), transparent 62%),
-        radial-gradient(520px 380px at 0% 105%, rgba(226, 169, 59, .06), transparent 60%),
         var(--page-dark);
     background-attachment: fixed;
 }
 html.dark * { scrollbar-color: rgba(255, 255, 255, .25) transparent; }
 html.dark #appContainer :focus-visible { outline-color: var(--amber); }
-html.dark ::selection { background: rgba(226, 169, 59, .35); }
+html.dark ::selection { background: rgba(255, 255, 255, .3); }
 
 /* الأسطح: فحمي زجاجي (الشريطين، الأقسام، عناصر القوائم) */
 html.dark :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, .dash-card,
@@ -837,7 +836,7 @@ html.dark .dash-card, html.dark .dash-card.feature {
     background-color: #1a1a1d !important;
     background-image: var(--dark-surface) !important;
     border: 1px solid var(--dark-edge) !important;
-    box-shadow: 0 12px 26px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+    box-shadow: none !important;
     color: #f1f1f1 !important;
 }
 html.dark .dash-card:hover, html.dark .dash-card.feature:hover { background-color: #212124 !important; }
@@ -1370,10 +1369,10 @@ html:is(.dark, :not(.dark)) .auth-card .auth-foot { color: #ecd9a6 !important; b
    الوضع الداكن: رجوع الظلال بلمسة ذهبية خفيفة
    ===================================================================== */
 html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 18px rgba(201, 169, 98, .16), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+    box-shadow: none !important;
 }
 html.dark .bottom-nav {
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, .5), 0 0 18px rgba(201, 169, 98, .16), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+    box-shadow: none !important;
 }
 
 /* =====================================================================
@@ -1402,8 +1401,7 @@ html.dark .bottom-nav {
 .bottom-nav .user-avatar-btn .avatar,
 .bottom-nav .user-avatar-btn .avatar > *,
 .bottom-nav .user-avatar-btn .w-9,
-
-.bottom-nav .user-avatar-btn img { object-fit: cover; }
+.bottom-nav .user-avatar-btn img { width: 1.9rem !important; height: 1.9rem !important; object-fit: cover; }
 .bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn img { border-radius: .45rem !important; }
 .user-avatar-lg .avatar,
 .user-avatar-lg .avatar > *,
@@ -1475,10 +1473,10 @@ html.dark .dash-card::before, html.dark .dash-card.feature::before {
     background: linear-gradient(135deg, rgba(226, 169, 59, .14), rgba(226, 169, 59, 0) 45%);
 }
 html.dark :is(.dash-card, #appContainer .app-topbar, .modal-box, .auth-card, #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
-    box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 18px rgba(226, 169, 59, .22), inset 0 1px 0 rgba(226, 169, 59, .3) !important;
+    box-shadow: none !important;
 }
 html.dark .bottom-nav {
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, .5), 0 0 18px rgba(226, 169, 59, .22), inset 0 1px 0 rgba(226, 169, 59, .3) !important;
+    box-shadow: none !important;
 }
 html.dark #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover {
     background-image:
@@ -1646,3 +1644,119 @@ html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input)
 .hp3-chip, .hp3-collapse { font-size: .9rem; }
 .auth-card h1 { font-size: 1.6rem; }
 .auth-card .line-field input { font-size: 1.1rem; }
+
+/* =====================================================================
+   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Almwaheb 3
+   - الظلال الذهبية كانت لسه ظاهرة في الوضع الداكن (قواعد !important أعلى من إصدار 6)، اتشالت من مصدرها فوق.
+   - الشريطين (العلوي والسفلي) والقائمة الجانبية بيستخدموا متغير واحد --bar-bg، فلونهم دايماً واحد في الوضعين.
+   ===================================================================== */
+:root { --bar-bg: #0a0a0b; --bar-solid: #0a0a0b; }
+html.dark, html.dark #appContainer { --p: 96% 0 0; --pc: 14% 0 0; }
+html.dark { --amber: #ffffff; }
+
+/* ---------- الشريطين: لون واحد ثابت في الوضعين ومع أي تغيير ---------- */
+html:is(.dark, :not(.dark)) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu) {
+    background-color: var(--bar-bg) !important;
+    background-image: var(--gloss) !important;
+    border-color: rgba(255, 255, 255, .14) !important;
+    color: #fff;
+}
+html:is(.dark, :not(.dark)) .bottom-nav .bottom-nav-item,
+html:is(.dark, :not(.dark)) .topbar-brand { color: #fff !important; }
+
+/* ---------- حدود الكروت ولوحة العرض: محايدة بدل الذهبي ---------- */
+.phone-stage::after { border-color: rgba(255, 255, 255, .22); }
+.hero { border-color: rgba(255, 255, 255, .14); }
+html:is(.dark, :not(.dark)) :is(.dash-card, .dash-card.feature, .home-intro, .hero, .phone-stage, .modal-box, .photo-sheet-card,
+                                #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) { border-color: rgba(255, 255, 255, .14) !important; }
+.hero-panel { border-color: rgba(255, 255, 255, .3); background: var(--gloss); }
+.hero-panel::before { background: #bdbdc2; }
+.hero-panel::after { background: linear-gradient(#bdbdc2, #4a4a50); }
+.hp-ico { background: var(--gloss-white); color: #0a0a0b; }
+
+/* ---------- حلقة التركيز: محايدة ---------- */
+html:not(.dark) .input:focus, html:not(.dark) .select:focus, html:not(.dark) .textarea:focus { border-color: #27272a; box-shadow: none; }
+html.dark .input:focus, html.dark .select:focus, html.dark .textarea:focus { border-color: #fff; box-shadow: none; }
+html:not(.dark) .excel-input:focus { background-color: #f1f1f3 !important; box-shadow: inset 0 0 0 2px #27272a !important; }
+html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !important; box-shadow: inset 0 0 0 2px #fff !important; }
+.line-field:focus-within { border-bottom-color: currentColor; }
+
+/* ---------- الوضع الفاتح: من غير التظليل الأسود الخفيف جوه كروت الصور ---------- */
+html:not(.dark) #appContainer .dash-card.has-img { background-image: var(--card-img) !important; }
+
+/* ---------- عمود profile_photo_url في شيت المستخدمين: عرض محدود والباقي ... ---------- */
+#editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- الخط: Almwaheb 3 (معرّف في style.css). الأحجام معاد ضبطها لأن Katibeh كان صغير والخط ده بحجم عادي ---------- */
+body, button, input, select, textarea { font-family: 'Almwaheb 3', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif; }
+#appContainer .text-xs { font-size: .85rem !important; line-height: 1.5 !important; }
+#appContainer .text-sm { font-size: 1rem !important; line-height: 1.5 !important; }
+#appContainer .text-base { font-size: 1.1rem !important; line-height: 1.5 !important; }
+#appContainer .text-lg { font-size: 1.25rem !important; line-height: 1.45 !important; }
+#appContainer .text-xl { font-size: 1.45rem !important; line-height: 1.4 !important; }
+#appContainer .text-2xl { font-size: 1.75rem !important; line-height: 1.35 !important; }
+@media (min-width: 640px) {
+    #appContainer .sm\:text-base { font-size: 1.1rem !important; }
+    #appContainer .sm\:text-lg { font-size: 1.25rem !important; }
+}
+#appContainer .btn { font-size: 1rem; }
+#appContainer .btn-sm { font-size: .95rem; }
+#appContainer .badge { font-size: .9rem; }
+#appContainer .badge-lg { font-size: 1rem; }
+#appContainer .label-text { font-size: 1rem; }
+#appContainer .input, #appContainer .select, #appContainer .textarea, #appContainer .input > input { font-size: 1rem; }
+#appContainer .dash-card.compact h3 { font-size: 1.2rem !important; }
+#appContainer .dash-card h3 { font-size: 1.25rem; }
+.home-intro h2 { font-size: 1.05rem; }
+.home-intro p { font-size: .95rem; }
+.home-step { font-size: .85rem; }
+.hero-kicker { font-size: .95rem; }
+.hero-cap, .hero-tag, .hero-stat span { font-size: 1rem; }
+.hero-tile { font-size: .85rem; }
+.hp-label { font-size: .75em; }
+.phone-stage-cap { font-size: 1rem; }
+.hp3-chip, .hp3-collapse { font-size: .85rem; }
+.auth-card h1 { font-size: 1.5rem; }
+.auth-card .line-field input { font-size: 1rem; }
+
+/* =====================================================================
+   الإصدار 8: الوضع الفاتح - أصفر السرير (mustard) بدل الأسود
+   اللون متاخد من صورة السرير. لتغييره: غيّر --mustard و --mustard-hover و --ink هنا بس.
+   كروت الصور (has-img) فاضلة بصورتها، والوضع الداكن زي ما هو.
+   ===================================================================== */
+html:not(.dark) {
+    --mustard: #c9961f;
+    --mustard-hover: #d6a62c;
+    --ink: #24190a;
+    --bar-bg: var(--mustard);
+    --bar-solid: #c9961f;
+}
+html:not(.dark) :is(.bottom-nav, #appContainer .app-topbar, #appContainer .app-search-bar, #sideMenu,
+                    .dash-card:not(.has-img), .dash-card.feature:not(.has-img), .home-intro, .auth-card,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) {
+    background-color: var(--mustard) !important;
+    background-image: none !important;
+    border-color: rgba(36, 25, 10, .28) !important;
+    --p: 20% .04 80; --pc: 98% 0 0;
+    --b1: 99% .01 90; --b2: 96% .015 90; --b3: 88% .05 85; --bc: 20% .04 80;
+    color: var(--ink) !important;
+}
+html:not(.dark) :is(.dash-card:not(.has-img), .dash-card.feature:not(.has-img)):hover,
+html:not(.dark) #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200).cursor-pointer:hover { background-color: var(--mustard-hover) !important; background-image: none !important; }
+html:not(.dark) :is(.dash-card:not(.has-img), .home-intro, .auth-card,
+                    #appContainer :is(.rounded-2xl, .rounded-3xl).border:is(.bg-base-100, .bg-base-200)) :is(h1, h2, h3, h4, p, label, .label-text, .text-primary) { color: var(--ink) !important; }
+html:not(.dark) .bottom-nav .bottom-nav-item,
+html:not(.dark) .topbar-brand { color: var(--ink) !important; }
+html:not(.dark) .bottom-nav .bottom-nav-item:hover, html:not(.dark) .bottom-nav .bottom-nav-item:active { color: var(--ink) !important; background: rgba(36, 25, 10, .12); }
+html:not(.dark) .app-search-bar input { color: var(--ink); }
+html:not(.dark) :is(.auth-card, .app-search-bar, #appContainer .app-search-bar) input::placeholder { color: var(--ink) !important; opacity: .6; }
+html:not(.dark) .auth-card :is(.line-field, .line-field svg, .line-field button, .auth-foot, .btn-ghost) { color: var(--ink) !important; }
+html:not(.dark) .auth-card .line-field { border-bottom-color: rgba(36, 25, 10, .6); }
+html:not(.dark) .auth-card .line-field input { color: var(--ink) !important; -webkit-text-fill-color: var(--ink); }
+html:not(.dark) .auth-card .line-field input::placeholder { color: var(--ink) !important; opacity: .6; }
+html:not(.dark) .auth-card .checkbox { border-color: var(--ink); }
+html:not(.dark) .auth-card .auth-foot { background: rgba(36, 25, 10, .08) !important; }
+html:not(.dark) .auth-card .btn-outline { border-color: rgba(36, 25, 10, .6); color: var(--ink) !important; }
+html:not(.dark) :is(.auth-screen, .splash-overlay, .teal-floral:not(.dash-card)) { background-color: var(--mustard) !important; background-image: none !important; }
+/* الأزرار الأساسية في الصفحة (برا الأسطح الصفرا) */
+html:not(.dark) #appContainer .btn-primary:not(.btn-outline) { background: var(--mustard) !important; background-color: var(--mustard) !important; border-color: rgba(36, 25, 10, .28) !important; color: var(--ink) !important; }
