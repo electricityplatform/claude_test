@@ -7,7 +7,7 @@ function renderLoginScreen() {
                 <div class="brand"><span>ELECTRICITY</span><span class="brand-chip">${logoImg()}</span></div>
             </div>
             <div class="auth-card">
-                <div class="auth-avatar">${uiIcon('user', 'w-9 h-9')}</div>
+                <div class="auth-avatar" id="loginAvatar">${typeof loginAvatarHtml === 'function' ? loginAvatarHtml() : uiIcon('user', 'w-9 h-9')}</div>
                 <h1 class="text-center font-bold text-lg text-primary mb-4">تسجيل الدخول</h1>
                 <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)" class="flex flex-col gap-2" autocomplete="off">
                     <div class="line-field">
@@ -60,8 +60,10 @@ function syncRememberedLogin() {
         } else {
             localStorage.removeItem('saved_phone');
             localStorage.removeItem('saved_password');
+            localStorage.removeItem('saved_photo');   // من غير "تذكرني": الصورة المتذكّرة تتمسح كمان
         }
     } catch (e) { /* التخزين غير متاح */ }
+    if (!remember && typeof refreshLoginAvatar === 'function') refreshLoginAvatar();
 }
 
 async function handleLoginSubmit(e) {
@@ -76,6 +78,7 @@ async function handleLoginSubmit(e) {
     } else {
         localStorage.removeItem('saved_phone');
         localStorage.removeItem('saved_password');
+        localStorage.removeItem('saved_photo');
     }
 
     const { data, error } = await supabaseClient.rpc('login', {
