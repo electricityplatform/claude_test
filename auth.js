@@ -9,18 +9,18 @@ function renderLoginScreen() {
             <div class="auth-card">
                 <div class="auth-avatar">${uiIcon('user', 'w-9 h-9')}</div>
                 <h1 class="text-center font-bold text-lg text-primary mb-4">تسجيل الدخول</h1>
-                <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)" class="flex flex-col gap-2">
+                <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)" class="flex flex-col gap-2" autocomplete="off">
                     <div class="line-field">
                         ${uiIcon('device', 'w-5 h-5')}
-                        <input type="text" id="loginPhone" required inputmode="tel" autocomplete="username" placeholder="رقم الهاتف" dir="ltr">
+                        <input type="text" id="loginPhone" required inputmode="tel" autocomplete="off" placeholder="رقم الهاتف" oninput="syncRememberedLogin()" dir="ltr">
                     </div>
                     <div class="line-field">
                         ${uiIcon('key', 'w-5 h-5')}
-                        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="رمز المرور" dir="ltr">
+                        <input type="password" id="loginPassword" required autocomplete="new-password" placeholder="رمز المرور" oninput="syncRememberedLogin()" dir="ltr">
                         <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" aria-label="إظهار أو إخفاء رمز المرور">${eye}</button>
                     </div>
                     <label class="label cursor-pointer justify-start gap-2 py-2">
-                        <input type="checkbox" id="rememberMe" class="checkbox checkbox-primary checkbox-sm">
+                        <input type="checkbox" id="rememberMe" class="checkbox checkbox-primary checkbox-sm" onchange="syncRememberedLogin()">
                         <span class="label-text text-primary font-semibold text-xs">تذكرني</span>
                     </label>
                     <button type="submit" class="btn btn-primary w-40 mx-auto">دخول</button>
@@ -32,14 +32,36 @@ function renderLoginScreen() {
     `;
     document.getElementById('appContainer').innerHTML = html;
 
-    if (localStorage.getItem('saved_phone')) {
-        const phoneInput = document.getElementById('loginPhone');
-        const passInput = document.getElementById('loginPassword');
-        const rememberCheckbox = document.getElementById('rememberMe');
-        if (phoneInput) phoneInput.value = localStorage.getItem('saved_phone');
-        if (passInput) passInput.value = localStorage.getItem('saved_password');
-        if (rememberCheckbox) rememberCheckbox.checked = true;
+    // تذكرني: الافتراضي غير معلّمة والخانات فاضية. لو في بيانات محفوظة بترجع هي والعلامة، غير كده كله فاضي.
+    const phoneInput = document.getElementById('loginPhone');
+    const passInput = document.getElementById('loginPassword');
+    const rememberCheckbox = document.getElementById('rememberMe');
+    const savedPhone = localStorage.getItem('saved_phone');
+    if (savedPhone) {
+        phoneInput.value = savedPhone;
+        passInput.value = localStorage.getItem('saved_password') || '';
+        rememberCheckbox.checked = true;
+    } else {
+        phoneInput.value = '';
+        passInput.value = '';
+        rememberCheckbox.checked = false;
     }
+}
+
+// بتتنادى مع كل تغيير في الخانات أو العلامة: معلّمة = احفظ، مش معلّمة = امسح المحفوظ فوراً
+function syncRememberedLogin() {
+    const phone = document.getElementById('loginPhone')?.value.trim() || '';
+    const password = document.getElementById('loginPassword')?.value.trim() || '';
+    const remember = document.getElementById('rememberMe')?.checked;
+    try {
+        if (remember) {
+            localStorage.setItem('saved_phone', phone);
+            localStorage.setItem('saved_password', password);
+        } else {
+            localStorage.removeItem('saved_phone');
+            localStorage.removeItem('saved_password');
+        }
+    } catch (e) { /* التخزين غير متاح */ }
 }
 
 async function handleLoginSubmit(e) {
