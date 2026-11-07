@@ -40,7 +40,7 @@ function boltMarkSvg() {
 
 // لوجو الموقع (صورة logo.png)
 function logoImg(cls = '') {
-    return `<img src="logo.png" alt="Electricity" class="logo-img ${cls}" draggable="false">`;
+    return `<img src="logo.png" alt="ELECTRICITY" class="logo-img ${cls}" draggable="false">`;
 }
 
 // ================= دوال مساعدة: المحافظات والمناطق والنطاقات =================
