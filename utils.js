@@ -236,13 +236,23 @@ function emptyTableRowHtml(colspan, message) {
         return false;
     }
 
+    // الجزء الظاهر من الصفحة (visual viewport) مش في أول الصفحة؟ (بيشمل حالة التكبير Pinch zoom)
+    // لما الصفحة تتكبّر، السحب بيحرّك الجزء الظاهر بس ومش بيغيّر scrollY، فلازم نقيس من الـ visual viewport.
+    // السحب للتحديث بيشتغل بس لما الجزء الظاهر يكون واصل لأول الصفحة بالظبط وبعدها تسحب لتحت.
+    function visualNotAtTop() {
+        const vv = window.visualViewport;
+        if (!vv) return false;
+        const top = typeof vv.pageTop === 'number' ? vv.pageTop : (vv.offsetTop + (window.scrollY || 0));
+        return top > 1;
+    }
+
     // في المتصفح العادي التحديث بالسحب بيعمله المتصفح نفسه (الصفحة بتتمرر طبيعي)، ده بس للتطبيق المثبّت
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     document.addEventListener('touchstart', function (e) {
         pulling = false;
         // شاشات الدخول/الترحيب الصفحة فيها مبتتحركش، فالمتصفح ما بيحدّثش بالسحب: بنفعّله بإيدينا هناك
-        if (e.touches.length !== 1) return;
+        if (e.touches.length !== 1 || visualNotAtTop()) return;
         const t = e.target;
         if (t.closest && t.closest('input, textarea, select, #sideMenu')) return;
         if (canScrollUp(t)) return;
@@ -254,6 +264,8 @@ function emptyTableRowHtml(colspan, message) {
 
     document.addEventListener('touchmove', function (e) {
         if (!pulling) return;
+        // إصبعين (تكبير) أو الجزء الظاهر اتحرك بعيد عن أول الصفحة: مش سحب للتحديث
+        if (e.touches.length > 1 || visualNotAtTop()) { pulling = false; dist = 0; hideIndicator(); return; }
         const dy = e.touches[0].clientY - startY;
         const dx = e.touches[0].clientX - startX;
         // الإصبع اتحرك لفوق = تمرير عادي للمحتوى، يبقى مش سحب للتحديث لحد ما يرفع إيده
@@ -271,7 +283,7 @@ function emptyTableRowHtml(colspan, message) {
     document.addEventListener('touchend', function () {
         if (!pulling) return;
         pulling = false;
-        if (dist >= THRESHOLD) {
+        if (dist >= THRESHOLD && !visualNotAtTop()) {
             const el = getIndicator();
             el.style.transition = 'transform .2s';
             el.style.transform = 'translateY(30px)';
