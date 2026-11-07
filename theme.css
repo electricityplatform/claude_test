@@ -1688,7 +1688,7 @@ html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !import
 #editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- الخط: الإنجليزي Amiri والعربي Cairo (من Google Fonts في index.html) ---------- */
-body, button, input, select, textarea { font-family: 'Amiri', 'Cairo', Arial, sans-serif; font-weight: 700; }
+body, button, input, select, textarea { font-family: 'Amiri', 'Cairo', sans-serif; font-weight: 700; }
 /* بولد في الموقع كله */
 body *:not(svg):not(svg *) { font-weight: 700 !important; }
 #appContainer .text-xs { font-size: .85rem !important; line-height: 1.5 !important; }
@@ -1832,4 +1832,4 @@ html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #64594
 
 /* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
 .auth-card .line-field input[type="password"] {
-    font-family: Arial, san
+    font-family: 'Amiri', 'Cairo',
