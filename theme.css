@@ -1646,7 +1646,7 @@ html.dark *:not(.excel-input):not(.input):not(.select):not(.textarea):not(input)
 .auth-card .line-field input { font-size: 1.1rem; }
 
 /* =====================================================================
-   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Arial
+   الإصدار 7: من غير ذهبي خالص (لا ظلال ولا لمعان ولا حدود) + خط Cairo
    - الظلال الذهبية كانت لسه ظاهرة في الوضع الداكن (قواعد !important أعلى من إصدار 6)، اتشالت من مصدرها فوق.
    - الشريطين (العلوي والسفلي) والقائمة الجانبية بيستخدموا متغير واحد --bar-bg، فلونهم دايماً واحد في الوضعين.
    ===================================================================== */
@@ -1687,8 +1687,8 @@ html.dark .excel-input:focus { background-color: rgba(255, 255, 255, .1) !import
 /* ---------- عمود profile_photo_url في شيت المستخدمين: عرض محدود والباقي ... ---------- */
 #editableUsersTable .sheet-photo-url { display: block; width: 8rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- الخط: Arial ---------- */
-body, button, input, select, textarea { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; }
+/* ---------- الخط: Cairo (من Google Fonts في index.html) ---------- */
+body, button, input, select, textarea { font-family: 'Cairo', Arial, sans-serif; }
 #appContainer .text-xs { font-size: .85rem !important; line-height: 1.5 !important; }
 #appContainer .text-sm { font-size: 1rem !important; line-height: 1.5 !important; }
 #appContainer .text-base { font-size: 1.1rem !important; line-height: 1.5 !important; }
@@ -1830,7 +1830,7 @@ html:not(.dark) .hero-panel::after { background: linear-gradient(#d9c7a6, #64594
 
 /* ---------- رمز المرور: النقط كانت مش باينة (الخط ما فيهوش النقطة) ---------- */
 .auth-card .line-field input[type="password"] {
-    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif !important;
+    font-family: 'Cairo', Arial, sans-serif !important;
     letter-spacing: .25em;
 }
-html:not(.dark) .auth-card .line-field input[type="password"] { co
+html:not(.dark) .auth-card .line-field input[type="password"] { color: #f5
