@@ -1074,7 +1074,7 @@ html .welcome-brand .brand-chip { --lh: 1.5rem; }
 #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 1.8rem; }
 #appContainer #loginFormContainer .line-field svg { width: 2.2rem; height: 2.2rem; }
 #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.15rem; }   /* الكلمات العربي (رقم الهاتف / رمز المرور) أصغر من الأرقام */
-#appContainer #loginFormContainer .label-text { font-size: 2rem; }   /* تذكرني */
+#appContainer #loginFormContainer .label-text { font-size: 2.5rem; }   /* تذكرني */
 #appContainer #loginFormContainer .checkbox { width: 2.1rem; height: 2.1rem; }
 #appContainer #loginFormContainer .btn-primary { width: 15rem; min-height: 4.4rem; height: auto; font-size: 1.7rem; }
 #appContainer #loginFormContainer .btn-ghost { min-height: 3.4rem; height: auto; font-size: 1.5rem; }
@@ -1084,8 +1084,59 @@ html .welcome-brand .brand-chip { --lh: 1.5rem; }
     #appContainer #loginFormContainer .line-field input[type="text"] { font-size: 2.2rem; }
     #appContainer #loginFormContainer .line-field svg { width: 2.5rem; height: 2.5rem; }
     #appContainer #loginFormContainer .line-field input::placeholder { font-size: 1.5rem; }
-    #appContainer #loginFormContainer .label-text { font-size: 2.3rem; }
+    #appContainer #loginFormContainer .label-text { font-size: 2.8rem; }
     #appContainer #loginFormContainer .checkbox { width: 2.4rem; height: 2.4rem; }
     #appContainer #loginFormContainer .btn-primary { width: 19rem; min-height: 5rem; font-size: 2rem; }
     #appContainer #loginFormContainer .btn-ghost { min-height: 3.8rem; font-size: 1.7rem; }
 }
+
+/* =====================================================================
+   الصفحة مكبّرة (utils.js بيضيف is-zoomed): نفك قفل التمرير الرأسي عشان تقدر تحرّك الصفحة لفوق وتحت
+   ===================================================================== */
+html.is-zoomed, html.is-zoomed body { overscroll-behavior: auto !important; }
+html.is-zoomed:has(.auth-screen) { overflow-y: auto !important; }
+
+/* =====================================================================
+   توحيد الألوان (الوضع الفاتح): بدل الأزرق/التيل القديم
+   - أي كتابة على خلفية فاتحة/بيضا = بني الموقع (#3a332b)
+   - أي كتابة على خلفية الموقع البني الذهبي (الشريطين، الكروت، شريط البحث...) = أبيض (مضبوطة فوق في قواعد الأسطح)
+   - ألوان الثيم هنا مكتوبة تاني عشان الموقع ما يرجعش للتيل لو theme.css ما اتحمّلش
+   ===================================================================== */
+[data-theme="electricity-light"] {
+    --p: 33% 0.025 70;   --pc: 98% 0.008 85;
+    --s: 84% 0.012 70;   --sc: 26% 0.02 70;
+    --a: 78% 0.1 85;     --ac: 28% 0.04 80;
+    --n: 31% 0.022 70;   --nc: 97% 0.006 85;
+    --b1: 99% 0.004 85;  --b2: 96% 0.007 85;  --b3: 91% 0.01 70;  --bc: 27% 0.022 70;
+}
+html:not(.dark) #appContainer { --p: 30% 0.03 70; --pc: 98% 0.008 85; --bc: 27% 0.03 70; color: oklch(var(--bc)); }
+
+/* الشاشات القديمة (text-gray-* / text-blue-* / border-gray-*): بنربطها بألوان المنطقة (بني على الأبيض، أبيض على الأسطح البني) */
+html:not(.dark) #appContainer :is(.text-gray-900, .text-gray-800, .text-slate-800) { color: oklch(var(--bc)); }
+html:not(.dark) #appContainer .text-gray-700 { color: oklch(var(--bc) / .9); }
+html:not(.dark) #appContainer .text-gray-600 { color: oklch(var(--bc) / .75); }
+html:not(.dark) #appContainer :is(.text-gray-500, .text-slate-500) { color: oklch(var(--bc) / .6); }
+html:not(.dark) #appContainer :is(.text-gray-400, .text-slate-400) { color: oklch(var(--bc) / .5); }
+html:not(.dark) #appContainer :is(.text-blue-600, .text-blue-700) { color: oklch(var(--p)); }
+html:not(.dark) #appContainer :is(.border-gray-100, .border-gray-200) { border-color: oklch(var(--b3)); }
+html:not(.dark) #appContainer :is(.border-gray-300, .border-slate-300) { border-color: oklch(var(--bc) / .25); }
+
+/* لافتة "فيه تحديث جديد" / "عاد الاتصال": بني الموقع بدل التيل */
+.conn-banner.online { background: #3a332b; color: #fff; }
+
+/* شيت الإكسل (الوضع الفاتح): ألوان بني/كريمي بدل التيل */
+html:not(.dark) #editableUsersTable th, html:not(.dark) #editableUsersTable td { border-color: #ddd2ba; }
+html:not(.dark) #editableUsersTable th { background-color: #efe6d1; color: #3a332b; }
+html:not(.dark) .excel-input { color: #3a332b; }
+html:not(.dark) .excel-input:focus { background-color: #f6f1e7 !important; box-shadow: inset 0 0 0 2px #3a332b !important; }
+html:not(.dark) .drag-handle { background-color: #3a332b; }
+
+/* خانة البحث (الخانة الجوّانية بتاعة "ابحث"): أفتح من شريط البحث، والكلمة والأيقونة والكتابة بيضا */
+html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input {
+    background-color: rgba(255, 255, 255, .22) !important;
+    background-image: none !important;
+    border-color: rgba(255, 255, 255, .3) !important;
+}
+html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input { color: #fff !important; -webkit-text-fill-color: #fff; }
+html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input input::placeholder { color: #fff !important; opacity: 1 !important; }
+html:is(.dark, :not(.dark)) #appContainer .app-search-bar .input svg { color: #fff; opacity: .9; }
