@@ -89,7 +89,8 @@ async function handleLoginSubmit(e) {
         console.error("Instant heartbeat error:", err);
     }
 
-    saveSession(true);   // الدخول بيفضل محفوظ زي واتساب وفيسبوك لحد ما تسجّل خروج
+    rememberLogin = !!rememberMe;
+    saveSession(true);   // الدخول بيفضل محفوظ (لو "تذكرني" متعلّمة) لحد ما تسجّل خروج
     startHeartbeat();
     renderMainDashboard();
     loadDynamicMenuIntoSidebar();
@@ -122,8 +123,8 @@ function logoutUser() {
         <div class="modal-box max-w-xs text-center">
             <h3 class="font-bold text-lg mb-5">تأكيد الخروج</h3>
             <div class="flex gap-3 justify-center">
-                <button type="button" class="btn btn-site flex-1" onclick="confirmLogout()">تأكيد خروج</button>
-                <button type="button" class="btn btn-ghost flex-1" onclick="closeLogoutConfirm()">إلغاء</button>
+                <button type="button" class="btn btn-primary flex-1" onclick="confirmLogout()">تأكيد خروج</button>
+                <button type="button" class="btn btn-outline btn-primary flex-1" onclick="closeLogoutConfirm()">إلغاء</button>
             </div>
         </div>
         <div class="modal-backdrop" onclick="closeLogoutConfirm()"></div>
@@ -158,6 +159,7 @@ function confirmLogout() {
 // - الزائر: sessionStorage بس (ريفرش بس).
 // مفيش باسورد بيتحفظ هنا، بس id والدور والاسم والتليفون.
 const APP_SESSION_KEY = 'app_session';
+let rememberLogin = true;   // false لو المستخدم دخل من غير "تذكرني": الجلسة ما بتتحفظش وأي ريفرش بيطلب دخول من جديد
 const APP_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 function saveSession(persist) {
@@ -167,6 +169,7 @@ function saveSession(persist) {
     try {
         localStorage.removeItem(APP_SESSION_KEY);
         sessionStorage.removeItem(APP_SESSION_KEY);
+        if (currentUserId && !rememberLogin) return;   // من غير "تذكرني": مفيش حفظ خالص
         (persist && currentUserId ? localStorage : sessionStorage).setItem(APP_SESSION_KEY, JSON.stringify(data));
     } catch (e) { /* التخزين غير متاح */ }
 }
@@ -203,6 +206,7 @@ function restoreSession() {
     currentUserRole = s.role || '';
     currentUserName = s.name || '';
     currentUserPhone = s.phone || '';
+    rememberLogin = true;       // الجلسة اتحمّلت من التخزين يعني كانت متذكّرة
     saveSession(true);          // تجديد المدة
     startHeartbeat();
     renderMainDashboard();
