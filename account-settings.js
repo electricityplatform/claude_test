@@ -209,6 +209,7 @@ function closePhotoEditSheet() {
 
 // بيقفل أعلى حاجة مفتوحة: قائمة التعديل الأول، وبعدها العارض (زر رجوع الموبايل بيعدّي من هنا). all=true بيقفل الاتنين (عند الخروج).
 function closeProfilePhotoSheet(all) {
+    if (document.getElementById('photoCropper')) { cancelPhotoCrop(); return; }   // شاشة القص مفتوحة: الرجوع بيقفلها بس
     if (!all && document.getElementById('photoEditSheet')) { closePhotoEditSheet(); return; }
     closePhotoEditSheet();
     const v = document.getElementById('photoSheet');
@@ -284,6 +285,144 @@ async function rpcPhoto(name, args) {
     return res.data;
 }
 
+// ---------- قص الصورة (شاشة كاملة: إطار مربع بشبكة، إلغاء / تدوير / تم) ----------
+// بترجّع File مربع بعد القص، أو null لو المستخدم داس إلغاء. لو الصورة ما اتفتحتش بترجّع الأصلية وتكمل عادي.
+let _photoCropCancel = null;
+function cancelPhotoCrop() { if (_photoCropCancel) _photoCropCancel(); }
+
+// بنرسم الصورة على كانفاس بحد أقصى 2400px (يحافظ على الذاكرة في الموبايل)
+function toCanvas(img) {
+    const max = 2400;
+    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k);
+    c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+}
+function rotateCanvas(c) {
+    const r = document.createElement('canvas');
+    r.width = c.height; r.height = c.width;
+    const x = r.getContext('2d');
+    x.translate(r.width, 0);
+    x.rotate(Math.PI / 2);
+    x.drawImage(c, 0, 0);
+    return r;
+}
+
+function cropProfilePhoto(file) {
+    return new Promise(function (resolve) {
+        if (!file || !/^image\//.test(file.type || 'image/jpeg')) { resolve(file || null); return; }
+        loadImageFromFile(file).then(function (img) {
+            let src = toCanvas(img);
+            const root = document.createElement('div');
+            root.id = 'photoCropper';
+            root.innerHTML =
+                '<div class="pc-stage"></div>' +
+                '<div class="pc-bar">' +
+                '<button type="button" class="pc-cancel">إلغاء</button>' +
+                '<button type="button" class="pc-rot" aria-label="تدوير"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>' +
+                '<button type="button" class="pc-ok">تم</button>' +
+                '</div>';
+            document.body.appendChild(root);
+            const stage = root.querySelector('.pc-stage');
+            const view = document.createElement('canvas');
+            stage.appendChild(view);
+            const shades = [0, 1, 2, 3].map(function () { const d = document.createElement('div'); d.className = 'pc-shade'; stage.appendChild(d); return d; });
+            const box = document.createElement('div');
+            box.className = 'pc-box';
+            ['nw', 'ne', 'sw', 'se'].forEach(function (c) { const h = document.createElement('div'); h.className = 'pc-h'; h.dataset.c = c; box.appendChild(h); });
+            stage.appendChild(box);
+
+            let dx = 0, dy = 0, dw = 0, dh = 0;      // مكان الصورة المعروضة جوه المسرح
+            let bx = 0, by = 0, bs = 0;               // الإطار (x, y, المقاس)
+            const MIN = 64;
+
+            function layout() {
+                const W = stage.clientWidth, H = stage.clientHeight;
+                const k = Math.min(W / src.width, H / src.height);
+                dw = src.width * k; dh = src.height * k;
+                dx = (W - dw) / 2; dy = (H - dh) / 2;
+                view.width = Math.round(dw * (window.devicePixelRatio || 1));
+                view.height = Math.round(dh * (window.devicePixelRatio || 1));
+                view.style.cssText = 'left:' + dx + 'px;top:' + dy + 'px;width:' + dw + 'px;height:' + dh + 'px;';
+                view.getContext('2d').drawImage(src, 0, 0, view.width, view.height);
+                bs = Math.min(dw, dh); bx = dx + (dw - bs) / 2; by = dy + (dh - bs) / 2;
+                draw();
+            }
+            function draw() {
+                box.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + bs + 'px;height:' + bs + 'px;';
+                const r = dx + dw, b = dy + dh;
+                const set = function (el, l, t, w, h) { el.style.cssText = 'left:' + l + 'px;top:' + t + 'px;width:' + Math.max(0, w) + 'px;height:' + Math.max(0, h) + 'px;'; };
+                set(shades[0], dx, dy, dw, by - dy);                       // فوق
+                set(shades[1], dx, by + bs, dw, b - (by + bs));            // تحت
+                set(shades[2], dx, by, bx - dx, bs);                       // شمال
+                set(shades[3], bx + bs, by, r - (bx + bs), bs);            // يمين
+            }
+
+            let drag = null;
+            function pt(e) { const r = stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+            box.addEventListener('pointerdown', function (e) {
+                const c = e.target.dataset && e.target.dataset.c;
+                const p = pt(e);
+                drag = c
+                    ? { mode: 'resize', c: c, ax: (c === 'nw' || c === 'sw') ? bx + bs : bx, ay: (c === 'nw' || c === 'ne') ? by + bs : by }
+                    : { mode: 'move', ox: p.x - bx, oy: p.y - by };
+                try { box.setPointerCapture(e.pointerId); } catch (x) { /* مش مشكلة */ }
+                e.preventDefault();
+            });
+            box.addEventListener('pointermove', function (e) {
+                if (!drag) return;
+                const p = pt(e);
+                if (drag.mode === 'move') {
+                    bx = Math.min(dx + dw - bs, Math.max(dx, p.x - drag.ox));
+                    by = Math.min(dy + dh - bs, Math.max(dy, p.y - drag.oy));
+                } else {
+                    const goLeft = drag.c === 'nw' || drag.c === 'sw';
+                    const goUp = drag.c === 'nw' || drag.c === 'ne';
+                    const maxW = goLeft ? drag.ax - dx : dx + dw - drag.ax;
+                    const maxH = goUp ? drag.ay - dy : dy + dh - drag.ay;
+                    const want = Math.max(Math.abs(p.x - drag.ax), Math.abs(p.y - drag.ay));
+                    bs = Math.max(MIN, Math.min(want, maxW, maxH));
+                    bx = goLeft ? drag.ax - bs : drag.ax;
+                    by = goUp ? drag.ay - bs : drag.ay;
+                }
+                draw();
+            });
+            const end = function () { drag = null; };
+            box.addEventListener('pointerup', end);
+            box.addEventListener('pointercancel', end);
+
+            function close(result) {
+                window.removeEventListener('resize', layout);
+                _photoCropCancel = null;
+                root.remove();
+                resolve(result);
+            }
+            _photoCropCancel = function () { close(null); };
+
+            root.querySelector('.pc-cancel').addEventListener('click', function () { close(null); });
+            root.querySelector('.pc-rot').addEventListener('click', function () { src = rotateCanvas(src); layout(); });
+            root.querySelector('.pc-ok').addEventListener('click', function () {
+                const k = src.width / dw;
+                const sx = (bx - dx) * k, sy = (by - dy) * k, ss = bs * k;
+                const out = document.createElement('canvas');
+                out.width = out.height = Math.min(1024, Math.round(ss));
+                out.getContext('2d').drawImage(src, sx, sy, ss, ss, 0, 0, out.width, out.height);
+                const keepAlpha = /^image\/(png|webp|gif|avif)$/.test(file.type || '');
+                const mime = keepAlpha ? 'image/png' : 'image/jpeg';
+                out.toBlob(function (blob) {
+                    if (!blob) { close(file); return; }
+                    close(new File([blob], keepAlpha ? 'profile.png' : 'profile.jpg', { type: mime }));
+                }, mime, 0.9);
+            });
+
+            window.addEventListener('resize', layout);
+            layout();
+        }).catch(function () { resolve(file); });   // لو الصورة ما اتفتحتش نكمل بالأصلية
+    });
+}
+
 // ---------- رفع / تغيير ----------
 async function handleProfilePhotoFile(input) {
     const file = input && input.files && input.files[0];
@@ -294,12 +433,15 @@ async function handleProfilePhotoFile(input) {
     if (!looksLikeImage) { setPhotoStatus('اختر ملف صورة', 'error'); return; }
     if (file.size > PROFILE_PHOTO_MAX_INPUT_BYTES) { setPhotoStatus('الصورة كبيرة جدًا', 'error'); return; }
 
+    const cropped = await cropProfilePhoto(file);   // شاشة القص
+    if (!cropped) return;                            // إلغاء
+
     setPhotoBusy(true);
     setPhotoStatus('جارٍ رفع الصورة...', '');
     try {
         let out;
         try {
-            out = await fileToSquareBase64(file);
+            out = await fileToSquareBase64(cropped);
         } catch (e) {
             throw new Error('المتصفح مش قادر يقرا نوع الصورة دي، جرّب JPG أو PNG أو WebP');
         }
