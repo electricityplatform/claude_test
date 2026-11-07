@@ -169,7 +169,7 @@ function showSystemAlert(title, idStatus, menuStatus, errorDetails = "") {
 }
 
 function getRotatingCardStyle(index) {
-    return { bg: "bg-base-200 hover:bg-base-300 rounded-3xl", border: "border-base-300 hover:border-primary/40", text: "text-base-content", icon: "text-base-content/40 group-hover:text-primary" };
+    return { bg: "bg-base-200 hover:bg-base-300 rounded-3xl list-card", border: "border-base-300 hover:border-primary/40", text: "text-base-content", icon: "text-base-content/40 group-hover:text-primary" };
 }
 
 
