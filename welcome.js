@@ -89,7 +89,7 @@ function renderWelcomeScreen() {
             </div>
             <div class="auth-card">
                 <div class="auth-avatar welcome-logo">${logoImg()}</div>
-                <h1 class="text-center font-bold text-lg text-primary mb-2">أهلاً بك في Electricity</h1>
+                <h1 class="text-center font-bold text-lg text-primary mb-2">أهلًا بك في ELECTRICITY</h1>
                 <div class="mb-6"></div>
                 <div class="flex flex-col items-center gap-3">
                     <button type="button" class="btn btn-primary w-64" onclick="showLoginFromWelcome()">دخول</button>
@@ -129,7 +129,7 @@ window.renderLoginScreen = function () {
 function homeIntroHtml() {
     return `
         <div id="homeIntro" class="home-intro">
-            <h2 class="font-bold text-base text-primary">أهلاً بك في Electricity</h2>
+            <h2 class="font-bold text-base text-primary">أهلًا بك في ELECTRICITY</h2>
             <div class="home-steps">
                 <span class="home-step"><b>١</b>اختر الماركة</span>
                 <span class="home-step"><b>٢</b>اختر الموديل</span>
