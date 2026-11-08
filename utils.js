@@ -359,6 +359,17 @@ function emptyTableRowHtml(colspan, message) {
 
     // بيقفل أعلى نافذة مفتوحة (نافذة الصورة الشخصية أو القائمة الجانبية). بيرجّع true لو قفل حاجة.
     function closeTopOverlay() {
+        // كارت تأكيد تسجيل الخروج: نقفله بزر "إلغاء" بتاعه (لو مش لاقيه نشيل الكلاس/العنصر)
+        const lo = document.getElementById('logoutConfirmModal');
+        if (lo && (lo.classList.contains('modal-open') || lo.hasAttribute('open'))) {
+            const cancel = lo.querySelector('.btn-outline');
+            if (cancel) cancel.click();
+            if (document.getElementById('logoutConfirmModal') === lo && lo.classList.contains('modal-open')) {
+                lo.classList.remove('modal-open');
+                lo.removeAttribute('open');
+            }
+            return true;
+        }
         if (document.getElementById('photoSheet') && typeof closeProfilePhotoSheet === 'function') {
             closeProfilePhotoSheet();
             return true;
