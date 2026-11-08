@@ -209,7 +209,7 @@ function closePhotoEditSheet() {
 
 // بيقفل أعلى حاجة مفتوحة: قائمة التعديل الأول، وبعدها العارض (زر رجوع الموبايل بيعدّي من هنا). all=true بيقفل الاتنين (عند الخروج).
 function closeProfilePhotoSheet(all) {
-    if (document.getElementById('photoCropper')) { cancelPhotoCrop(); return; }   // شاشة القص مفتوحة: الرجوع بيقفلها بس
+    if (document.getElementById('photoCropper')) { cancelPhotoCrop(); closePhotoEditSheet(); return; }   // شاشة القص مفتوحة: الرجوع بيقفلها بس
     if (!all && document.getElementById('photoEditSheet')) { closePhotoEditSheet(); return; }
     closePhotoEditSheet();
     const v = document.getElementById('photoSheet');
@@ -455,7 +455,7 @@ async function handleProfilePhotoFile(input) {
     if (file.size > PROFILE_PHOTO_MAX_INPUT_BYTES) { setPhotoStatus('الصورة كبيرة جدًا', 'error'); return; }
 
     const cropped = await cropProfilePhoto(file);   // شاشة القص
-    if (!cropped) return;                            // إلغاء
+    if (!cropped) { closePhotoEditSheet(); return; }   // إلغاء: نرجع للصورة من غير قائمة الكاميرا/المعرض
 
     setPhotoBusy(true);
     setPhotoStatus('جارٍ رفع الصورة...', '');
