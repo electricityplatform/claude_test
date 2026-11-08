@@ -67,7 +67,7 @@ function syncRememberedLogin() {
 }
 
 // ================= نوع الجهاز (بيتسجّل مع كل دخول في سجل الدخول) =================
-function detectDeviceType() {
+function detectDeviceTypeBasic() {
     const ua = navigator.userAgent || '';
     if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
     if (/iPhone|iPod/i.test(ua)) return 'iPhone';
@@ -76,6 +76,19 @@ function detectDeviceType() {
     if (/Macintosh|Mac OS/i.test(ua)) return 'Mac';
     if (/Linux|X11/i.test(ua)) return 'Linux';
     return 'Unknown';
+}
+
+// بيحاول يجيب موديل الجهاز الحقيقي (كروم أندرويد بس)، ولو مش متاح يرجع للنوع العام
+async function detectDeviceType() {
+    const base = detectDeviceTypeBasic();
+    try {
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+            const h = await navigator.userAgentData.getHighEntropyValues(['model']);
+            const model = (h.model || '').trim();
+            if (model) return base + ' - ' + model;
+        }
+    } catch (e) { /* مش متاح: نكمل بالنوع العام */ }
+    return base;
 }
 
 async function handleLoginSubmit(e) {
@@ -96,7 +109,7 @@ async function handleLoginSubmit(e) {
     const { data, error } = await supabaseClient.rpc('login', {
         p_phone_number: phone,
         p_password: password,
-        p_device_type: detectDeviceType()
+        p_device_type: await detectDeviceType()
     });
 
     if (error || !data || !data.id) {
