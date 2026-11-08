@@ -1208,3 +1208,23 @@ html #logoutConfirmModal .modal-box .flex { gap: 1rem; }
 html:not(.dark), html:not(.dark) body { background-color: #ffffff; }
 html:not(.dark) #logoutConfirmModal .modal-box, html:not(.dark) .photo-edit-card, html:not(.dark) .photo-sheet-card { background-color: #ffffff; }
 html:not(.dark) #editableUsersTable, html:not(.dark) #editableUsersTable td { background-color: #ffffff; }
+
+/* شاشة قص الصورة الشخصية (account-settings.js) */
+#photoCropper { position:fixed; inset:0; z-index:120; background:#05080c; color:#fff; display:flex; flex-direction:column; direction:rtl; touch-action:none; user-select:none; -webkit-user-select:none; }
+#photoCropper .pc-stage { position:relative; flex:1; margin:calc(env(safe-area-inset-top,0px) + 1rem) 1rem 0; overflow:hidden; }
+#photoCropper canvas { position:absolute; display:block; }
+#photoCropper .pc-shade { position:absolute; background:rgba(0,0,0,.62); pointer-events:none; }
+#photoCropper .pc-box { position:absolute; border:1px solid rgba(255,255,255,.85); cursor:move; box-sizing:border-box; }
+#photoCropper .pc-box::before, #photoCropper .pc-box::after { content:""; position:absolute; inset:0; pointer-events:none; }
+#photoCropper .pc-box::before { background:linear-gradient(to right, transparent calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% - .5px) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% - .5px) calc(66.66% + .5px), transparent calc(66.66% + .5px)); }
+#photoCropper .pc-box::after { background:linear-gradient(to bottom, transparent calc(33.33% - .5px), rgba(255,255,255,.45) calc(33.33% - .5px) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.45) calc(66.66% - .5px) calc(66.66% + .5px), transparent calc(66.66% + .5px)); }
+#photoCropper .pc-h { position:absolute; width:2.75rem; height:2.75rem; margin:-1.375rem; }
+#photoCropper .pc-h::after { content:""; position:absolute; width:1.25rem; height:1.25rem; border:0 solid #fff; }
+#photoCropper .pc-h[data-c="nw"] { left:0; top:0; cursor:nwse-resize; } #photoCropper .pc-h[data-c="nw"]::after { left:1.375rem; top:1.375rem; border-width:3px 0 0 3px; margin:-3px 0 0 -3px; }
+#photoCropper .pc-h[data-c="ne"] { left:100%; top:0; cursor:nesw-resize; } #photoCropper .pc-h[data-c="ne"]::after { right:1.375rem; top:1.375rem; border-width:3px 3px 0 0; margin:-3px -3px 0 0; }
+#photoCropper .pc-h[data-c="sw"] { left:0; top:100%; cursor:nesw-resize; } #photoCropper .pc-h[data-c="sw"]::after { left:1.375rem; bottom:1.375rem; border-width:0 0 3px 3px; margin:0 0 -3px -3px; }
+#photoCropper .pc-h[data-c="se"] { left:100%; top:100%; cursor:nwse-resize; } #photoCropper .pc-h[data-c="se"]::after { right:1.375rem; bottom:1.375rem; border-width:0 3px 3px 0; margin:0 -3px -3px 0; }
+#photoCropper .pc-bar { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.75rem calc(1.25rem + env(safe-area-inset-bottom,0px)); }
+#photoCropper .pc-bar button { background:transparent; border:0; color:#fff; font:inherit; font-size:1.2rem; font-weight:700; min-width:4.5rem; min-height:3rem; display:flex; align-items:center; justify-content:center; }
+#photoCropper .pc-bar .pc-ok { color:#ecd9a6; }
+#photoCropper .pc-bar svg { width:1.9rem; height:1.9rem; }
