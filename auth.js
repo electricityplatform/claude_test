@@ -66,6 +66,18 @@ function syncRememberedLogin() {
     if (!remember && typeof refreshLoginAvatar === 'function') refreshLoginAvatar();
 }
 
+// ================= نوع الجهاز (بيتسجّل مع كل دخول في سجل الدخول) =================
+function detectDeviceType() {
+    const ua = navigator.userAgent || '';
+    if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+    if (/iPhone|iPod/i.test(ua)) return 'iPhone';
+    if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android موبايل' : 'Android تابلت';
+    if (/Windows/i.test(ua)) return 'Windows';
+    if (/Macintosh|Mac OS/i.test(ua)) return 'Mac';
+    if (/Linux|X11/i.test(ua)) return 'Linux';
+    return 'Unknown';
+}
+
 async function handleLoginSubmit(e) {
     e.preventDefault();
     const phone = document.getElementById('loginPhone').value.trim();
@@ -83,7 +95,8 @@ async function handleLoginSubmit(e) {
 
     const { data, error } = await supabaseClient.rpc('login', {
         p_phone_number: phone,
-        p_password: password
+        p_password: password,
+        p_device_type: detectDeviceType()
     });
 
     if (error || !data || !data.id) {
