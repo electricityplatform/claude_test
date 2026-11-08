@@ -543,6 +543,7 @@ async function fetchAndDisplayLoginHistory() {
                         <thead class="bg-base-200 text-base-content/80 border-b border-base-300">
                             <tr>
                                 <th class="p-3.5 font-bold whitespace-nowrap min-w-[130px]">آخر دخول</th>
+                                <th class="p-3.5 font-bold">نوع الجهاز</th>
                                 <th class="p-3.5 font-bold">الرتبة</th>
                                 <th class="p-3.5 font-bold">الاسم</th>
                                 <th class="p-3.5 font-bold">اسم المتجر</th>
@@ -564,7 +565,7 @@ async function fetchAndDisplayLoginHistory() {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-base-200 bg-base-100">
-                            ${historyList.length === 0 ? emptyTableRowHtml(19, 'لا توجد سجلات دخول متاحة حالياً') : historyList.map(item => {
+                            ${historyList.length === 0 ? emptyTableRowHtml(20, 'لا توجد سجلات دخول متاحة حالياً') : historyList.map(item => {
                                 let rawTime = item.login_times || '';
                                 let datePart = '---';
                                 let timePart = '';
@@ -586,6 +587,7 @@ async function fetchAndDisplayLoginHistory() {
                                         <td class="p-3.5 font-mono text-base-content/80 leading-tight min-w-[130px]" dir="ltr">
                                             <div class="font-bold text-base-content">${escapeHtmlValue(datePart)}</div>${timePart ? `<div class="text-[11px] text-base-content/60 mt-0.5">${escapeHtmlValue(timePart)}</div>` : ''}
                                         </td>
+                                        <td class="p-3.5 text-base-content/80" dir="auto">${escapeHtmlValue(item.device_type || '---')}</td>
                                         <td class="p-3.5">
                                             <span class="px-2.5 py-1 rounded-full text-xs font-bold ${
                                                 (item.user_role === 'admin' || item.user_role === 'أدمن') ? 'bg-error/20 text-error' : 'bg-primary/20 text-primary'
