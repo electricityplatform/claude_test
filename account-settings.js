@@ -331,12 +331,13 @@ function cropProfilePhoto(file) {
             const shades = [0, 1, 2, 3].map(function () { const d = document.createElement('div'); d.className = 'pc-shade'; stage.appendChild(d); return d; });
             const box = document.createElement('div');
             box.className = 'pc-box';
+            ['n', 's', 'e', 'w'].forEach(function (c) { const h = document.createElement('div'); h.className = 'pc-e'; h.dataset.c = c; box.appendChild(h); });
             ['nw', 'ne', 'sw', 'se'].forEach(function (c) { const h = document.createElement('div'); h.className = 'pc-h'; h.dataset.c = c; box.appendChild(h); });
             stage.appendChild(box);
 
             let dx = 0, dy = 0, dw = 0, dh = 0;      // مكان الصورة المعروضة جوه المسرح
             let bx = 0, by = 0, bs = 0;               // الإطار (x, y, المقاس)
-            const MIN = 64;
+            const MIN = 96;
 
             function layout() {
                 const W = stage.clientWidth, H = stage.clientHeight;
@@ -365,9 +366,13 @@ function cropProfilePhoto(file) {
             box.addEventListener('pointerdown', function (e) {
                 const c = e.target.dataset && e.target.dataset.c;
                 const p = pt(e);
-                drag = c
-                    ? { mode: 'resize', c: c, ax: (c === 'nw' || c === 'sw') ? bx + bs : bx, ay: (c === 'nw' || c === 'ne') ? by + bs : by }
-                    : { mode: 'move', ox: p.x - bx, oy: p.y - by };
+                if (!c) {
+                    drag = { mode: 'move', ox: p.x - bx, oy: p.y - by };
+                } else if (c.length === 2) {
+                    drag = { mode: 'corner', c: c, ax: (c === 'nw' || c === 'sw') ? bx + bs : bx, ay: (c === 'nw' || c === 'ne') ? by + bs : by };
+                } else {
+                    drag = { mode: 'edge', c: c, ar: bx + bs, ab: by + bs, l: bx, t: by, cx: bx + bs / 2, cy: by + bs / 2 };
+                }
                 try { box.setPointerCapture(e.pointerId); } catch (x) { /* مش مشكلة */ }
                 e.preventDefault();
             });
@@ -377,7 +382,7 @@ function cropProfilePhoto(file) {
                 if (drag.mode === 'move') {
                     bx = Math.min(dx + dw - bs, Math.max(dx, p.x - drag.ox));
                     by = Math.min(dy + dh - bs, Math.max(dy, p.y - drag.oy));
-                } else {
+                } else if (drag.mode === 'corner') {
                     const goLeft = drag.c === 'nw' || drag.c === 'sw';
                     const goUp = drag.c === 'nw' || drag.c === 'ne';
                     const maxW = goLeft ? drag.ax - dx : dx + dw - drag.ax;
@@ -386,6 +391,22 @@ function cropProfilePhoto(file) {
                     bs = Math.max(MIN, Math.min(want, maxW, maxH));
                     bx = goLeft ? drag.ax - bs : drag.ax;
                     by = goUp ? drag.ay - bs : drag.ay;
+                } else {
+                    // ضلع: المربع بيكبر/يصغر والضلع المقابل ثابت، والاتجاه التاني بيفضل متوسّط
+                    const horiz = drag.c === 'e' || drag.c === 'w';
+                    let want, along;
+                    if (drag.c === 'e') { want = p.x - drag.l; along = dx + dw - drag.l; }
+                    else if (drag.c === 'w') { want = drag.ar - p.x; along = drag.ar - dx; }
+                    else if (drag.c === 's') { want = p.y - drag.t; along = dy + dh - drag.t; }
+                    else { want = drag.ab - p.y; along = drag.ab - dy; }
+                    const mid = horiz ? drag.cy : drag.cx;
+                    const lo = horiz ? dy : dx, hi = horiz ? dy + dh : dx + dw;
+                    const across = 2 * Math.min(mid - lo, hi - mid);
+                    bs = Math.max(MIN, Math.min(want, along, across));
+                    if (drag.c === 'e') { bx = drag.l; by = drag.cy - bs / 2; }
+                    else if (drag.c === 'w') { bx = drag.ar - bs; by = drag.cy - bs / 2; }
+                    else if (drag.c === 's') { by = drag.t; bx = drag.cx - bs / 2; }
+                    else { by = drag.ab - bs; bx = drag.cx - bs / 2; }
                 }
                 draw();
             });
