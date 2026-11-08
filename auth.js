@@ -67,11 +67,27 @@ function syncRememberedLogin() {
 }
 
 // ================= نوع الجهاز (بيتسجّل مع كل دخول في سجل الدخول) =================
+// المتصفح بيدي كود الموديل بس (زي 21061119AG) مش اسمه التجاري. الجدول ده بيحوّل الكود المعروف لماركة + اسم.
+// لإضافة جهاز: ضيف سطر 'الكود': 'الماركة الاسم'. (الأكواد اللي مش هنا بتتعرض بماركة تقريبية + الكود)
+const DEVICE_MODEL_NAMES = {
+    '21061119AG': 'Xiaomi Redmi 10'
+};
+
+function deviceBrandGuess(model) {
+    if (/^SM-/i.test(model)) return 'Samsung';
+    if (/^CPH\d/i.test(model)) return 'Oppo';
+    if (/^RMX\d/i.test(model)) return 'Realme';
+    if (/^V\d{4}/i.test(model)) return 'Vivo';
+    if (/^Pixel/i.test(model)) return 'Google';
+    if (/^(M\d{4}[A-Z]\d+[A-Z]*|\d{7,8}[A-Z]{1,3})$/i.test(model)) return 'Xiaomi';
+    return '';
+}
+
 function detectDeviceTypeBasic() {
     const ua = navigator.userAgent || '';
     if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
     if (/iPhone|iPod/i.test(ua)) return 'iPhone';
-    if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android موبايل' : 'Android تابلت';
+    if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android Mobile' : 'Android Tablet';
     if (/Windows/i.test(ua)) return 'Windows';
     if (/Macintosh|Mac OS/i.test(ua)) return 'Mac';
     if (/Linux|X11/i.test(ua)) return 'Linux';
@@ -85,7 +101,11 @@ async function detectDeviceType() {
         if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
             const h = await navigator.userAgentData.getHighEntropyValues(['model']);
             const model = (h.model || '').trim();
-            if (model) return base + ' - ' + model;
+            if (model) {
+                if (DEVICE_MODEL_NAMES[model]) return base + ' - ' + DEVICE_MODEL_NAMES[model] + ' (' + model + ')';
+                const brand = deviceBrandGuess(model);
+                return base + ' - ' + (brand ? brand + ' ' : '') + model;
+            }
         }
     } catch (e) { /* مش متاح: نكمل بالنوع العام */ }
     return base;
