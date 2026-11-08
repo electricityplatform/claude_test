@@ -1241,7 +1241,7 @@ html #logoutConfirmModal .modal-box {
     width: 100% !important; max-width: 34rem !important; margin: 0;
     border-radius: 1.75rem 1.75rem 0 0 !important;
     padding: .75rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
-    transform: none !important; transition: none;
+    transition: none;   /* مهم: من غير transform !important، لأن !important بيلغي الأنيميشن */
 }
 /* الحركة بتبدأ وقت الفتح بس (modal-open)، مش وقت تحميل الصفحة، عشان الكارت يطلع من تحت فعلاً */
 html #logoutConfirmModal.modal-open .modal-box { animation: sheetUp .3s cubic-bezier(.2, .8, .2, 1); }
