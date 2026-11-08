@@ -67,22 +67,8 @@ function syncRememberedLogin() {
 }
 
 // ================= نوع الجهاز (بيتسجّل مع كل دخول في سجل الدخول) =================
-// المتصفح بيدي كود الموديل بس (زي 21061119AG) مش اسمه التجاري. الجدول ده بيحوّل الكود المعروف لماركة + اسم.
-// لإضافة جهاز: ضيف سطر 'الكود': 'الماركة الاسم'. (الأكواد اللي مش هنا بتتعرض بماركة تقريبية + الكود)
-const DEVICE_MODEL_NAMES = {
-    '21061119AG': 'Xiaomi Redmi 10'
-};
-
-function deviceBrandGuess(model) {
-    if (/^SM-/i.test(model)) return 'Samsung';
-    if (/^CPH\d/i.test(model)) return 'Oppo';
-    if (/^RMX\d/i.test(model)) return 'Realme';
-    if (/^V\d{4}/i.test(model)) return 'Vivo';
-    if (/^Pixel/i.test(model)) return 'Google';
-    if (/^(M\d{4}[A-Z]\d+[A-Z]*|\d{7,8}[A-Z]{1,3})$/i.test(model)) return 'Xiaomi';
-    return '';
-}
-
+// النوع العام (Android Mobile / iPhone / Windows ...) + كود الموديل اللي المتصفح بيدّيه (كروم أندرويد بس).
+// الماركة واسم الموديل بتتجاب من جداول الموديلات في الداتابيز (دالة login)، مفيش أي تخمين هنا.
 function detectDeviceTypeBasic() {
     const ua = navigator.userAgent || '';
     if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
@@ -94,21 +80,30 @@ function detectDeviceTypeBasic() {
     return 'Unknown';
 }
 
-// بيحاول يجيب موديل الجهاز الحقيقي (كروم أندرويد بس)، ولو مش متاح يرجع للنوع العام
-async function detectDeviceType() {
-    const base = detectDeviceTypeBasic();
+// الأبليكيشن (أندرويد / آيفون / ويندوز exe) لو بيفتح الموقع جواه، بيحط الكائن ده قبل تحميل الصفحة:
+//   window.APP_DEVICE = { type: 'Android Mobile', name: 'Samsung Galaxy S23', code: 'SM-S911B' }
+// كل الحقول اختيارية: type = النوع العام، name = الماركة + الاسم (من النظام)، code = كود الموديل.
+// الداتابيز بتدوّر على الكود في جداول الموديلات الأول، ولو ملقتهوش بتستخدم name بتاع الأبليكيشن.
+function cleanDeviceField(v) {
+    return String(v == null ? '' : v).trim().slice(0, 100) || null;
+}
+
+async function detectDeviceInfo() {
+    const info = { type: detectDeviceTypeBasic(), model: null, name: null };
+    const app = window.APP_DEVICE;
+    if (app && typeof app === 'object') {
+        info.type = cleanDeviceField(app.type) || info.type;
+        info.model = cleanDeviceField(app.code);
+        info.name = cleanDeviceField(app.name);
+        return info;
+    }
     try {
         if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
             const h = await navigator.userAgentData.getHighEntropyValues(['model']);
-            const model = (h.model || '').trim();
-            if (model) {
-                if (DEVICE_MODEL_NAMES[model]) return base + ' - ' + DEVICE_MODEL_NAMES[model] + ' (' + model + ')';
-                const brand = deviceBrandGuess(model);
-                return base + ' - ' + (brand ? brand + ' ' : '') + model;
-            }
+            info.model = cleanDeviceField(h.model);
         }
     } catch (e) { /* مش متاح: نكمل بالنوع العام */ }
-    return base;
+    return info;
 }
 
 async function handleLoginSubmit(e) {
@@ -126,10 +121,13 @@ async function handleLoginSubmit(e) {
         localStorage.removeItem('saved_photo');
     }
 
+    const device = await detectDeviceInfo();
     const { data, error } = await supabaseClient.rpc('login', {
         p_phone_number: phone,
         p_password: password,
-        p_device_type: await detectDeviceType()
+        p_device_type: device.type,
+        p_device_model: device.model,
+        p_device_name: device.name
     });
 
     if (error || !data || !data.id) {
