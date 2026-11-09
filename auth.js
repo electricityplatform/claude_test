@@ -90,6 +90,7 @@ function cleanDeviceField(v) {
 
 async function detectDeviceInfo() {
     const info = { type: detectDeviceTypeBasic(), model: null, name: null };
+    if (window.APP_DEVICE_READY) { try { await window.APP_DEVICE_READY; } catch (e) {} }
     const app = window.APP_DEVICE;
     if (app && typeof app === 'object') {
         info.type = cleanDeviceField(app.type) || info.type;
