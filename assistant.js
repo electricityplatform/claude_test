@@ -42,10 +42,10 @@
         </div>
         <div class="ai-msgs"></div>
         <div class="ai-bar">
-            <button type="button" class="ai-icon-btn" aria-label="إرفاق صورة">${svg('camera')}</button>
-            <button type="button" class="ai-icon-btn" aria-label="إدخال صوتي">${svg('mic')}</button>
-            <textarea class="ai-input" rows="1" placeholder="اكتب سؤالك..." aria-label="اكتب سؤالك"></textarea>
             <button type="button" class="ai-icon-btn ai-send" aria-label="إرسال">${svg('send')}</button>
+            <textarea class="ai-input" rows="1" placeholder="اكتب سؤالك..." aria-label="اكتب سؤالك"></textarea>
+            <button type="button" class="ai-icon-btn" aria-label="إدخال صوتي">${svg('mic')}</button>
+            <button type="button" class="ai-icon-btn" aria-label="إرفاق صورة">${svg('camera')}</button>
         </div>
     `;
     document.body.appendChild(fab);
@@ -53,7 +53,7 @@
 
     const msgsEl = panel.querySelector('.ai-msgs');
     const inputEl = panel.querySelector('.ai-input');
-    msgsEl.innerHTML = '<div class="ai-msg bot" dir="auto">أهلاً! اسألني عن أي حاجة.</div>';
+    msgsEl.innerHTML = '<div class="ai-msg bot" dir="auto">أهلاً! اسألني عن أي شيء يخص هاتفك، أو ابحث بالصورة عن نوع الهاتف وقطع الغيار.</div>';
 
     let isOpen = false;
     let isMax = false;   // النافذة ملء الشاشة؟
