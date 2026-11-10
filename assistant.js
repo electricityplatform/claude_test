@@ -7,7 +7,7 @@
     window.__aiAssistantLoaded = true;
 
     const POS_KEY = 'ai_fab_pos_v1';
-    const FAB = 58;     // حجم الزرار بالبكسل
+    const FAB = 72;     // حجم الزرار بالبكسل (نفس width/height في assistant.css)
     const EDGE = 10;    // المسافة من حافة الشاشة
 
     const ICON = {
@@ -15,6 +15,8 @@
         close: 'M6 18L18 6M6 6l12 12',
         send: 'M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5',
         mic: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z',
+        expand: 'M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15',
+        shrink: 'M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25',
         camera: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z'
     };
     const svg = (name, cls) => `<svg class="${cls || ''}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="${ICON[name]}"></path></svg>`;
@@ -25,7 +27,7 @@
     fab.className = 'ai-fab';
     fab.setAttribute('aria-label', 'المساعد الآلي');
     fab.setAttribute('aria-expanded', 'false');
-    fab.innerHTML = svg('spark', 'ai-ico-spark') + svg('close', 'ai-ico-close');
+    fab.innerHTML = '<img class="ai-fab-logo" src="logo.png" alt="" draggable="false"><span class="ai-fab-badge">' + svg('spark') + '</span>';
 
     const panel = document.createElement('section');
     panel.className = 'ai-panel';
@@ -34,8 +36,9 @@
     panel.setAttribute('aria-label', 'المساعد الآلي');
     panel.innerHTML = `
         <div class="ai-head">
-            <h2>المساعد الآلي</h2>
             <button type="button" class="ai-icon-btn" data-act="close" aria-label="إغلاق">${svg('close')}</button>
+            <button type="button" class="ai-icon-btn" data-act="max" aria-label="تكبير النافذة">${svg('expand', 'ai-ico-max')}${svg('shrink', 'ai-ico-min')}</button>
+            <h2>المساعد الآلي</h2>
         </div>
         <div class="ai-msgs"></div>
         <div class="ai-bar">
@@ -53,6 +56,7 @@
     msgsEl.innerHTML = '<div class="ai-msg bot" dir="auto">أهلاً! اسألني عن أي حاجة.</div>';
 
     let isOpen = false;
+    let isMax = false;   // النافذة ملء الشاشة؟
     let pos = null;   // { x, y } أعلى يسار الزرار
 
     // اللمس على العناصر دي ما يوصلش لكود "السحب للتحديث" في utils.js
@@ -105,6 +109,10 @@
     }
     function placePanel() {
         const v = viewport();
+        if (isMax) {   // ملء الشاشة
+            Object.assign(panel.style, { width: v.w + 'px', height: v.h + 'px', left: '0px', top: v.top + 'px' });
+            return;
+        }
         const W = Math.min(384, v.w - 16);
         let H, left, top;
         if (v.kb) {   // الكيبورد مفتوح: النافذة تاخد المساحة الظاهرة فوقه
@@ -134,10 +142,18 @@
     }
     function closePanel() {
         isOpen = false;
+        if (isMax) setMax(false);
         panel.classList.remove('open');
         fab.classList.remove('open');
         fab.setAttribute('aria-expanded', 'false');
         inputEl.blur();
+    }
+    function setMax(on) {
+        isMax = on;
+        panel.classList.toggle('max', on);
+        const b = panel.querySelector('[data-act="max"]');
+        if (b) b.setAttribute('aria-label', on ? 'تصغير النافذة' : 'تكبير النافذة');
+        placePanel();
     }
     function toggle() { isOpen ? closePanel() : openPanel(); }
 
@@ -181,7 +197,10 @@
     });
 
     panel.addEventListener('click', (e) => {
-        if (e.target.closest('[data-act="close"]')) closePanel();
+        const b = e.target.closest('[data-act]');
+        if (!b) return;
+        if (b.dataset.act === 'close') closePanel();
+        else if (b.dataset.act === 'max') setMax(!isMax);
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closePanel(); });
 
