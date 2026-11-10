@@ -29,9 +29,6 @@ function getSearchBarHtml() {
                 <button type="button" onclick="alert('جارِ الاستماع للصوت...فعل ميكروفون المتصفح')" class="btn btn-outline btn-square" title="بحث صوتي" aria-label="بحث صوتي">
                     ${uiIcon('mic', 'w-5 h-5')}
                 </button>
-                <button type="button" onclick="alert('جارِ فتح الكاميرا للمسح الضوئي...')" class="btn btn-outline btn-square" title="بحث بالكاميرا" aria-label="بحث بالكاميرا">
-                    ${uiIcon('camera', 'w-5 h-5')}
-                </button>
             </div>
     `;
 }
