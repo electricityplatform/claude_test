@@ -111,9 +111,38 @@ function openAccountScreen() {
     renderAccountScreen();
 }
 
+// الإجراء المرتبط بكل عنصر من إعدادات الحساب (الاسم جاي من جدول account_settings)
+function accountActionFor(name) {
+    if (name.includes('البيانات الشخصية')) return 'renderPersonalProfileScreen()';
+    if (name.includes('الإعدادات العامة')) return 'openSettingsScreen()';
+    if (name.includes('خروج')) return 'logoutUser()';
+    return `alert(${jsArg(name)})`;
+}
+
+async function loadAccountSettingsCards() {
+    const box = document.getElementById('accountSettingsContainer');
+    if (!box) return;
+    let items = [];
+    try {
+        const { data, error } = await supabaseClient.rpc('get_account_settings');
+        if (error) throw error;
+        if (Array.isArray(data)) items = data;
+        else if (typeof data === 'string') { try { items = JSON.parse(data); } catch (e) {} }
+    } catch (err) {
+        console.error('Account settings load error:', err);
+        const el = document.getElementById('accountSettingsContainer');
+        if (el) el.innerHTML = '<div class="text-center text-error text-sm py-4">تعذر تحميل إعدادات الحساب</div>';
+        return;
+    }
+    // الشاشة ممكن تكون اتغيّرت أثناء الجلب
+    const target = document.getElementById('accountSettingsContainer');
+    if (!target) return;
+    target.innerHTML = items.length
+        ? items.map(name => menuListCardHtml(name, accountActionFor(name))).join('')
+        : '<div class="text-center text-base-content/50 text-sm py-4">لا توجد عناصر متاحة</div>';
+}
+
 function renderAccountScreen() {
-    // نفس كارت قوائم مركز البيانات بالظبط (menuListCardHtml): نفس الحجم والخط، من غير أيقونة
-    const card = (icon, label, action) => menuListCardHtml(label, action);
     const avatar = typeof profileAvatarHtml === 'function'
         ? profileAvatarHtml()
         : `<div class="avatar placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span class="text-sm font-bold">${escapeHtmlValue(String(currentUserName || '').trim().charAt(0))}</span></div></div>`;
@@ -127,13 +156,12 @@ function renderAccountScreen() {
                 ${currentUserRole ? `<div class="text-sm acct-meta text-base-content/70" dir="auto">${escapeHtmlValue(currentUserRole)}</div>` : ''}
                 ${currentUserPhone ? `<div class="text-sm acct-meta text-base-content/70" dir="ltr">${escapeHtmlValue(currentUserPhone)}</div>` : ''}
             </div>
-            <div class="w-full flex flex-col gap-3 pb-4">
-                ${card('user', 'البيانات الشخصية', 'renderPersonalProfileScreen()')}
-                ${card('cog', 'الإعدادات العامة', 'openSettingsScreen()')}
-                ${card('logout', 'تسجيل خروج', 'logoutUser()')}
+            <div id="accountSettingsContainer" class="w-full flex flex-col gap-3 pb-4">
+                <div class="text-center text-base-content/50 text-sm py-4"><span class="loading loading-dots loading-sm"></span></div>
             </div>
         </div>
     `;
+    loadAccountSettingsCards();
 }
 
 // ================= الشريط السفلي: الرئيسية | القائمة | حسابي (الإعدادات جوه حسابي) =================
