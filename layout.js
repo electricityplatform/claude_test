@@ -175,12 +175,19 @@ function renderBottomNav() {
     nav.innerHTML = `
         <button type="button" onclick="renderMainDashboard()" class="bottom-nav-item" aria-label="الرئيسية">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="bottom-nav-label">الرئيسية</span>
         </button>
         <button type="button" onclick="renderMenuScreen()" class="bottom-nav-item" aria-label="القائمة">
             ${uiIcon('menu', 'w-6 h-6')}
+            <span class="bottom-nav-label">القائمة</span>
+        </button>
+        <button type="button" onclick="openFriendsScreen()" class="bottom-nav-item" aria-label="الأصدقاء">
+            ${uiIcon('users', 'w-6 h-6')}
+            <span class="bottom-nav-label">الأصدقاء</span>
         </button>
         <button type="button" onclick="openAccountScreen()" class="bottom-nav-item" aria-label="حسابي">
             <span class="user-avatar-btn">${avatar}</span>
+            <span class="bottom-nav-label">حسابي</span>
         </button>
     `;}
 function filterSideMenu(q) {
