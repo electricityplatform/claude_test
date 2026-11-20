@@ -1,26 +1,24 @@
-// ================= انسيابية التنقل (اختفاء الكلام تدريجياً ثم ظهور الشاشة الجديدة تدريجياً) + السحب يمين/شمال =================
-// 1) لما تدوس على حاجة بتفتح شاشة تانية (زر، كارت، زر رجوع، الشريط السفلي): كلام الشاشة الحالية بيخفت لحد ما يختفي،
-//    وبعدها تتنفّذ الضغطة والشاشة الجديدة بيظهر كلامها بالتدريج. الهيدر والشريط السفلي ثابتين ومابيتحركوش.
-//    لو الضغطة ما فتحتش شاشة جديدة، المحتوى بيرجع يظهر لوحده.
-//    عشان تظبط السرعة: غيّر OUT_MS (الاختفاء) و IN_MS (الظهور) تحت. الأرقام الأكبر = أبطأ وأنعم.
+// ================= انسيابية التنقل (تراكب: الشاشة الجديدة بتظهر فوق القديمة وهي بتختفي) + السحب يمين/شمال =================
+// 1) أي تبديل شاشة: نسخة من الشاشة القديمة بتفضل ظاهرة مكانها وبتخفت تدريجياً، والجديدة بتظهر تدريجياً فوقها في نفس اللحظة.
+//    الهيدر والشريط السفلي ثابتين. مفيش انتظار قبل التنقل: الضغطة بتتنفّذ فوراً.
+//    عشان تظبط السرعة: غيّر FADE_MS تحت (الأكبر = أبطأ وأنعم).
 // 2) السحب: سحب الصباع من الشمال لليمين = القسم اللي بعده (الرئيسية > القائمة > الأصدقاء > حسابي)، والعكس للعكس.
-//    جوه الأصدقاء: السحب بيبدّل التبويبات الأربعة الأول، ولما توصل لآخر تبويب بيكمّل للقسم اللي بعده.
-//    شغّال حتى لو إنت جوه شاشة فرعية (زي شراء قطع الغيار): بيروح للقسم المجاور للقسم اللي فتحت منه.
+//    تبويبات الأصدقاء بتتبدّل بالضغط بس (من غير سحب). شغّال حتى جوه الشاشات الفرعية: بيروح للقسم المجاور للقسم اللي فتحت منه.
 (function setupNavMotion() {
     const container = document.getElementById('appContainer');
     if (!container) return;
 
     const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
         || !container.animate;
-    const OUT_MS = 300;   // اختفاء كلام الشاشة القديمة تدريجياً
-    const IN_MS = 520;    // ظهور كلام الشاشة الجديدة تدريجياً
+    const FADE_MS = 450;
     const EASE = 'ease-in-out';
-    window.NAV_FADE = { out: OUT_MS, in: IN_MS, ease: EASE };   // friends.js بيستعملهم عشان تبديل التبويبات يبقى بنفس الإحساس
+    window.NAV_FADE = { ms: FADE_MS, ease: EASE };   // friends.js بيستعملهم عشان تبديل التبويبات يبقى بنفس الإحساس
 
-    // المتصفح ما يخطفش السحب الأفقي (من غير ما نمنع التمرير الرأسي ولا التكبير). الجداول والشرائح الأفقية ليها تمريرها الخاص.
-    const st0 = document.createElement('style');
-    st0.textContent = '#appContainer{touch-action:pan-y pinch-zoom}';
-    document.head.appendChild(st0);
+    // position:relative عشان نسخة الشاشة القديمة تتحط مكانها بالظبط. touch-action: المتصفح ما يخطفش السحب الأفقي.
+    const style = document.createElement('style');
+    style.textContent = '#appContainer{position:relative;touch-action:pan-y pinch-zoom}'
+        + '.nav-ghost{position:absolute;display:flex;flex-direction:column;pointer-events:none;z-index:5}';
+    document.head.appendChild(style);
 
     // ---------- القسم الحالي (ترتيب الشريط السفلي: 0 رئيسية، 1 قائمة، 2 أصدقاء، 3 حسابي) ----------
     let currentSection = 0;
@@ -33,99 +31,76 @@
         // غير كده (شاشة فرعية): القسم بيفضل زي ما هو
     }
     detectSection();
+    // ضغطة الشريط السفلي بتحدّد القسم فوراً (حتى لو الشاشة اللي بتفتح مفيهاش علامة واضحة)
+    window.addEventListener('click', function (e) {
+        const item = e.target && e.target.closest && e.target.closest('.bottom-nav .bottom-nav-item');
+        if (!item) return;
+        const idx = navItems().indexOf(item);
+        if (idx >= 0) currentSection = idx;
+    }, true);
 
-    // ---------- الاختفاء ثم الظهور ----------
+    // ---------- التراكب ----------
     function contentKids() {
-        return Array.prototype.filter.call(container.children, function (k) { return !k.matches('.app-topbar, header'); });
+        return Array.prototype.filter.call(container.children, function (k) { return !k.matches('.app-topbar, header, .nav-ghost'); });
+    }
+    function clearGhosts() {
+        Array.prototype.forEach.call(container.querySelectorAll(':scope > .nav-ghost'), function (g) { g.remove(); });
     }
 
-    let pendingNav = false;    // في فترة الاختفاء، مستنيين ننفّذ الضغطة
-    let faded = false;         // المحتوى القديم مخفي ومستنيين الشاشة الجديدة
-    let bypass = false;        // الضغطة المعاد تنفيذها ما تتعترضش تاني
-    let safetyTimer = null;
+    // removed: عناصر الشاشة القديمة (من غير الهيدر) اللي اتشالت من الصفحة
+    function crossfade(removed) {
+        clearGhosts();
+        const kids = contentKids();
 
-    function fadeOut() {
-        faded = true;
-        contentKids().forEach(function (k) {
-            k.getAnimations().forEach(function (a) { a.cancel(); });
-            k.animate([{ opacity: 1 }, { opacity: 0 }], { duration: OUT_MS, easing: EASE, fill: 'forwards' });
-        });
-    }
-    function fadeIn(kids) {
+        // الجديدة: تظهر تدريجياً
         kids.forEach(function (k) {
             k.getAnimations().forEach(function (a) { a.cancel(); });
-            k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: IN_MS, easing: EASE });
+            k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS, easing: EASE });
         });
-    }
-    // الضغطة ما غيّرتش الشاشة: نرجّع المحتوى
-    function restore() {
-        if (!faded) return;
-        faded = false;
-        clearTimeout(safetyTimer);
-        fadeIn(contentKids());
+
+        // القديمة: ترجع تتحط مكانها وتخفت في نفس الوقت (الجديدة ظاهرة فوقها/معاها)
+        if (!removed.length || !kids.length) return;
+        const cs = getComputedStyle(container);
+        const ghost = document.createElement('div');
+        ghost.className = 'nav-ghost';
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.style.top = kids[0].offsetTop + 'px';
+        ghost.style.left = cs.paddingLeft;
+        ghost.style.right = cs.paddingRight;
+        removed.forEach(function (n) { ghost.appendChild(n); });
+        container.appendChild(ghost);
+        const anim = ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_MS, easing: EASE, fill: 'forwards' });
+        anim.onfinish = anim.oncancel = function () { ghost.remove(); };
     }
 
+    // بنراقب تغيّر الشاشة (قبل ما تتعرض)، وبنعمل التراكب بس لما الشاشة نفسها تتغيّر (مش لو اتعاد رسمها)
+    let lastSig = null;
     function isBackText(btn) {
         return /^(رجوع|عودة|السابق)(\s|$)/.test((btn.textContent || '').replace(/\s+/g, ' ').trim());
     }
-    // أزرار فتح الشاشات: renderXxx(...) أو openXxx(...) أو startXxxFlow(...) (من غير النوافذ والصور)، وأزرار الرجوع، والشريط السفلي
-    const NAV_ONCLICK = /\b(?:(?:render|open)[A-Z]\w*|start\w*Flow|select\w*(?:Part|Brand|Model))\s*\(/;   // + كروت الرئيسية (startBuyFlow...) واختيار القطعة/الماركة/الموديل
-    const NOT_NAV = /(Photo|Modal|Dialog|Overlay|Popup|Confirm|Filter|Sort)/;
-    function isNavTrigger(el) {
-        if (el.closest('.bottom-nav')) return true;
-        if (!container.contains(el)) return false;
-        if (el.tagName === 'BUTTON' && isBackText(el)) return true;
-        const oc = el.getAttribute('onclick') || '';
-        return NAV_ONCLICK.test(oc) && !NOT_NAV.test(oc);
-    }
-
-    // على مستوى window (capture) عشان نسبق منطق الرجوع في utils.js
-    window.addEventListener('click', function (e) {
-        if (bypass || reduceMotion) return;
-        const el = e.target && e.target.closest && (e.target.closest('[onclick]') || e.target.closest('button'));
-        if (!el) return;
-        if (el.dataset && el.dataset.navSynthetic) return;   // ضغطة رجوع المحاكاة بتاعة زر رجوع الموبايل: تتنفّذ فوراً
-        if (pendingNav) { e.preventDefault(); e.stopImmediatePropagation(); return; }   // ضغطة تانية أثناء الاختفاء: نتجاهلها
-
-        const item = el.closest('.bottom-nav .bottom-nav-item');
-        if (item) { const idx = navItems().indexOf(item); if (idx >= 0) currentSection = idx; }
-
-        if (!isNavTrigger(el)) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        pendingNav = true;
-        fadeOut();
-        setTimeout(function () {
-            pendingNav = false;
-            if (!el.isConnected) { restore(); return; }
-            bypass = true;
-            try { el.click(); } finally { bypass = false; }
-            clearTimeout(safetyTimer);
-            safetyTimer = setTimeout(restore, 1500);   // لو ما اترسمتش شاشة جديدة
-        }, OUT_MS);
-    }, true);
-
-    // أول ما الشاشة الجديدة تترسم (قبل ما تتعرض) نظهرها بنعومة
-    let lastSig = null;
     function signature() {
         const back = Array.prototype.find.call(container.querySelectorAll('button'), isBackText);
         const title = container.querySelector('h1, h2');
         return (back ? (back.getAttribute('onclick') || '') : '') + '|' + (title ? title.textContent.trim() : '');
     }
-    new MutationObserver(function () {
+    new MutationObserver(function (records) {
         detectSection();
+        const removed = [];
+        let relevant = false;
+        records.forEach(function (r) {
+            Array.prototype.forEach.call(r.removedNodes, function (n) {
+                if (n.nodeType === 1 && !n.classList.contains('nav-ghost') && !n.matches('.app-topbar, header')) removed.push(n);
+            });
+            Array.prototype.forEach.call(r.addedNodes, function (n) {
+                if (n.nodeType === 1 && !n.classList.contains('nav-ghost')) relevant = true;
+            });
+        });
+        if (!relevant) return;   // تغيير بسبب نسخة التراكب نفسها
         const sig = signature();
         const same = sig === lastSig;
         lastSig = sig;
-        if (reduceMotion) { faded = false; return; }
-        if (faded) {   // جاية بعد اختفاء القديم: دايماً نظهرها
-            faded = false;
-            clearTimeout(safetyTimer);
-            fadeIn(contentKids());
-            return;
-        }
-        if (same) return;   // نفس الشاشة اتعاد رسمها (تحديث): من غير حركة
-        fadeIn(contentKids());   // تبديل من غير ضغطة (زي زر رجوع الموبايل): الجديدة بتظهر بنعومة
+        if (reduceMotion || same) return;
+        crossfade(removed);
     }).observe(container, { childList: true });
 
     // ---------- السحب ----------
@@ -146,16 +121,16 @@
         // أي عنصر بيتحرك أفقي (جداول، شرائح) بنسيبه يتحرك لوحده. شريط تبويبات الأصدقاء مستثنى عشان السحب يشتغل عليه.
         for (let n = el; n && n !== container; n = n.parentElement) {
             if (n.id === 'friendsTabs') continue;
-            const cs = getComputedStyle(n);
-            if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+            const c = getComputedStyle(n);
+            if ((c.overflowX === 'auto' || c.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
         }
         return false;
     }
     // نافذة "ظاهرة فعلاً" على الشاشة (مش مجرد موجودة في الـ DOM ومخفية)
     function isShown(el) {
         if (!el || !el.getClientRects().length) return false;
-        const cs = getComputedStyle(el);
-        if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+        const c = getComputedStyle(el);
+        if (c.visibility === 'hidden' || c.display === 'none') return false;
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0 && r.right > 0 && r.bottom > 0 && r.left < window.innerWidth && r.top < window.innerHeight;
     }
@@ -204,13 +179,11 @@
     // بعض المتصفحات بتبعت touchcancel لما تاخد الإيماءة: نحسب بآخر مكان وصله الصباع
     document.addEventListener('touchcancel', function () { finishSwipe(lx, ly); }, { passive: true });
 
-    // sign = +1: القسم/التبويب اللي بعده (سحب من الشمال لليمين) | -1: اللي قبله
+    // sign = +1: القسم اللي بعده (سحب من الشمال لليمين) | -1: اللي قبله
     function handleSwipe(sign) {
-        if (pendingNav) return;
-        if (typeof friendsSwipe === 'function' && container.querySelector('#friendsTabs') && friendsSwipe(sign)) return;
         const target = currentSection + sign;
         if (allowedSections().indexOf(target) < 0) return;
         const items = navItems();
-        if (items[target]) items[target].click();   // نفس ضغطة الزر: بتشغّل الاختفاء/الظهور والتنقل العادي
+        if (items[target]) items[target].click();   // نفس ضغطة الزر
     }
 })();
