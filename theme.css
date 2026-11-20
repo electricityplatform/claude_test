@@ -3893,3 +3893,47 @@ html.is-zoomed:not(#zA):not(#zB) *:not(#photoCropper):not(#photoCropper *) {
     overscroll-behavior: auto !important;
     touch-action: pan-x pan-y pinch-zoom !important;
 }
+
+/* ===== الشريط السفلي: أسماء الأزرار تحت الأيقونات + زر الأصدقاء ===== */
+.bottom-nav .bottom-nav-item {
+    gap: .15rem;
+}
+.bottom-nav .bottom-nav-item svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+.bottom-nav .user-avatar-btn .avatar, .bottom-nav .user-avatar-btn .avatar > *, .bottom-nav .user-avatar-btn .w-9, .bottom-nav .user-avatar-btn img {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+}
+.bottom-nav-label {
+    font-size: .68rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    color: inherit;
+}
+
+/* ===== تبويبات شاشة الأصدقاء ===== */
+.friends-tabs {
+    display: flex;
+    gap: .25rem;
+    padding: .25rem;
+    border-radius: var(--r);
+    background: oklch(var(--b2));
+}
+.friends-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: .5rem .2rem;
+    border-radius: calc(var(--r) - .2rem);
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: oklch(var(--bc) / .65);
+    transition: background .2s, color .2s;
+}
+.friends-tab.active {
+    background: oklch(var(--p));
+    color: oklch(var(--pc));
+}
