@@ -3917,17 +3917,17 @@ html.is-zoomed:not(#zA):not(#zB) *:not(#photoCropper):not(#photoCropper *) {
 /* ===== تبويبات شاشة الأصدقاء ===== */
 .friends-tabs {
     display: flex;
-    gap: .25rem;
-    padding: .25rem;
+    gap: .3rem;
+    padding: .35rem;
     border-radius: var(--r);
     background: oklch(var(--b2));
 }
 .friends-tab {
     flex: 1 1 0;
     min-width: 0;
-    padding: .5rem .2rem;
+    padding: .95rem .2rem;
     border-radius: calc(var(--r) - .2rem);
-    font-size: .7rem;
+    font-size: .8rem;
     font-weight: 700;
     white-space: nowrap;
     color: oklch(var(--bc) / .65);
