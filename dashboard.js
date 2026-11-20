@@ -109,15 +109,6 @@ function partitionMeta(name) {
     return { action: `alert(${jsArg('قسم ' + n)})`, icon: 'bolt', desc: '' };
 }
 
-// ================= تقسيمة الشاشة الرئيسية =================
-// كل صف: الأقسام اللي فيه جنب بعض (الاسم بيتطابق بـ includes زي partitionMeta).
-const HOME_ROWS = [
-    ['شراء قطع الغيار'],
-    ['التوافقات', 'بحث بالكاميرا'],
-    ['تنبيهات الصيانة', 'جهز متجرك'],
-    ['محلات الصيانة', 'متاجر']
-];
-
 function partitionCardHtml(name, compact) {
     const m = partitionMeta(name);
     // لو القسم له صورة (img في partitionMeta): بتبقى خلفية الكارت من المتغير --card-img (الستايل في theme.css)
@@ -141,25 +132,15 @@ function partitionCardHtml(name, compact) {
         </button>`;
 }
 
-// بيوزّع الأقسام على الصفوف. أي قسم مش متسجّل في HOME_ROWS بيظهر في صفوف إضافية في الآخر (اتنين جنب بعض).
+// بيوزّع الأقسام على الصفوف بنفس ترتيبها في قاعدة البيانات: اتنين جنب بعض.
+// لو العدد فردي، آخر قسم بياخد نص الصف برضه (مش الصف كله).
 function groupedPartitionsHtml(list) {
-    const used = new Set();
-    const rows = HOME_ROWS.map(row => {
-        const names = [];
-        row.forEach(key => {
-            list.forEach((name, i) => {
-                if (!used.has(i) && String(name).includes(key)) { used.add(i); names.push(name); }
-            });
-        });
-        return names;
-    });
-    const rest = list.filter((_, i) => !used.has(i));
-    for (let i = 0; i < rest.length; i += 2) rows.push(rest.slice(i, i + 2));
-
-    return rows.filter(r => r.length).map(names => {
-        const compact = names.length > 1;
-        return `<div class="dash-row ${compact ? 'two' : 'one'}">${names.map(n => partitionCardHtml(n, compact)).join('')}</div>`;
-    }).join('');
+    let html = '';
+    for (let i = 0; i < list.length; i += 2) {
+        const names = list.slice(i, i + 2);
+        html += `<div class="dash-row two">${names.map(n => partitionCardHtml(n, true)).join('')}</div>`;
+    }
+    return html;
 }
 
 // ================= الشاشة الرئيسية =================
