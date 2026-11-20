@@ -103,8 +103,42 @@
         crossfade(removed);
     }).observe(container, { childList: true });
 
+    // ---------- ظهور تدريجي للحاجات اللي بتتجلب من قاعدة البيانات ----------
+    // أي محتوى بيتحط جوه الشاشة بعد ما ترسم (كروت، أقسام، قطع غيار، موديلات، قوائم...): بيظهر بنعومة،
+    // ولو قائمة فيها عناصر كتير بتظهر عنصر ورا عنصر (متتابعة) بدل ما تيجي كلها مرة واحدة.
+    const ITEM_MS = 400;       // مدة ظهور كل عنصر
+    const ITEM_STEP = 45;      // الفرق بين ظهور كل عنصر والتاني
+    const ITEM_MAX_DELAY = 450; // أقصى تأخير (عشان القوائم الطويلة ماتبطأش)
+    function skipItem(n) {
+        if (n.nodeType !== 1 || /^(SCRIPT|STYLE|LINK)$/.test(n.tagName)) return true;
+        if (n.classList.contains('nav-ghost') || n.closest('.nav-ghost')) return true;
+        if (n.closest('table, input, textarea, select, [contenteditable="true"], .modal, [role="dialog"], #photoCropper')) return true;
+        if (n.matches('.loading, .skeleton, .ptr-indicator') || (!n.textContent.trim() && n.querySelector('.loading'))) return true;
+        if (n.getAnimations().length) return true;   // ليه حركة شغالة بالفعل (زي تبويبات الأصدقاء)
+        return false;
+    }
+    function fadeItem(el, i) {
+        el.animate([{ opacity: 0 }, { opacity: 1 }], {
+            duration: ITEM_MS, easing: EASE, fill: 'backwards',
+            delay: Math.min(i * ITEM_STEP, ITEM_MAX_DELAY)
+        });
+    }
+    new MutationObserver(function (records) {
+        if (reduceMotion) return;
+        records.forEach(function (r) {
+            if (r.target === container) return;   // تبديل الشاشة كلها: بيتعامل معاه التراكب فوق
+            if (r.target.closest && r.target.closest('.nav-ghost')) return;
+            Array.prototype.forEach.call(r.addedNodes, function (n) {
+                if (skipItem(n)) return;
+                const kids = Array.prototype.filter.call(n.children, function (c) { return !skipItem(c); });
+                if (kids.length >= 2) kids.forEach(fadeItem);   // قائمة: العناصر تظهر ورا بعض
+                else fadeItem(n, 0);
+            });
+        });
+    }).observe(container, { childList: true, subtree: true });
+
     // ---------- السحب ----------
-    const EDGE = 12;           // نتجاهل السحب اللي بيبدأ من حرف الشاشة (إيماءة رجوع النظام)
+    const EDGE = 12;          // نتجاهل السحب اللي بيبدأ من حرف الشاشة (إيماءة رجوع النظام)
     const MIN_DX = 50;         // أقل مسافة أفقية (بكسل)
     const RATIO = 1.25;        // الحركة الأفقية لازم تكون أكبر من الرأسية بالنسبة دي
     const MAX_MS = 1100;
