@@ -31,8 +31,28 @@ function renderFriendsScreen() {
 function setFriendsTab(key) {
     if (key === friendsActiveTab) return;
     friendsActiveTab = key;
-    renderFriendsTabs();
-    renderFriendsTabContent();
+    renderFriendsTabs();   // التبويب المختار بيتلوّن فوراً
+    const box = document.getElementById('friendsTabContent');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!box || !box.animate || reduce) { renderFriendsTabContent(); return; }
+    // المحتوى القديم يختفي الأول، وبعدين الجديد يظهر بنعومة
+    box.getAnimations().forEach(function (a) { a.cancel(); });
+    const out = box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: 'ease-in', fill: 'forwards' });
+    out.onfinish = function () {
+        renderFriendsTabContent();   // بيرسم تبويب friendsActiveTab الحالي
+        out.cancel();
+        box.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+    };
+}
+
+// السحب جوه الأصدقاء (بيناديه nav-motion.js): +1 = التبويب اللي بعده، -1 = اللي قبله.
+// بيرجّع false لو وصلنا لأول/آخر تبويب، فالسحب يكمّل للقسم المجاور في الشريط السفلي.
+function friendsSwipe(sign) {
+    const i = FRIENDS_TABS.findIndex(t => t.key === friendsActiveTab);
+    const j = i + sign;
+    if (j < 0 || j >= FRIENDS_TABS.length) return false;
+    setFriendsTab(FRIENDS_TABS[j].key);
+    return true;
 }
 
 function renderFriendsTabs() {
