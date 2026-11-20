@@ -35,13 +35,14 @@ function setFriendsTab(key) {
     const box = document.getElementById('friendsTabContent');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!box || !box.animate || reduce) { renderFriendsTabContent(); return; }
-    // المحتوى القديم يختفي الأول، وبعدين الجديد يظهر بنعومة
+    // المحتوى القديم يختفي تدريجياً الأول، وبعدين الجديد يظهر تدريجياً (نفس توقيتات nav-motion.js)
+    const FADE = Object.assign({ out: 300, in: 520, ease: 'ease-in-out' }, window.NAV_FADE || {});
     box.getAnimations().forEach(function (a) { a.cancel(); });
-    const out = box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: 'ease-in', fill: 'forwards' });
+    const out = box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE.out, easing: FADE.ease, fill: 'forwards' });
     out.onfinish = function () {
         renderFriendsTabContent();   // بيرسم تبويب friendsActiveTab الحالي
         out.cancel();
-        box.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+        box.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE.in, easing: FADE.ease });
     };
 }
 
