@@ -52,6 +52,8 @@
         clearGhosts();
         const kids = contentKids();
 
+        removed = removed.filter(function (n) { return !n.matches('.intro-screen'); });   // شاشة البداية بتختفي بحركتها هي
+        if (kids.some(function (k) { return k.matches('.intro-screen'); })) return;      // وبتظهر بحركتها هي
         // الجديدة: عناصرها (كروت، أقسام، عناوين...) تظهر عنصر ورا التاني
         const items = [];
         kids.forEach(function (k) {
@@ -83,7 +85,9 @@
     function signature() {
         const back = Array.prototype.find.call(container.querySelectorAll('button'), isBackText);
         const title = container.querySelector('h1, h2');
-        return (back ? (back.getAttribute('onclick') || '') : '') + '|' + (title ? title.textContent.trim() : '');
+        const first = contentKids()[0];   // شكل أول عنصر: يفرّق بين شاشات مفيهاش عنوان (زي البداية والرئيسية)
+        return (back ? (back.getAttribute('onclick') || '') : '') + '|' + (title ? title.textContent.trim() : '')
+            + '|' + (first ? (first.id + '.' + first.className) : '');
     }
     new MutationObserver(function (records) {
         detectSection();
@@ -128,28 +132,53 @@
     function collectItems(el, out) {
         if (el.nodeType !== 1) return;
         const kids = elKids(el);
-        if (!kids.length || LEAF.test(el.tagName) || el.matches('.dash-card, [onclick], .modal-box')) { out.push(el); return; }
-        if (isRepeating(kids)) { kids.forEach(function (k) { out.push(k); }); return; }
+        if (el.matches('.skeleton, .sr-only, .loading, .search-sentinel')) return;
+        if (!kids.length || LEAF.test(el.tagName) || el.matches('.dash-card, [onclick], .modal-box, .phone-stage, .hero, .app-search-bar')) { out.push(el); return; }
+        if (isRepeating(kids)) { kids.forEach(function (k) { if (!k.matches('.skeleton, .sr-only, .loading, .search-sentinel')) out.push(k); }); return; }
         kids.forEach(function (k) { collectItems(k, out); });
     }
+    // شاشة البداية (أو التبويب في الخلفية): مانبدأش الحركة تحتها، عشان تخلص من غير ما تتشاف
+    function revealBlocked() {
+        if (document.visibilityState === 'hidden') return true;
+        const sp = document.querySelector('.splash-overlay');
+        if (!sp || !sp.getClientRects().length) return false;
+        const c = getComputedStyle(sp);
+        return c.visibility !== 'hidden' && c.display !== 'none' && c.opacity !== '0';
+    }
+    function whenReveal(fn, tries) {
+        if (!revealBlocked() || (tries || 0) > 100) { fn(); return; }   // أقصى انتظار ~10 ثواني
+        setTimeout(function () { whenReveal(fn, (tries || 0) + 1); }, 100);
+    }
     function revealSequence(items) {
-        items.forEach(function (el, i) {
-            el.animate([{ opacity: 0 }, { opacity: 1 }], {
-                duration: ITEM_MS, easing: EASE, fill: 'backwards',
-                delay: Math.min(i * ITEM_STEP, ITEM_MAX_DELAY)
+        // العناصر المخبية أصلاً (opacity:0 بالـCSS لحد ما تدوس، زي كلمة "تجميع") ما بنحركهاش عشان ماتبانش
+        items = items.filter(function (el) { return el.isConnected && (getComputedStyle(el).opacity === '1' || el.getAnimations().length > 0); });
+        if (!items.length) return;
+        const run = function () {
+            items.forEach(function (el, i) {
+                el.style.removeProperty('opacity');
+                el.animate([{ opacity: 0 }, { opacity: 1 }], {
+                    duration: ITEM_MS, easing: EASE, fill: 'backwards',
+                    delay: Math.min(i * ITEM_STEP, ITEM_MAX_DELAY)
+                });
             });
-        });
+        };
+        if (revealBlocked()) {
+            items.forEach(function (el) { el.style.opacity = '0'; });   // مخفيين لحد ما شاشة البداية تختفي
+            whenReveal(run);
+        } else run();
     }
     function skipItem(n) {
+        if (n.nodeType === 1 && n.tagName === 'CANVAS' && n.closest('.hero-phone')) return false;   // مجسم التليفون: يظهر بنعومة لما يتحمّل
         if (n.nodeType !== 1 || /^(SCRIPT|STYLE|LINK)$/.test(n.tagName)) return true;
         if (n.classList.contains('nav-ghost') || n.closest('.nav-ghost')) return true;
-        if (n.closest('table, input, textarea, select, [contenteditable="true"], .modal, [role="dialog"], #photoCropper')) return true;
+        if (n.closest('table, input, textarea, select, [contenteditable="true"], .modal, [role="dialog"], #photoCropper, .phone-stage, .hero')) return true;
         if (n.matches('.loading, .skeleton, .ptr-indicator') || (!n.textContent.trim() && n.querySelector('.loading'))) return true;
         if (n.getAnimations().length) return true;   // ليه حركة شغالة بالفعل (زي تبويبات الأصدقاء)
         return false;
     }
     new MutationObserver(function (records) {
         if (reduceMotion) return;
+        const all = [];
         records.forEach(function (r) {
             if (r.target === container) return;   // تبديل الشاشة كلها: بيتعامل معاه التراكب فوق
             if (r.target.closest && r.target.closest('.nav-ghost')) return;
@@ -158,9 +187,12 @@
                 const items = [];
                 collectItems(n, items);
                 const ok = items.filter(function (i) { return !skipItem(i); });
-                revealSequence(ok.length ? ok : [n]);
+                (ok.length ? ok : [n]).forEach(function (i) { if (all.indexOf(i) < 0) all.push(i); });
             });
         });
+        // العناصر دي كلها اتجابت مع بعض: تتحط في تسلسل واحد (مش كل مجموعة تبدأ من الأول). بنشيل اللي جوه عنصر تاني.
+        const flat = all.filter(function (i) { return !all.some(function (o) { return o !== i && o.contains(i); }); });
+        if (flat.length) revealSequence(flat);
     }).observe(container, { childList: true, subtree: true });
 
     // ---------- السحب ----------
