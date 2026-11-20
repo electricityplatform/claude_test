@@ -1,7 +1,8 @@
-// ================= انسيابية التنقل (اختفاء الشاشة القديمة ثم ظهور الجديدة) + السحب يمين/شمال =================
-// 1) لما تدوس على حاجة بتفتح شاشة تانية (زر، كارت، زر رجوع، الشريط السفلي): المحتوى الحالي بيختفي بنعومة (~0.12 ثانية)
-//    وبعدها تتنفّذ الضغطة والشاشة الجديدة بتظهر بنعومة (~0.2 ثانية). الهيدر ثابت ومابيتحركش.
+// ================= انسيابية التنقل (اختفاء الكلام تدريجياً ثم ظهور الشاشة الجديدة تدريجياً) + السحب يمين/شمال =================
+// 1) لما تدوس على حاجة بتفتح شاشة تانية (زر، كارت، زر رجوع، الشريط السفلي): كلام الشاشة الحالية بيخفت لحد ما يختفي،
+//    وبعدها تتنفّذ الضغطة والشاشة الجديدة بيظهر كلامها بالتدريج. الهيدر والشريط السفلي ثابتين ومابيتحركوش.
 //    لو الضغطة ما فتحتش شاشة جديدة، المحتوى بيرجع يظهر لوحده.
+//    عشان تظبط السرعة: غيّر OUT_MS (الاختفاء) و IN_MS (الظهور) تحت. الأرقام الأكبر = أبطأ وأنعم.
 // 2) السحب: سحب الصباع من الشمال لليمين = القسم اللي بعده (الرئيسية > القائمة > الأصدقاء > حسابي)، والعكس للعكس.
 //    جوه الأصدقاء: السحب بيبدّل التبويبات الأربعة الأول، ولما توصل لآخر تبويب بيكمّل للقسم اللي بعده.
 //    شغّال حتى لو إنت جوه شاشة فرعية (زي شراء قطع الغيار): بيروح للقسم المجاور للقسم اللي فتحت منه.
@@ -11,8 +12,15 @@
 
     const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
         || !container.animate;
-    const OUT_MS = 120;   // اختفاء الشاشة القديمة
-    const IN_MS = 200;    // ظهور الشاشة الجديدة
+    const OUT_MS = 300;   // اختفاء كلام الشاشة القديمة تدريجياً
+    const IN_MS = 520;    // ظهور كلام الشاشة الجديدة تدريجياً
+    const EASE = 'ease-in-out';
+    window.NAV_FADE = { out: OUT_MS, in: IN_MS, ease: EASE };   // friends.js بيستعملهم عشان تبديل التبويبات يبقى بنفس الإحساس
+
+    // المتصفح ما يخطفش السحب الأفقي (من غير ما نمنع التمرير الرأسي ولا التكبير). الجداول والشرائح الأفقية ليها تمريرها الخاص.
+    const st0 = document.createElement('style');
+    st0.textContent = '#appContainer{touch-action:pan-y pinch-zoom}';
+    document.head.appendChild(st0);
 
     // ---------- القسم الحالي (ترتيب الشريط السفلي: 0 رئيسية، 1 قائمة، 2 أصدقاء، 3 حسابي) ----------
     let currentSection = 0;
@@ -24,6 +32,7 @@
         else if (container.querySelector('#accountSettingsContainer')) currentSection = 3;
         // غير كده (شاشة فرعية): القسم بيفضل زي ما هو
     }
+    detectSection();
 
     // ---------- الاختفاء ثم الظهور ----------
     function contentKids() {
@@ -38,13 +47,14 @@
     function fadeOut() {
         faded = true;
         contentKids().forEach(function (k) {
-            k.animate([{ opacity: 1 }, { opacity: 0 }], { duration: OUT_MS, easing: 'ease-in', fill: 'forwards' });
+            k.getAnimations().forEach(function (a) { a.cancel(); });
+            k.animate([{ opacity: 1 }, { opacity: 0 }], { duration: OUT_MS, easing: EASE, fill: 'forwards' });
         });
     }
     function fadeIn(kids) {
         kids.forEach(function (k) {
             k.getAnimations().forEach(function (a) { a.cancel(); });
-            k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: IN_MS, easing: 'ease-out' });
+            k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: IN_MS, easing: EASE });
         });
     }
     // الضغطة ما غيّرتش الشاشة: نرجّع المحتوى
@@ -91,7 +101,7 @@
             bypass = true;
             try { el.click(); } finally { bypass = false; }
             clearTimeout(safetyTimer);
-            safetyTimer = setTimeout(restore, 700);   // لو ما اترسمتش شاشة جديدة
+            safetyTimer = setTimeout(restore, 1500);   // لو ما اترسمتش شاشة جديدة
         }, OUT_MS);
     }, true);
 
@@ -119,27 +129,39 @@
     }).observe(container, { childList: true });
 
     // ---------- السحب ----------
-    const EDGE = 18;           // نتجاهل السحب اللي بيبدأ من حرف الشاشة (إيماءة رجوع النظام)
-    const MIN_DX = 70;
-    const MAX_MS = 800;
-    let sx = 0, sy = 0, st = 0, tracking = false;
+    const EDGE = 12;           // نتجاهل السحب اللي بيبدأ من حرف الشاشة (إيماءة رجوع النظام)
+    const MIN_DX = 50;         // أقل مسافة أفقية (بكسل)
+    const RATIO = 1.25;        // الحركة الأفقية لازم تكون أكبر من الرأسية بالنسبة دي
+    const MAX_MS = 1100;
+    let sx = 0, sy = 0, st = 0, lx = 0, ly = 0, tracking = false;
 
     function isZoomed() {
-        return !!(window.visualViewport && window.visualViewport.scale > 1.02);
+        // نفس علامة التكبير اللي في utils.js (is-zoomed على html)
+        return document.documentElement.classList.contains('is-zoomed');
     }
     function blockedTarget(el) {
         if (!el || !el.closest) return true;
         if (!container.contains(el)) return true;   // اللمسة بدأت برا الشاشة (قوائم/نوافذ فوقها)
         if (el.closest('input, textarea, select, canvas, table, [contenteditable="true"], [data-no-swipe], [id*="assistant"], [class*="assistant"], #photoCropper')) return true;
-        // أي عنصر بيتحرك أفقي (جداول، شرائح) بنسيبه يتحرك لوحده
+        // أي عنصر بيتحرك أفقي (جداول، شرائح) بنسيبه يتحرك لوحده. شريط تبويبات الأصدقاء مستثنى عشان السحب يشتغل عليه.
         for (let n = el; n && n !== container; n = n.parentElement) {
+            if (n.id === 'friendsTabs') continue;
             const cs = getComputedStyle(n);
             if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
         }
         return false;
     }
+    // نافذة "ظاهرة فعلاً" على الشاشة (مش مجرد موجودة في الـ DOM ومخفية)
+    function isShown(el) {
+        if (!el || !el.getClientRects().length) return false;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && r.right > 0 && r.bottom > 0 && r.left < window.innerWidth && r.top < window.innerHeight;
+    }
     function overlayOpen() {
-        if (document.querySelector('.modal-open, [role="dialog"], #photoSheet, #photoCropper')) return true;
+        const found = document.querySelectorAll('.modal-open, [role="dialog"], #photoSheet, #photoCropper');
+        for (let i = 0; i < found.length; i++) if (isShown(found[i])) return true;
         const sb = document.getElementById('sideMenu');
         return !!sb && !sb.classList.contains('translate-x-full');
     }
@@ -155,23 +177,32 @@
         const t = e.touches[0];
         if (t.clientX < EDGE || t.clientX > window.innerWidth - EDGE) return;
         if (blockedTarget(e.target)) return;
-        sx = t.clientX; sy = t.clientY; st = Date.now();
+        sx = lx = t.clientX; sy = ly = t.clientY; st = Date.now();
         tracking = true;
     }, { passive: true });
 
-    document.addEventListener('touchcancel', function () { tracking = false; }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+        if (!tracking) return;
+        if (e.touches.length !== 1) { tracking = false; return; }   // إصبعين = تكبير
+        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    }, { passive: true });
 
-    document.addEventListener('touchend', function (e) {
+    function finishSwipe(x, y) {
         if (!tracking) return;
         tracking = false;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - sx, dy = t.clientY - sy;
+        const dx = x - sx, dy = y - sy;
         if (Date.now() - st > MAX_MS) return;
-        if (Math.abs(dx) < MIN_DX || Math.abs(dx) < Math.abs(dy) * 1.7) return;
+        if (Math.abs(dx) < MIN_DX || Math.abs(dx) < Math.abs(dy) * RATIO) return;
         const sel = window.getSelection && window.getSelection();
         if (sel && String(sel).length > 0) return;   // المستخدم بيحدد نص
         handleSwipe(dx > 0 ? 1 : -1);
+    }
+    document.addEventListener('touchend', function (e) {
+        const t = e.changedTouches[0];
+        finishSwipe(t ? t.clientX : lx, t ? t.clientY : ly);
     }, { passive: true });
+    // بعض المتصفحات بتبعت touchcancel لما تاخد الإيماءة: نحسب بآخر مكان وصله الصباع
+    document.addEventListener('touchcancel', function () { finishSwipe(lx, ly); }, { passive: true });
 
     // sign = +1: القسم/التبويب اللي بعده (سحب من الشمال لليمين) | -1: اللي قبله
     function handleSwipe(sign) {
