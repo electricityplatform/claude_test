@@ -1010,9 +1010,6 @@ html.dark:root[data-theme] {
     min-width: 0;
 }
 
-.dash-grid2 > .dash-card:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-}
 
 @media (min-width: 900px) {
     #partitionsContainer .dash-row {
@@ -1071,9 +1068,6 @@ html.dark:root[data-theme] {
         padding-bottom: 1.1rem;
     }
 
-    .dash-grid2 > .dash-card:last-child:nth-child(odd) {
-        grid-column: auto;
-    }
 }
 
 .topbar-brand {
