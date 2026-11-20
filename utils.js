@@ -395,7 +395,8 @@ function emptyTableRowHtml(colspan, message) {
     document.addEventListener('click', addGuard, true);
 
     function isBackButton(btn) {
-        return /^(رجوع|عودة|السابق)$/.test((btn.textContent || '').replace(/\s+/g, ' ').trim());
+        // يقبل "رجوع" لوحدها أو "رجوع لمركز البيانات" / "رجوع للماركات" (أول كلمة رجوع/عودة/السابق)
+        return /^(رجوع|عودة|السابق)(\s|$)/.test((btn.textContent || '').replace(/\s+/g, ' ').trim());
     }
     function currentBackButton() {
         return Array.prototype.find.call(container.querySelectorAll('button'), isBackButton) || null;
