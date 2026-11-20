@@ -52,11 +52,13 @@
         clearGhosts();
         const kids = contentKids();
 
-        // الجديدة: تظهر تدريجياً
+        // الجديدة: عناصرها (كروت، أقسام، عناوين...) تظهر عنصر ورا التاني
+        const items = [];
         kids.forEach(function (k) {
             k.getAnimations().forEach(function (a) { a.cancel(); });
-            k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS, easing: EASE });
+            collectItems(k, items);
         });
+        revealSequence(items.length ? items : kids);
 
         // القديمة: ترجع تتحط مكانها وتخفت في نفس الوقت (الجديدة ظاهرة فوقها/معاها)
         if (!removed.length || !kids.length) return;
@@ -103,12 +105,41 @@
         crossfade(removed);
     }).observe(container, { childList: true });
 
-    // ---------- ظهور تدريجي للحاجات اللي بتتجلب من قاعدة البيانات ----------
-    // أي محتوى بيتحط جوه الشاشة بعد ما ترسم (كروت، أقسام، قطع غيار، موديلات، قوائم...): بيظهر بنعومة،
-    // ولو قائمة فيها عناصر كتير بتظهر عنصر ورا عنصر (متتابعة) بدل ما تيجي كلها مرة واحدة.
-    const ITEM_MS = 400;       // مدة ظهور كل عنصر
-    const ITEM_STEP = 45;      // الفرق بين ظهور كل عنصر والتاني
-    const ITEM_MAX_DELAY = 450; // أقصى تأخير (عشان القوائم الطويلة ماتبطأش)
+    // ---------- ظهور العناصر واحد ورا التاني ----------
+    // أي شاشة جديدة أو محتوى بيتجلب من قاعدة البيانات (كروت، أقسام، قطع غيار، موديلات، قوائم...):
+    // كل عنصر بيظهر بنعومة وبعد اللي قبله، مش كلهم مع بعض.
+    const ITEM_MS = 500;        // مدة ظهور كل عنصر
+    const ITEM_STEP = 130;      // الفرق بين ظهور كل عنصر والتاني (الأكبر = متتابع أوضح)
+    const ITEM_MAX_DELAY = 1500; // أقصى تأخير (عشان القوائم الطويلة جداً ماتبطأش)
+
+    const LEAF = /^(INPUT|TEXTAREA|SELECT|BUTTON|A|IMG|SVG|CANVAS|TABLE|LABEL|H1|H2|H3|H4|P|SPAN)$/i;
+    function elKids(el) {
+        return Array.prototype.filter.call(el.children, function (c) { return !/^(SCRIPT|STYLE|LINK)$/.test(c.tagName) && !c.matches('.nav-ghost'); });
+    }
+    // مجموعة عناصر "قائمة" لو كذا واحد منهم ليهم نفس الشكل (نفس الكلاسات)
+    function isRepeating(kids) {
+        if (kids.length < 2) return false;
+        const counts = {};
+        let best = 0;
+        kids.forEach(function (k) { const sig = k.className || k.tagName; counts[sig] = (counts[sig] || 0) + 1; if (counts[sig] > best) best = counts[sig]; });
+        return best >= 2 && best >= kids.length / 2;
+    }
+    // بيطلّع العناصر اللي هتظهر ورا بعض بترتيب ظهورها في الصفحة
+    function collectItems(el, out) {
+        if (el.nodeType !== 1) return;
+        const kids = elKids(el);
+        if (!kids.length || LEAF.test(el.tagName) || el.matches('.dash-card, [onclick], .modal-box')) { out.push(el); return; }
+        if (isRepeating(kids)) { kids.forEach(function (k) { out.push(k); }); return; }
+        kids.forEach(function (k) { collectItems(k, out); });
+    }
+    function revealSequence(items) {
+        items.forEach(function (el, i) {
+            el.animate([{ opacity: 0 }, { opacity: 1 }], {
+                duration: ITEM_MS, easing: EASE, fill: 'backwards',
+                delay: Math.min(i * ITEM_STEP, ITEM_MAX_DELAY)
+            });
+        });
+    }
     function skipItem(n) {
         if (n.nodeType !== 1 || /^(SCRIPT|STYLE|LINK)$/.test(n.tagName)) return true;
         if (n.classList.contains('nav-ghost') || n.closest('.nav-ghost')) return true;
@@ -117,12 +148,6 @@
         if (n.getAnimations().length) return true;   // ليه حركة شغالة بالفعل (زي تبويبات الأصدقاء)
         return false;
     }
-    function fadeItem(el, i) {
-        el.animate([{ opacity: 0 }, { opacity: 1 }], {
-            duration: ITEM_MS, easing: EASE, fill: 'backwards',
-            delay: Math.min(i * ITEM_STEP, ITEM_MAX_DELAY)
-        });
-    }
     new MutationObserver(function (records) {
         if (reduceMotion) return;
         records.forEach(function (r) {
@@ -130,9 +155,10 @@
             if (r.target.closest && r.target.closest('.nav-ghost')) return;
             Array.prototype.forEach.call(r.addedNodes, function (n) {
                 if (skipItem(n)) return;
-                const kids = Array.prototype.filter.call(n.children, function (c) { return !skipItem(c); });
-                if (kids.length >= 2) kids.forEach(fadeItem);   // قائمة: العناصر تظهر ورا بعض
-                else fadeItem(n, 0);
+                const items = [];
+                collectItems(n, items);
+                const ok = items.filter(function (i) { return !skipItem(i); });
+                revealSequence(ok.length ? ok : [n]);
             });
         });
     }).observe(container, { childList: true, subtree: true });
