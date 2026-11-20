@@ -35,15 +35,23 @@ function setFriendsTab(key) {
     const box = document.getElementById('friendsTabContent');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!box || !box.animate || reduce) { renderFriendsTabContent(); return; }
-    // المحتوى القديم يختفي تدريجياً الأول، وبعدين الجديد يظهر تدريجياً (نفس توقيتات nav-motion.js)
-    const FADE = Object.assign({ out: 300, in: 520, ease: 'ease-in-out' }, window.NAV_FADE || {});
-    box.getAnimations().forEach(function (a) { a.cancel(); });
-    const out = box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE.out, easing: FADE.ease, fill: 'forwards' });
-    out.onfinish = function () {
-        renderFriendsTabContent();   // بيرسم تبويب friendsActiveTab الحالي
-        out.cancel();
-        box.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE.in, easing: FADE.ease });
-    };
+    // تراكب: المحتوى الجديد بيظهر تدريجياً فوق القديم وهو بيختفي في نفس الوقت (نفس توقيت nav-motion.js)
+    const FADE = Object.assign({ ms: 450, ease: 'ease-in-out' }, window.NAV_FADE || {});
+    box.querySelectorAll(':scope > .nav-ghost').forEach(function (g) { g.remove(); });
+    const oldHtml = box.innerHTML;
+    renderFriendsTabContent();   // بيرسم تبويب friendsActiveTab الحالي
+    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
+    const ghost = document.createElement('div');
+    ghost.className = 'nav-ghost';
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.cssText = 'position:absolute;inset:0;box-sizing:border-box;pointer-events:none;padding:' + getComputedStyle(box).padding;
+    ghost.innerHTML = oldHtml;
+    Array.prototype.forEach.call(box.children, function (k) {
+        k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE.ms, easing: FADE.ease });
+    });
+    box.appendChild(ghost);
+    const out = ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE.ms, easing: FADE.ease, fill: 'forwards' });
+    out.onfinish = out.oncancel = function () { ghost.remove(); };
 }
 
 // السحب جوه الأصدقاء (بيناديه nav-motion.js): +1 = التبويب اللي بعده، -1 = اللي قبله.
