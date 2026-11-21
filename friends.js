@@ -31,27 +31,8 @@ function renderFriendsScreen() {
 function setFriendsTab(key) {
     if (key === friendsActiveTab) return;
     friendsActiveTab = key;
-    renderFriendsTabs();   // التبويب المختار بيتلوّن فوراً
-    const box = document.getElementById('friendsTabContent');
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!box || !box.animate || reduce) { renderFriendsTabContent(); return; }
-    // تراكب: المحتوى الجديد بيظهر تدريجياً فوق القديم وهو بيختفي في نفس الوقت (نفس توقيت nav-motion.js)
-    const FADE = Object.assign({ ms: 450, ease: 'ease-in-out' }, window.NAV_FADE || {});
-    box.querySelectorAll(':scope > .nav-ghost').forEach(function (g) { g.remove(); });
-    const oldHtml = box.innerHTML;
-    renderFriendsTabContent();   // بيرسم تبويب friendsActiveTab الحالي
-    if (getComputedStyle(box).position === 'static') box.style.position = 'relative';
-    const ghost = document.createElement('div');
-    ghost.className = 'nav-ghost';
-    ghost.setAttribute('aria-hidden', 'true');
-    ghost.style.cssText = 'position:absolute;inset:0;box-sizing:border-box;pointer-events:none;padding:' + getComputedStyle(box).padding;
-    ghost.innerHTML = oldHtml;
-    Array.prototype.forEach.call(box.children, function (k) {
-        k.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE.ms, easing: FADE.ease });
-    });
-    box.appendChild(ghost);
-    const out = ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE.ms, easing: FADE.ease, fill: 'forwards' });
-    out.onfinish = out.oncancel = function () { ghost.remove(); };
+    renderFriendsTabs();         // التبويب المختار بيتلوّن فوراً
+    renderFriendsTabContent();   // المحتوى بيتبدّل فوراً من غير تدرّج
 }
 
 // السحب جوه الأصدقاء (بيناديه nav-motion.js): +1 = التبويب اللي بعده، -1 = اللي قبله.
