@@ -171,7 +171,7 @@
         if (n.nodeType === 1 && n.tagName === 'CANVAS' && n.closest('.hero-phone')) return false;   // مجسم التليفون: يظهر بنعومة لما يتحمّل
         if (n.nodeType !== 1 || /^(SCRIPT|STYLE|LINK)$/.test(n.tagName)) return true;
         if (n.classList.contains('nav-ghost') || n.closest('.nav-ghost')) return true;
-        if (n.closest('table, input, textarea, select, [contenteditable="true"], .modal, [role="dialog"], #photoCropper, .phone-stage, .hero')) return true;
+        if (n.closest('table, input, textarea, select, [contenteditable="true"], .modal, [role="dialog"], #photoCropper, .phone-stage, .hero, #friendsTabContent, #friendsTabs')) return true;   // تبويبات الأصدقاء: من غير تدرّج
         if (n.matches('.loading, .skeleton, .ptr-indicator') || (!n.textContent.trim() && n.querySelector('.loading'))) return true;
         if (n.getAnimations().length) return true;   // ليه حركة شغالة بالفعل (زي تبويبات الأصدقاء)
         return false;
