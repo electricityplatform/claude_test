@@ -318,6 +318,10 @@ function sdcRenderPriceTable(columns, rows) {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                 <span>حفظ التعديلات لقاعدة البيانات</span>
             </button>
+            <button type="button" id="keyPinBtn" onclick="toggleKeyColumnPin()" class="btn btn-sm btn-outline btn-accent gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                <span id="keyPinLabel">تثبيت العمود المميز</span>
+            </button>
             <button type="button" onclick="sdcExportPriceSheet()" class="btn btn-sm btn-primary gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 <span>تصدير إلى إكسل</span>
@@ -328,13 +332,16 @@ function sdcRenderPriceTable(columns, rows) {
         <div id="sdcSheetContainer" class="flex-1 overflow-auto p-1 border border-base-300 rounded-xl bg-base-100 shadow-inner">
             <table id="editableUsersTable">
                 <thead>
-                    <tr>${columns.map(c => `<th class="sticky top-0 z-10">${sdcEsc(c)}</th>`).join('')}</tr>
+                    <tr>${columns.map(c => sheetThHtml(c, c)).join('')}</tr>
                 </thead>
                 <tbody id="sdcTableBody"></tbody>
             </table>
         </div>
         <div id="sdcRowsCount" class="text-xs text-base-content/60 text-center flex-shrink-0"></div>
     `;
+    // العمود المميز (اسم الموديل / مجموعة التوافق): بيتسجّل مرة واحدة هنا، والتثبيت نفسه بيتفعّل بالزرار.
+    // مهم: applyKeyPinState بتصفّر حالة التثبيت، فما ننادهاش مع كل بحث؛ enableExcelPasteAndDragFill بتعيد تطبيق التثبيت لوحدها بعد إعادة رسم الصفوف.
+    applyKeyPinState(document.getElementById('editableUsersTable'), sdcSearchCol);
     sdcApplyFilter('');
 }
 
